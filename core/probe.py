@@ -9,20 +9,21 @@ class MediaMetadata:
     """
     def __init__(self):
         self.filename = ""
+        self.full_path = ""  # <--- CRITICAL: Full path for FFmpeg
         self.duration_sec = 0.0
-        self.format_long = ""  # e.g., "QuickTime / MOV"
+        self.format_long = ""  
         self.size_bytes = 0
         
         # Video Info
         self.has_video = False
         self.video_codec = ""
-        self.video_resolution = "" # e.g., "1920x1080"
+        self.video_resolution = "" 
         
         # Audio Info
         self.has_audio = False
         self.audio_codec = ""
-        self.audio_bitrate = "" # e.g., "320 kb/s"
-        self.audio_channels = 0 # e.g., 2 (Stereo)
+        self.audio_bitrate = "" 
+        self.audio_channels = 0 
 
     def get_summary(self):
         """Returns a short string description for the UI list."""
@@ -44,7 +45,6 @@ class FileProber:
         self.ffprobe_exe = self._get_ffprobe_path()
 
     def _get_ffprobe_path(self):
-        """Locates ffprobe binary (dev or frozen)."""
         if getattr(sys, 'frozen', False):
             base_path = sys._MEIPASS
         else:
@@ -58,13 +58,9 @@ class FileProber:
         return ffprobe_path
 
     def analyze(self, file_path):
-        """
-        Runs ffprobe on the file and returns a MediaMetadata object.
-        """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        # Command to get info in JSON format
         cmd = [
             self.ffprobe_exe,
             '-v', 'quiet',
@@ -74,7 +70,6 @@ class FileProber:
             file_path
         ]
 
-        # Run process (hidden window)
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         
@@ -95,24 +90,22 @@ class FileProber:
             return self._parse_json(data, file_path)
 
         except Exception as e:
-            # Return a basic metadata object marking error
             meta = MediaMetadata()
             meta.filename = os.path.basename(file_path)
+            meta.full_path = file_path # Keep path even on error
             meta.format_long = "Error reading file"
             return meta
 
     def _parse_json(self, data, file_path):
-        """Parses the raw JSON from ffprobe into MediaMetadata."""
         meta = MediaMetadata()
         meta.filename = os.path.basename(file_path)
+        meta.full_path = file_path # <--- Store full path
         
-        # General Format Info
         fmt = data.get('format', {})
         meta.duration_sec = float(fmt.get('duration', 0))
         meta.size_bytes = int(fmt.get('size', 0))
         meta.format_long = fmt.get('format_long_name', 'Unknown')
 
-        # Streams Info
         for stream in data.get('streams', []):
             codec_type = stream.get('codec_type')
             
@@ -125,13 +118,10 @@ class FileProber:
                     meta.video_resolution = f"{w}x{h}"
             
             elif codec_type == 'audio':
-                # We typically take the first audio track found
                 if not meta.has_audio:
                     meta.has_audio = True
                     meta.audio_codec = stream.get('codec_name', 'unknown')
                     meta.audio_channels = int(stream.get('channels', 0))
-                    
-                    # Bitrate is sometimes in format, sometimes in stream
                     br = stream.get('bit_rate')
                     if br:
                         kbps = int(br) // 1000

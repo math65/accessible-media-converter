@@ -1,0 +1,157 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Universal Transcoder 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Universal Transcoder"
+msgstr "Universal Transcoder"
+
+msgid "No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here."
+msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter\nou glissez des fichiers ici."
+
+msgid "&File"
+msgstr "&Fichier"
+
+msgid "&Add Files..."
+msgstr "&Ajouter des fichiers..."
+
+msgid "Add &Folder..."
+msgstr "Ajouter un &Dossier..."
+
+msgid "E&xit"
+msgstr "&Quitter"
+
+msgid "&Edit"
+msgstr "&Édition"
+
+msgid "&Clear List"
+msgstr "&Vider la liste"
+
+msgid "Remove &Selected"
+msgstr "&Supprimer la sélection"
+
+msgid "&Help"
+msgstr "&Aide"
+
+msgid "&About"
+msgstr "À &Propos"
+
+msgid "Filename"
+msgstr "Nom du fichier"
+
+msgid "Details (Codec/Bitrate)"
+msgstr "Détails (Codec/Débit)"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Conversion Settings"
+msgstr "Paramètres de conversion"
+
+msgid "Convert to:"
+msgstr "Convertir en :"
+
+msgid "&Settings / Quality..."
+msgstr "&Réglages / Qualité..."
+
+msgid "&Start Conversion"
+msgstr "&Lancer la conversion"
+
+msgid "Open Media"
+msgstr "Ouvrir un média"
+
+msgid "Configure settings for: "
+msgstr "Configurer pour : "
+
+msgid "Audio Settings"
+msgstr "Paramètres Audio"
+
+msgid "Convert Audio (Re-encode)"
+msgstr "Convertir l'Audio (Ré-encoder)"
+
+msgid "Copy Audio Stream (No quality loss)"
+msgstr "Flux Audio : Copie directe (Sans perte)"
+
+msgid "Bitrate:"
+msgstr "Débit :"
+
+msgid "Quality:"
+msgstr "Qualité :"
+
+msgid "Video Settings"
+msgstr "Paramètres Vidéo"
+
+msgid "Convert Video (H.264)"
+msgstr "Convertir la Vidéo (H.264)"
+
+msgid "Copy Video Stream"
+msgstr "Flux Vidéo : Copie directe"
+
+msgid "Quality (CRF): Balanced"
+msgstr "Qualité (CRF) : Équilibré"
+
+msgid "About"
+msgstr "À Propos"
+
+msgid "Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"
+msgstr "Universal Transcoder V1.0\nPropulsé par FFmpeg & wxPython"
+
+msgid "All tasks completed!"
+msgstr "Toutes les tâches sont terminées !"
+
+msgid "Success"
+msgstr "Succès"
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Converting..."
+msgstr "Conversion en cours..."
+
+msgid "Done"
+msgstr "Terminé"
+
+msgid "Ready"
+msgstr "Prêt"
+
+msgid "Mode:"
+msgstr "Mode :"
+
+msgid "CBR (Constant Bitrate)"
+msgstr "CBR (Débit Constant)"
+
+msgid "VBR (Variable Quality)"
+msgstr "VBR (Qualité Variable)"
+
+msgid "Best Quality (V0)"
+msgstr "Meilleure Qualité (V0)"
+
+msgid "High Quality (V2)"
+msgstr "Haute Qualité (V2)"
+
+msgid "Medium Quality (V4)"
+msgstr "Qualité Moyenne (V4)"
+
+msgid "Standard Quality (V6)"
+msgstr "Qualité Standard (V6)"
+
+msgid "64k (Voice)"
+msgstr "64k (Voix)"
+
+msgid "128k (Radio)"
+msgstr "128k (Radio)"
+
+msgid "192k (Standard)"
+msgstr "192k (Standard)"
+
+msgid "256k (High)"
+msgstr "256k (Haute)"
+
+msgid "320k (Max)"
+msgstr "320k (Max)"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "OK"
+msgstr "Valider"
