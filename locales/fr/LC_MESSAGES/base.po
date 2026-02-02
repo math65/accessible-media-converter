@@ -1,10 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 1.3\n"
+"Project-Id-Version: Universal Transcoder 1.6\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 # --- MENUS ---
-
 msgid "Universal Transcoder"
 msgstr "Universal Transcoder"
 
@@ -39,7 +38,6 @@ msgid "&About"
 msgstr "À &Propos"
 
 # --- INTERFACE PRINCIPALE ---
-
 msgid "Filename"
 msgstr "Nom du fichier"
 
@@ -53,7 +51,6 @@ msgid "No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here
 msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter\nou glissez des fichiers ici."
 
 # --- ONGLETS ---
-
 msgid "Audio"
 msgstr "Audio"
 
@@ -61,7 +58,6 @@ msgid "Video"
 msgstr "Vidéo"
 
 # --- FORMATS & OPTIONS ---
-
 msgid "Conversion Settings"
 msgstr "Paramètres de conversion"
 
@@ -81,75 +77,40 @@ msgid "AAC - Audio (Extract)"
 msgstr "AAC - Audio (Extraction)"
 
 # --- FENÊTRE DE RÉGLAGES (SETTINGS) ---
-
 msgid "Configure settings for: "
 msgstr "Configurer pour : "
 
 msgid "Audio Settings"
 msgstr "Paramètres Audio"
 
-msgid "Convert Audio (Re-encode)"
-msgstr "Convertir l'Audio (Ré-encoder)"
+msgid "Re-encode (Recommended)"
+msgstr "Ré-encoder (Recommandé)"
 
-msgid "Copy Audio Stream (No quality loss)"
-msgstr "Flux Audio : Copie directe (Sans perte)"
+msgid "Copy Stream (Advanced)"
+msgstr "Copier le flux (Avancé)"
+
+msgid "Keep original quality and speed up conversion.\nWarning: The output format must support the source codec."
+msgstr "Garde la qualité originale et accélère la conversion.\nAttention : Le format de sortie doit supporter le codec source."
 
 msgid "Bitrate:"
 msgstr "Débit :"
 
-msgid "Quality:"
-msgstr "Qualité :"
-
 msgid "Video Settings"
 msgstr "Paramètres Vidéo"
 
-msgid "Convert Video (H.264)"
-msgstr "Convertir la Vidéo (H.264)"
+msgid "Quality (CRF):"
+msgstr "Qualité (CRF) :"
 
-msgid "Copy Video Stream"
-msgstr "Flux Vidéo : Copie directe"
+msgid "Balanced"
+msgstr "Équilibré"
 
-msgid "Quality (CRF): Balanced"
-msgstr "Qualité (CRF) : Équilibré"
-
-msgid "Mode:"
-msgstr "Mode :"
-
-msgid "CBR (Constant Bitrate)"
-msgstr "CBR (Débit Constant)"
-
-msgid "VBR (Variable Quality)"
-msgstr "VBR (Qualité Variable)"
-
-msgid "Best Quality (V0)"
-msgstr "Meilleure Qualité (V0)"
+msgid "Small Size"
+msgstr "Fichier léger"
 
 msgid "High Quality (V2)"
 msgstr "Haute Qualité (V2)"
 
-msgid "Medium Quality (V4)"
-msgstr "Qualité Moyenne (V4)"
-
-msgid "Standard Quality (V6)"
-msgstr "Qualité Standard (V6)"
-
-msgid "64k (Voice)"
-msgstr "64k (Voix)"
-
-msgid "128k (Radio)"
-msgstr "128k (Radio)"
-
-msgid "192k (Standard)"
-msgstr "192k (Standard)"
-
-msgid "256k (High)"
-msgstr "256k (Haute)"
-
-msgid "320k (Max)"
-msgstr "320k (Max)"
-
 # --- FENÊTRE DE PRÉFÉRENCES (PREFERENCES) ---
-
 msgid "Output Destination"
 msgstr "Destination des fichiers"
 
@@ -169,15 +130,16 @@ msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
 
 # --- BOUTONS ---
-
 msgid "Cancel"
 msgstr "Annuler"
 
 msgid "OK"
 msgstr "Valider"
 
-# --- MESSAGES & ERREURS ---
+msgid "Stop"
+msgstr "Arrêter"
 
+# --- MESSAGES & ERREURS ---
 msgid "Open Media"
 msgstr "Ouvrir un média"
 
@@ -204,6 +166,21 @@ msgstr "Terminé"
 
 msgid "Ready"
 msgstr "Prêt"
+
+msgid "Stopping..."
+msgstr "Arrêt en cours..."
+
+msgid "Stopped by user"
+msgstr "Arrêté par l'utilisateur"
+
+msgid "Conversion in progress"
+msgstr "Conversion en cours"
+
+msgid "A conversion is currently running.\nDo you really want to stop it and exit?"
+msgstr "Une conversion est en cours.\nVoulez-vous vraiment l'arrêter et quitter ?"
+
+msgid "Confirm Exit"
+msgstr "Confirmer la sortie"
 
 msgid "About"
 msgstr "À Propos"

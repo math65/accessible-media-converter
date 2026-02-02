@@ -5,7 +5,7 @@ import json
 
 from core import FileProber, ConversionTask
 from ui.settings_dialog import SettingsDialog
-from ui.preferences_dialog import PreferencesDialog # On importe notre nouveau fichier
+from ui.preferences_dialog import PreferencesDialog
 
 class FileListPanel(wx.Panel):
     def __init__(self, parent):
@@ -21,6 +21,11 @@ class FileListPanel(wx.Panel):
 class MainWindow(wx.Frame):
     def __init__(self):
         super().__init__(None, title=_("Universal Transcoder"), size=(900, 650))
+        
+        # --- ETAT INTERNE ---
+        self.is_converting = False
+        self.stop_requested = False
+        
         self.prober = FileProber()
         self.audio_data = [] 
         self.video_data = [] 
@@ -38,6 +43,9 @@ class MainWindow(wx.Frame):
         self._init_ui()
         self._update_ui_state()
         self.Centre()
+        
+        # INTERCEPTION DE LA FERMETURE
+        self.Bind(wx.EVT_CLOSE, self.on_close_window)
 
     def _load_config(self):
         defaults = {
@@ -47,8 +55,7 @@ class MainWindow(wx.Frame):
             'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
             'last_format_audio': 'mp3',
             'last_format_video': 'mp4',
-            # NOUVEAUX PARAMÈTRES GLOBAUX
-            'output_mode': 'source', # source, custom, ask
+            'output_mode': 'source',
             'custom_output_path': ''
         }
         if os.path.exists(self.config_path):
@@ -78,7 +85,6 @@ class MainWindow(wx.Frame):
         self.item_clear = edit_menu.Append(wx.ID_ANY, _("&Clear List") + "\tAlt+C")
         self.item_remove = edit_menu.Append(wx.ID_ANY, _("Remove &Selected") + "\tDel")
         edit_menu.AppendSeparator()
-        # NOUVEAU MENU PREFERENCES
         item_prefs = edit_menu.Append(wx.ID_PREFERENCES, _("Preferences"))
         
         help_menu = wx.Menu()
@@ -88,7 +94,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, item_exit)
         self.Bind(wx.EVT_MENU, self.on_clear_list, self.item_clear)
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
-        self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs) # Event Prefs
+        self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs)
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
 
         menubar.Append(file_menu, _("&File"))
@@ -133,10 +139,23 @@ class MainWindow(wx.Frame):
         controls_box.Add(self.gauge, 0, wx.EXPAND | wx.TOP, 10)
         self.gauge.Hide()
         
+        # --- BOUTONS START / STOP ---
+        self.btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
         self.btn_convert = wx.Button(self.content_panel, label=_("&Start Conversion"))
         self.btn_convert.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
-        controls_box.Add(self.btn_convert, 0, wx.EXPAND | wx.TOP, 10)
+        
+        self.btn_stop = wx.Button(self.content_panel, label=_("Stop"))
+        self.btn_stop.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        self.btn_stop.SetForegroundColour(wx.Colour(200, 0, 0)) # Rouge
+        self.btn_stop.Bind(wx.EVT_BUTTON, self.on_stop)
+        self.btn_stop.Hide() # Caché au début
+        
+        self.btn_sizer.Add(self.btn_convert, 1, wx.EXPAND)
+        self.btn_sizer.Add(self.btn_stop, 1, wx.EXPAND) # Sera caché
+        
+        controls_box.Add(self.btn_sizer, 0, wx.EXPAND | wx.TOP, 10)
         
         self.content_sizer.Add(controls_box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         self.content_panel.SetSizer(self.content_sizer)
@@ -144,7 +163,6 @@ class MainWindow(wx.Frame):
         self.main_sizer.Add(self.content_panel, 1, wx.EXPAND)
         self.panel.SetSizer(self.main_sizer)
 
-    # --- LOGIQUE PREFERENCES ---
     def on_preferences(self, event):
         dlg = PreferencesDialog(self, self.settings_store)
         if dlg.ShowModal() == wx.ID_OK:
@@ -153,7 +171,6 @@ class MainWindow(wx.Frame):
             self._save_config()
         dlg.Destroy()
 
-    # --- RESTE DU CODE UI ---
     def _update_layout_strategy(self):
         count_audio = len(self.audio_data)
         count_video = len(self.video_data)
@@ -222,6 +239,12 @@ class MainWindow(wx.Frame):
 
     def _update_ui_state(self):
         has_files = (len(self.audio_data) + len(self.video_data)) > 0
+        # Désactiver l'édition si conversion en cours
+        if self.is_converting:
+            self.item_clear.Enable(False)
+            self.item_remove.Enable(False)
+            return
+
         if has_files:
             self.empty_panel.Hide()
             self._update_layout_strategy()
@@ -238,6 +261,7 @@ class MainWindow(wx.Frame):
         self.Refresh()
 
     def on_add_files(self, event):
+        if self.is_converting: return # Sécurité
         with wx.FileDialog(self, _("Open Media"), wildcard="Media Files|*.*", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE) as dlg:
             if dlg.ShowModal() == wx.ID_CANCEL: return
             self._process_added_files(dlg.GetPaths())
@@ -260,6 +284,7 @@ class MainWindow(wx.Frame):
         self._update_ui_state()
 
     def on_clear_list(self, event):
+        if self.is_converting: return
         self.audio_data = []
         self.video_data = []
         self.panel_audio_list.list_ctrl.DeleteAllItems()
@@ -267,6 +292,7 @@ class MainWindow(wx.Frame):
         self._update_ui_state()
 
     def on_remove_selected(self, event):
+        if self.is_converting: return
         if self.current_tab == 'audio':
             lst = self.panel_audio_list.list_ctrl
             data = self.audio_data
@@ -307,6 +333,31 @@ class MainWindow(wx.Frame):
             self._update_formats_dropdown()
         dlg.Destroy()
 
+    # --- NOUVEAU : GESTION START / STOP / CLOSE ---
+
+    def on_stop(self, event):
+        """Appelé quand on clique sur le bouton STOP"""
+        self.btn_stop.Disable()
+        self.btn_stop.SetLabel(_("Stopping..."))
+        self.stop_requested = True # Le thread va lire ça
+
+    def on_close_window(self, event):
+        """Appelé quand on clique sur la croix de la fenêtre"""
+        if self.is_converting:
+            # Demande confirmation
+            dlg = wx.MessageDialog(self, 
+                                   _("A conversion is currently running.\nDo you really want to stop it and exit?"),
+                                   _("Confirm Exit"), 
+                                   wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+            
+            if dlg.ShowModal() == wx.ID_YES:
+                self.stop_requested = True
+                self.Destroy() # Force la fermeture
+            else:
+                event.Veto() # On annule la fermeture
+        else:
+            event.Skip() # Fermeture normale
+
     def on_convert(self, event):
         if self.current_tab == 'audio':
             data = self.audio_data
@@ -320,31 +371,34 @@ class MainWindow(wx.Frame):
         fmt_key = self.current_fmt_keys_active[idx]
         settings = self.settings_store.get(fmt_key, {})
         
-        # --- LOGIQUE DE DESTINATION INTELLIGENTE ---
         output_mode = self.settings_store.get('output_mode', 'source')
         custom_out = None
-        
-        if output_mode == 'source':
-            custom_out = None # Moteur gérera ça
-            
+        if output_mode == 'source': custom_out = None
         elif output_mode == 'custom':
             custom_out = self.settings_store.get('custom_output_path', '')
             if not custom_out or not os.path.exists(custom_out):
-                # Fallback sécurité
                 wx.MessageBox(_("Custom folder not found. Using source folder."), _("Warning"), wx.ICON_WARNING)
                 custom_out = None
-                
         elif output_mode == 'ask':
             with wx.DirDialog(self, _("Select Output Folder"), style=wx.DD_DEFAULT_STYLE) as dlg:
-                if dlg.ShowModal() == wx.ID_OK:
-                    custom_out = dlg.GetPath()
-                else:
-                    return # L'utilisateur a annulé, on arrête tout
+                if dlg.ShowModal() == wx.ID_OK: custom_out = dlg.GetPath()
+                else: return 
 
-        self.btn_convert.Disable()
+        # --- UI START STATE ---
+        self.is_converting = True
+        self.stop_requested = False
+        
+        self.btn_convert.Hide() # On cache Start
+        self.btn_stop.Show()    # On montre Stop
+        self.btn_stop.Enable(True)
+        self.btn_stop.SetLabel(_("Stop"))
+        
         self.gauge.SetValue(0)
         self.gauge.Show()
-        self.content_panel.Layout()
+        self.content_panel.Layout() # Important pour redessiner les boutons
+        
+        # On désactive l'ajout de fichiers
+        self._update_ui_state() 
         
         t = threading.Thread(target=self._worker_thread, args=(data, fmt_key, settings, lst, custom_out))
         t.daemon = True 
@@ -352,33 +406,62 @@ class MainWindow(wx.Frame):
 
     def _worker_thread(self, data_list, fmt, settings, list_ctrl_obj, output_dir):
         errors_count = 0 
+        
         for i, meta in enumerate(data_list):
+            # Si on a demandé l'arrêt entre deux fichiers
+            if self.stop_requested:
+                break
+                
             wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Converting..."))
             def update_progress(pct):
                 wx.CallAfter(self.gauge.SetValue, pct)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, f"{_('Converting...')} {pct}%")
 
+            # Callback pour vérifier l'arrêt PENDANT la conversion d'un fichier
+            def check_stop():
+                return self.stop_requested
+
             task = ConversionTask(meta.full_path, fmt, settings, duration=meta.duration, output_dir=output_dir)
             try:
-                task.run(progress_callback=update_progress)
+                # On passe le callback de vérification
+                task.run(progress_callback=update_progress, stop_check_callback=check_stop)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))
             except Exception as e:
-                errors_count += 1 
-                print(e)
-                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Error"))
+                # On vérifie si c'est un arrêt volontaire
+                if str(e) == "Stopped by user":
+                    wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Stopped by user"))
+                    break # On sort de la boucle for
+                else:
+                    errors_count += 1 
+                    print(e)
+                    wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Error"))
         
         wx.CallAfter(self._on_batch_complete, errors_count)
 
     def _on_batch_complete(self, errors_count):
-        self.btn_convert.Enable()
+        self.is_converting = False
+        self.stop_requested = False
+        
+        self.btn_stop.Hide()    # On cache Stop
+        self.btn_convert.Show() # On remet Start
         self.gauge.Hide()
         self.content_panel.Layout()
+        
+        self._update_ui_state() # Réactive les menus
+        
         if errors_count == 0:
-            wx.MessageBox(_("All tasks completed!"), _("Success"))
+            # On n'affiche le succès que si on n'a pas annulé manuellement
+            # (si stop_requested était True, on a breaké la boucle, donc errors_count vaut 0 ou x)
+            # Petite astuce : si le label du bouton stop est "Stopping...", c'est qu'on a annulé.
+            if self.btn_stop.GetLabel() == _("Stopping..."):
+                pass # Pas de popup succès si on a annulé
+            else:
+                wx.MessageBox(_("All tasks completed!"), _("Success"))
         else:
             msg = _("All tasks completed!") + f"\n\n{errors_count} " + _("Error")
             wx.MessageBox(msg, _("Done"), wx.ICON_WARNING)
 
-    def on_exit(self, e): self.Close()
+    def on_exit(self, e): 
+        self.Close()
     def on_about(self, e):
         wx.MessageBox(_("Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"), _("About"))
