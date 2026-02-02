@@ -5,6 +5,7 @@ import json
 
 from core import FileProber, ConversionTask
 from ui.settings_dialog import SettingsDialog
+from ui.preferences_dialog import PreferencesDialog # On importe notre nouveau fichier
 
 class FileListPanel(wx.Panel):
     def __init__(self, parent):
@@ -45,7 +46,10 @@ class MainWindow(wx.Frame):
             'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
             'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
             'last_format_audio': 'mp3',
-            'last_format_video': 'mp4'
+            'last_format_video': 'mp4',
+            # NOUVEAUX PARAMÈTRES GLOBAUX
+            'output_mode': 'source', # source, custom, ask
+            'custom_output_path': ''
         }
         if os.path.exists(self.config_path):
             try:
@@ -69,16 +73,24 @@ class MainWindow(wx.Frame):
         item_add_dir = file_menu.Append(wx.ID_ANY, _("Add &Folder..."))
         file_menu.AppendSeparator()
         item_exit = file_menu.Append(wx.ID_EXIT, _("E&xit") + "\tAlt+F4")
+        
         edit_menu = wx.Menu()
         self.item_clear = edit_menu.Append(wx.ID_ANY, _("&Clear List") + "\tAlt+C")
         self.item_remove = edit_menu.Append(wx.ID_ANY, _("Remove &Selected") + "\tDel")
+        edit_menu.AppendSeparator()
+        # NOUVEAU MENU PREFERENCES
+        item_prefs = edit_menu.Append(wx.ID_PREFERENCES, _("Preferences"))
+        
         help_menu = wx.Menu()
         item_about = help_menu.Append(wx.ID_ABOUT, _("&About"))
+
         self.Bind(wx.EVT_MENU, self.on_add_files, item_add)
         self.Bind(wx.EVT_MENU, self.on_exit, item_exit)
         self.Bind(wx.EVT_MENU, self.on_clear_list, self.item_clear)
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
+        self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs) # Event Prefs
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
+
         menubar.Append(file_menu, _("&File"))
         menubar.Append(edit_menu, _("&Edit"))
         menubar.Append(help_menu, _("&Help"))
@@ -103,7 +115,9 @@ class MainWindow(wx.Frame):
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         self.panel_audio_list = FileListPanel(self.content_panel)
         self.panel_video_list = FileListPanel(self.content_panel)
+        
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
+        
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         lbl_fmt = wx.StaticText(self.content_panel, label=_("Convert to:"))
         self.combo_format = wx.Choice(self.content_panel)
@@ -114,19 +128,32 @@ class MainWindow(wx.Frame):
         row1.Add(self.combo_format, 1, wx.EXPAND | wx.RIGHT, 10)
         row1.Add(self.btn_settings, 0)
         controls_box.Add(row1, 0, wx.EXPAND | wx.ALL, 5)
+
         self.gauge = wx.Gauge(self.content_panel, range=100, size=(250, 20))
         controls_box.Add(self.gauge, 0, wx.EXPAND | wx.TOP, 10)
         self.gauge.Hide()
+        
         self.btn_convert = wx.Button(self.content_panel, label=_("&Start Conversion"))
         self.btn_convert.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
         controls_box.Add(self.btn_convert, 0, wx.EXPAND | wx.TOP, 10)
+        
         self.content_sizer.Add(controls_box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         self.content_panel.SetSizer(self.content_sizer)
         self.main_sizer.Add(self.empty_panel, 1, wx.EXPAND)
         self.main_sizer.Add(self.content_panel, 1, wx.EXPAND)
         self.panel.SetSizer(self.main_sizer)
 
+    # --- LOGIQUE PREFERENCES ---
+    def on_preferences(self, event):
+        dlg = PreferencesDialog(self, self.settings_store)
+        if dlg.ShowModal() == wx.ID_OK:
+            new_prefs = dlg.get_settings()
+            self.settings_store.update(new_prefs)
+            self._save_config()
+        dlg.Destroy()
+
+    # --- RESTE DU CODE UI ---
     def _update_layout_strategy(self):
         count_audio = len(self.audio_data)
         count_video = len(self.video_data)
@@ -293,46 +320,62 @@ class MainWindow(wx.Frame):
         fmt_key = self.current_fmt_keys_active[idx]
         settings = self.settings_store.get(fmt_key, {})
         
+        # --- LOGIQUE DE DESTINATION INTELLIGENTE ---
+        output_mode = self.settings_store.get('output_mode', 'source')
+        custom_out = None
+        
+        if output_mode == 'source':
+            custom_out = None # Moteur gérera ça
+            
+        elif output_mode == 'custom':
+            custom_out = self.settings_store.get('custom_output_path', '')
+            if not custom_out or not os.path.exists(custom_out):
+                # Fallback sécurité
+                wx.MessageBox(_("Custom folder not found. Using source folder."), _("Warning"), wx.ICON_WARNING)
+                custom_out = None
+                
+        elif output_mode == 'ask':
+            with wx.DirDialog(self, _("Select Output Folder"), style=wx.DD_DEFAULT_STYLE) as dlg:
+                if dlg.ShowModal() == wx.ID_OK:
+                    custom_out = dlg.GetPath()
+                else:
+                    return # L'utilisateur a annulé, on arrête tout
+
         self.btn_convert.Disable()
         self.gauge.SetValue(0)
         self.gauge.Show()
         self.content_panel.Layout()
         
-        t = threading.Thread(target=self._worker_thread, args=(data, fmt_key, settings, lst))
+        t = threading.Thread(target=self._worker_thread, args=(data, fmt_key, settings, lst, custom_out))
         t.daemon = True 
         t.start()
 
-    def _worker_thread(self, data_list, fmt, settings, list_ctrl_obj):
-        errors_count = 0  # COMPTEUR D'ERREURS
-        
+    def _worker_thread(self, data_list, fmt, settings, list_ctrl_obj, output_dir):
+        errors_count = 0 
         for i, meta in enumerate(data_list):
             wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Converting..."))
-            
             def update_progress(pct):
                 wx.CallAfter(self.gauge.SetValue, pct)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, f"{_('Converting...')} {pct}%")
 
-            task = ConversionTask(meta.full_path, fmt, settings, duration=meta.duration)
+            task = ConversionTask(meta.full_path, fmt, settings, duration=meta.duration, output_dir=output_dir)
             try:
                 task.run(progress_callback=update_progress)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))
             except Exception as e:
-                errors_count += 1 # On note l'erreur
+                errors_count += 1 
                 print(e)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Error"))
         
-        # On passe le nombre d'erreurs à la fonction de fin
         wx.CallAfter(self._on_batch_complete, errors_count)
 
     def _on_batch_complete(self, errors_count):
         self.btn_convert.Enable()
         self.gauge.Hide()
         self.content_panel.Layout()
-        
         if errors_count == 0:
             wx.MessageBox(_("All tasks completed!"), _("Success"))
         else:
-            # Message différent s'il y a eu des erreurs
             msg = _("All tasks completed!") + f"\n\n{errors_count} " + _("Error")
             wx.MessageBox(msg, _("Done"), wx.ICON_WARNING)
 

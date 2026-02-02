@@ -1,13 +1,12 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 1.1\n"
+"Project-Id-Version: Universal Transcoder 1.3\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+
+# --- MENUS ---
 
 msgid "Universal Transcoder"
 msgstr "Universal Transcoder"
-
-msgid "No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here."
-msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter\nou glissez des fichiers ici."
 
 msgid "&File"
 msgstr "&Fichier"
@@ -30,11 +29,16 @@ msgstr "&Vider la liste"
 msgid "Remove &Selected"
 msgstr "&Supprimer la sélection"
 
+msgid "Preferences"
+msgstr "Préférences"
+
 msgid "&Help"
 msgstr "&Aide"
 
 msgid "&About"
 msgstr "À &Propos"
+
+# --- INTERFACE PRINCIPALE ---
 
 msgid "Filename"
 msgstr "Nom du fichier"
@@ -44,6 +48,19 @@ msgstr "Détails (Codec/Débit)"
 
 msgid "Status"
 msgstr "Statut"
+
+msgid "No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here."
+msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter\nou glissez des fichiers ici."
+
+# --- ONGLETS ---
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Video"
+msgstr "Vidéo"
+
+# --- FORMATS & OPTIONS ---
 
 msgid "Conversion Settings"
 msgstr "Paramètres de conversion"
@@ -57,8 +74,13 @@ msgstr "&Réglages / Qualité..."
 msgid "&Start Conversion"
 msgstr "&Lancer la conversion"
 
-msgid "Open Media"
-msgstr "Ouvrir un média"
+msgid "MP3 - Audio (Extract)"
+msgstr "MP3 - Audio (Extraction)"
+
+msgid "AAC - Audio (Extract)"
+msgstr "AAC - Audio (Extraction)"
+
+# --- FENÊTRE DE RÉGLAGES (SETTINGS) ---
 
 msgid "Configure settings for: "
 msgstr "Configurer pour : "
@@ -89,30 +111,6 @@ msgstr "Flux Vidéo : Copie directe"
 
 msgid "Quality (CRF): Balanced"
 msgstr "Qualité (CRF) : Équilibré"
-
-msgid "About"
-msgstr "À Propos"
-
-msgid "Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"
-msgstr "Universal Transcoder V1.0\nPropulsé par FFmpeg & wxPython"
-
-msgid "All tasks completed!"
-msgstr "Toutes les tâches sont terminées !"
-
-msgid "Success"
-msgstr "Succès"
-
-msgid "Error"
-msgstr "Erreur"
-
-msgid "Converting..."
-msgstr "Conversion en cours..."
-
-msgid "Done"
-msgstr "Terminé"
-
-msgid "Ready"
-msgstr "Prêt"
 
 msgid "Mode:"
 msgstr "Mode :"
@@ -150,22 +148,65 @@ msgstr "256k (Haute)"
 msgid "320k (Max)"
 msgstr "320k (Max)"
 
+# --- FENÊTRE DE PRÉFÉRENCES (PREFERENCES) ---
+
+msgid "Output Destination"
+msgstr "Destination des fichiers"
+
+msgid "Same as source file"
+msgstr "Même dossier que le fichier source"
+
+msgid "Specific folder:"
+msgstr "Dossier spécifique :"
+
+msgid "Ask every time (Batch)"
+msgstr "Demander à chaque fois"
+
+msgid "Browse..."
+msgstr "Parcourir..."
+
+msgid "Select Output Folder"
+msgstr "Sélectionner le dossier de sortie"
+
+# --- BOUTONS ---
+
 msgid "Cancel"
 msgstr "Annuler"
 
 msgid "OK"
 msgstr "Valider"
 
-# --- NOUVEAUX TERMES POUR LES ONGLETS ---
+# --- MESSAGES & ERREURS ---
 
-msgid "Audio"
-msgstr "Audio"
+msgid "Open Media"
+msgstr "Ouvrir un média"
 
-msgid "Video"
-msgstr "Vidéo"
+msgid "All tasks completed!"
+msgstr "Toutes les tâches sont terminées !"
 
-msgid "MP3 - Audio (Extract)"
-msgstr "MP3 - Audio (Extraction)"
+msgid "Success"
+msgstr "Succès"
 
-msgid "AAC - Audio (Extract)"
-msgstr "AAC - Audio (Extraction)"
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Warning"
+msgstr "Attention"
+
+msgid "Custom folder not found. Using source folder."
+msgstr "Dossier personnalisé introuvable. Utilisation du dossier source."
+
+msgid "Converting..."
+msgstr "Conversion en cours..."
+
+msgid "Done"
+msgstr "Terminé"
+
+msgid "Ready"
+msgstr "Prêt"
+
+msgid "About"
+msgstr "À Propos"
+
+msgid "Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"
+msgstr "Universal Transcoder V1.0\nPropulsé par FFmpeg & wxPython"
