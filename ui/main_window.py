@@ -22,7 +22,6 @@ class MainWindow(wx.Frame):
     def __init__(self):
         super().__init__(None, title=_("Universal Transcoder"), size=(900, 650))
         
-        # --- ETAT INTERNE ---
         self.is_converting = False
         self.stop_requested = False
         
@@ -41,9 +40,11 @@ class MainWindow(wx.Frame):
             "AAC - Audio (M4A)", 
             "WAV - Audio (Lossless)", 
             "FLAC - Audio (Lossless)",
-            "ALAC - Audio (Apple Lossless)"
+            "ALAC - Audio (Apple Lossless)",
+            "OGG - Audio (Vorbis)",
+            "WMA - Audio (Legacy)"
         ]
-        self.audio_formats_keys = ["mp3", "aac", "wav", "flac", "alac"]
+        self.audio_formats_keys = ["mp3", "aac", "wav", "flac", "alac", "ogg", "wma"]
         
         # --- FORMATS VIDEO ---
         self.video_formats_display = ["MP4 - Video (H.264)", "MKV - Video", "MP3 - Audio (Extract)", "AAC - Audio (Extract)"]
@@ -60,17 +61,21 @@ class MainWindow(wx.Frame):
     def _load_config(self):
         defaults = {
             # --- MP3 / AAC ---
-            'mp3': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 0, 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
-            'aac': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 3, 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
+            'mp3': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 0, 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k / Stereo'},
+            'aac': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 3, 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k / Stereo'},
+            
+            # --- OGG / WMA ---
+            'ogg': {'audio_mode': 'convert', 'audio_qscale': 6, 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'VBR Q6 / Stereo'},
+            'wma': {'audio_mode': 'convert', 'audio_bitrate': '128k', 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 128k / Stereo'},
             
             # --- LOSSLESS ---
-            'wav': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'summary': 'Lossless'},
-            'flac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'flac_compression': 5, 'summary': 'Lossless'},
-            'alac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'summary': 'Lossless'},
+            'wav': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'audio_channels': 'original', 'summary': 'Lossless'},
+            'flac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'flac_compression': 5, 'audio_channels': 'original', 'summary': 'Lossless'},
+            'alac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'audio_channels': 'original', 'summary': 'Lossless'},
             
             # --- VIDEO ---
-            'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
-            'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
+            'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k'},
+            'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k'},
             
             'last_format_audio': 'mp3',
             'last_format_video': 'mp4',
@@ -241,6 +246,8 @@ class MainWindow(wx.Frame):
             elif "FLAC" in label: label = _("FLAC - Audio (Lossless)")
             elif "ALAC" in label: label = _("ALAC - Audio (Apple Lossless)")
             elif "AAC" in label: label = _("AAC - Audio (M4A)")
+            elif "OGG" in label: label = _("OGG - Audio (Vorbis)")
+            elif "WMA" in label: label = _("WMA - Audio (Legacy)")
                 
             saved = self.settings_store.get(key, {})
             summary = saved.get('summary', '')
@@ -341,11 +348,13 @@ class MainWindow(wx.Frame):
             clean = self.video_formats_display[idx]
             if "Extract" in clean: clean = _(clean)
         
-        # Traduction propre pour le titre de la fenêtre
+        # Translation title
         if "WAV" in clean: clean = _("WAV - Audio (Lossless)")
         elif "FLAC" in clean: clean = _("FLAC - Audio (Lossless)")
         elif "ALAC" in clean: clean = _("ALAC - Audio (Apple Lossless)")
         elif "AAC" in clean: clean = _("AAC - Audio (M4A)")
+        elif "OGG" in clean: clean = _("OGG - Audio (Vorbis)")
+        elif "WMA" in clean: clean = _("WMA - Audio (Legacy)")
             
         input_ac = ""
         input_has_vid = (self.current_tab == 'video')

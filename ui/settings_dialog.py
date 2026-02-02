@@ -2,7 +2,7 @@ import wx
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent, format_label, has_video, input_audio_codec, current_settings):
-        super().__init__(parent, title=_("Configure settings for: ") + format_label, size=(550, 650))
+        super().__init__(parent, title=_("Configure settings for: ") + format_label, size=(550, 680))
         
         self.has_video = has_video
         self.settings = current_settings
@@ -14,6 +14,8 @@ class SettingsDialog(wx.Dialog):
         self.is_flac = 'flac' in lower_fmt
         self.is_mp3 = 'mp3' in lower_fmt
         self.is_aac = 'aac' in lower_fmt or 'm4a' in lower_fmt
+        self.is_ogg = 'ogg' in lower_fmt or 'vorbis' in lower_fmt
+        self.is_wma = 'wma' in lower_fmt
         
         # Valeurs actuelles
         self.audio_mode = self.settings.get('audio_mode', 'convert')
@@ -66,7 +68,7 @@ class SettingsDialog(wx.Dialog):
         # --- PARAMÈTRES AUDIO ---
         self.aud_params_sizer = wx.BoxSizer(wx.VERTICAL)
         
-        # 1. SAMPLE RATE (TOUT LE MONDE)
+        # 1. SAMPLE RATE
         hbox_sr = wx.BoxSizer(wx.HORIZONTAL)
         lbl_sr = wx.StaticText(sb_aud_sizer.GetStaticBox(), label=_("Sample Rate:"))
         self.combo_sr = wx.Choice(sb_aud_sizer.GetStaticBox(), choices=[
@@ -74,9 +76,19 @@ class SettingsDialog(wx.Dialog):
         ])
         hbox_sr.Add(lbl_sr, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
         hbox_sr.Add(self.combo_sr, 1, wx.EXPAND)
-        self.aud_params_sizer.Add(hbox_sr, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 15)
+        self.aud_params_sizer.Add(hbox_sr, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 10)
 
-        # 2. LOGIQUE COMPLEXE : LOSSLESS vs LOSSY (CBR/VBR)
+        # 2. CHANNELS (CANAUX) - NOUVEAU
+        hbox_ch = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_ch = wx.StaticText(sb_aud_sizer.GetStaticBox(), label=_("Channels:"))
+        self.combo_ch = wx.Choice(sb_aud_sizer.GetStaticBox(), choices=[
+            _("Stereo (Downmix)"), _("Mono"), _("Original Channels")
+        ])
+        hbox_ch.Add(lbl_ch, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+        hbox_ch.Add(self.combo_ch, 1, wx.EXPAND)
+        self.aud_params_sizer.Add(hbox_ch, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 15)
+
+        # 3. LOGIQUE FORMAT SPÉCIFIQUE
         
         if self.is_lossless:
             # --- CAS LOSSLESS ---
@@ -89,24 +101,25 @@ class SettingsDialog(wx.Dialog):
             hbox_depth.Add(self.combo_depth, 1, wx.EXPAND)
             self.aud_params_sizer.Add(hbox_depth, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 15)
             
-            # Init useless vars
             self.combo_rate_mode = None
             self.combo_bitrate = None
             self.slider_vbr = None
 
         else:
-            # --- CAS LOSSY (MP3 / AAC) ---
+            # --- CAS LOSSY (MP3, AAC, OGG, WMA) ---
             
-            # Choix CBR / VBR
+            # Choix CBR / VBR (Sauf si OGG ou WMA qui forcent un mode)
             hbox_mode = wx.BoxSizer(wx.HORIZONTAL)
             lbl_mode = wx.StaticText(sb_aud_sizer.GetStaticBox(), label=_("Rate Mode:"))
             self.combo_rate_mode = wx.Choice(sb_aud_sizer.GetStaticBox(), choices=[
                 _("Constant Bitrate (CBR)"), _("Variable Bitrate (VBR)")
             ])
             self.combo_rate_mode.Bind(wx.EVT_CHOICE, self.on_rate_mode_changed)
-            hbox_mode.Add(lbl_mode, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
-            hbox_mode.Add(self.combo_rate_mode, 1, wx.EXPAND)
-            self.aud_params_sizer.Add(hbox_mode, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 15)
+            
+            if not self.is_ogg and not self.is_wma:
+                hbox_mode.Add(lbl_mode, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+                hbox_mode.Add(self.combo_rate_mode, 1, wx.EXPAND)
+                self.aud_params_sizer.Add(hbox_mode, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 15)
 
             # Option A : CBR Bitrate
             self.hbox_cbr = wx.BoxSizer(wx.HORIZONTAL)
@@ -119,29 +132,34 @@ class SettingsDialog(wx.Dialog):
 
             # Option B : VBR Slider
             self.hbox_vbr = wx.BoxSizer(wx.HORIZONTAL)
-            # Gestion Echelle MP3 (0-9) vs AAC (1-5)
-            if self.is_mp3:
-                # MP3: 0 = Best, 9 = Worst. Slider 0..9
-                self.slider_vbr = wx.Slider(sb_aud_sizer.GetStaticBox(), value=0, minValue=0, maxValue=9, size=(250, -1))
-            else:
-                # AAC: 1 = Worst, 5 = Best. Slider 1..5
-                self.slider_vbr = wx.Slider(sb_aud_sizer.GetStaticBox(), value=3, minValue=1, maxValue=5, size=(250, -1))
             
-            self.lbl_vbr_val = wx.StaticText(sb_aud_sizer.GetStaticBox(), label=_("Quality (VBR):"), size=(250, -1))
+            # Config Slider selon format
+            if self.is_ogg:
+                # OGG: -1 to 10
+                self.slider_vbr = wx.Slider(sb_aud_sizer.GetStaticBox(), value=6, minValue=-1, maxValue=10, size=(250, -1))
+                prefix_txt = _("Quality (OGG):")
+            elif self.is_mp3:
+                # MP3: 0-9
+                self.slider_vbr = wx.Slider(sb_aud_sizer.GetStaticBox(), value=0, minValue=0, maxValue=9, size=(250, -1))
+                prefix_txt = _("Quality (VBR):")
+            else:
+                # AAC: 1-5
+                self.slider_vbr = wx.Slider(sb_aud_sizer.GetStaticBox(), value=3, minValue=1, maxValue=5, size=(250, -1))
+                prefix_txt = _("Quality (VBR):")
+            
+            self.lbl_vbr_val = wx.StaticText(sb_aud_sizer.GetStaticBox(), label=prefix_txt, size=(250, -1))
             self.slider_vbr.Bind(wx.EVT_SLIDER, self.on_vbr_change)
             
-            # Layout VBR
             vbr_col = wx.BoxSizer(wx.VERTICAL)
             vbr_col.Add(self.lbl_vbr_val, 0, wx.BOTTOM, 5)
             vbr_col.Add(self.slider_vbr, 0, wx.EXPAND)
             self.hbox_vbr.Add(vbr_col, 1, wx.EXPAND)
             self.aud_params_sizer.Add(self.hbox_vbr, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 15)
             
-            # Init useless vars
             self.combo_depth = None
             self.slider_comp = None
 
-        # 3. SPECIAL FLAC COMPRESSION
+        # 4. SPECIAL FLAC COMPRESSION
         if self.is_flac:
             self.hbox_comp = wx.BoxSizer(wx.HORIZONTAL)
             lbl_comp = wx.StaticText(sb_aud_sizer.GetStaticBox(), label=_("Compression Level:"))
@@ -188,6 +206,10 @@ class SettingsDialog(wx.Dialog):
         saved_sr = self.settings.get('audio_sample_rate', 'original')
         sr_map = {'original': 0, '44100': 1, '48000': 2, '88200': 3, '96000': 4}
         self.combo_sr.SetSelection(sr_map.get(str(saved_sr), 0))
+        
+        saved_ch = self.settings.get('audio_channels', '2') # Default 2 (Stereo)
+        ch_map = {'2': 0, '1': 1, 'original': 2}
+        self.combo_ch.SetSelection(ch_map.get(str(saved_ch), 0))
 
         # 3. Audio Specific
         if self.is_lossless:
@@ -197,27 +219,45 @@ class SettingsDialog(wx.Dialog):
             if self.is_flac:
                 self.slider_comp.SetValue(self.settings.get('flac_compression', 5))
         else:
-            # CBR/VBR
-            mode = self.settings.get('rate_mode', 'cbr')
-            self.combo_rate_mode.SetSelection(1 if mode == 'vbr' else 0)
+            # Logic Force OGG/WMA
+            if self.is_ogg:
+                # Force VBR UI
+                self.hbox_cbr.ShowItems(False)
+                self.hbox_vbr.ShowItems(True)
+                saved_q = self.settings.get('audio_qscale', 6)
+                self.slider_vbr.SetValue(saved_q)
+            elif self.is_wma:
+                # Force CBR UI
+                self.hbox_cbr.ShowItems(True)
+                self.hbox_vbr.ShowItems(False)
+                saved_bitrate = self.settings.get('audio_bitrate', '128k')
+                idx = self.combo_bitrate.FindString(saved_bitrate)
+                if idx != wx.NOT_FOUND: self.combo_bitrate.SetSelection(idx)
+                else: self.combo_bitrate.SetSelection(7)
+            else:
+                # MP3/AAC Switchable
+                mode = self.settings.get('rate_mode', 'cbr')
+                self.combo_rate_mode.SetSelection(1 if mode == 'vbr' else 0)
+                
+                # Bitrate
+                saved_bitrate = self.settings.get('audio_bitrate', '192k')
+                idx = self.combo_bitrate.FindString(saved_bitrate)
+                if idx != wx.NOT_FOUND: self.combo_bitrate.SetSelection(idx)
+                else: self.combo_bitrate.SetSelection(9)
+                
+                # VBR
+                saved_q = self.settings.get('audio_qscale', 0 if self.is_mp3 else 3)
+                self.slider_vbr.SetValue(saved_q)
+                self.on_rate_mode_changed(None)
+
+            if not self.is_wma and not self.is_ogg:
+                self.on_rate_mode_changed(None)
             
-            # Bitrate
-            saved_bitrate = self.settings.get('audio_bitrate', '192k')
-            idx = self.combo_bitrate.FindString(saved_bitrate)
-            if idx != wx.NOT_FOUND: self.combo_bitrate.SetSelection(idx)
-            else: self.combo_bitrate.SetSelection(9) # 192k
-            
-            # VBR Quality
-            saved_q = self.settings.get('audio_qscale', 0 if self.is_mp3 else 3)
-            self.slider_vbr.SetValue(saved_q)
-            self.on_vbr_change(None)
-            self.on_rate_mode_changed(None)
+            if self.slider_vbr: self.on_vbr_change(None)
 
         if self.audio_mode == 'copy': self.rb_aud_copy.SetValue(True)
         else: self.rb_aud_convert.SetValue(True)
         self.on_aud_mode_change(None)
-
-    # --- LOGIQUE UI ---
 
     def on_crf_change(self, event):
         val = self.slider_crf.GetValue()
@@ -230,26 +270,26 @@ class SettingsDialog(wx.Dialog):
 
     def on_vbr_change(self, event):
         val = self.slider_vbr.GetValue()
-        prefix = _("Quality (VBR):")
-        desc = ""
-        
-        if self.is_mp3: # 0(best) to 9(worst)
-            if val == 0: desc = _("Best Quality (V0)")
-            elif val < 3: desc = "V1-V2 (High)"
-            elif val < 7: desc = "V3-V6 (Mid)"
-            else: desc = _("Smallest Size (V9)")
-        else: # AAC: 1(low) to 5(best)
-            if val == 5: desc = _("Audiophile (5)")
-            elif val >= 3: desc = "High (3-4)"
-            else: desc = _("Low Quality (1)")
-            
-        self.lbl_vbr_val.SetLabel(f"{prefix} {val} - {desc}")
+        if self.is_ogg:
+            prefix = _("Quality (OGG):")
+            self.lbl_vbr_val.SetLabel(f"{prefix} {val}") # OGG is simple q scale
+        else:
+            prefix = _("Quality (VBR):")
+            desc = ""
+            if self.is_mp3: 
+                if val == 0: desc = _("Best Quality (V0)")
+                elif val < 3: desc = "V1-V2 (High)"
+                elif val < 7: desc = "V3-V6 (Mid)"
+                else: desc = _("Smallest Size (V9)")
+            else: # AAC
+                if val == 5: desc = _("Audiophile (5)")
+                elif val >= 3: desc = "High (3-4)"
+                else: desc = _("Low Quality (1)")
+            self.lbl_vbr_val.SetLabel(f"{prefix} {val} - {desc}")
 
     def on_rate_mode_changed(self, event):
         if not self.combo_rate_mode: return
         is_vbr = (self.combo_rate_mode.GetSelection() == 1)
-        
-        # Show/Hide Logic
         if is_vbr:
             self.hbox_cbr.ShowItems(False)
             self.hbox_vbr.ShowItems(True)
@@ -266,15 +306,17 @@ class SettingsDialog(wx.Dialog):
     def on_aud_mode_change(self, event):
         is_convert = self.rb_aud_convert.GetValue()
         self.combo_sr.Enable(is_convert)
+        self.combo_ch.Enable(is_convert)
         
         if self.is_lossless:
             self.combo_depth.Enable(is_convert)
             if self.is_flac: self.slider_comp.Enable(is_convert)
         else:
-            self.combo_rate_mode.Enable(is_convert)
+            if self.combo_rate_mode: self.combo_rate_mode.Enable(is_convert)
             self.combo_bitrate.Enable(is_convert)
-            self.slider_vbr.Enable(is_convert)
-            self.lbl_vbr_val.Enable(is_convert)
+            if self.slider_vbr:
+                self.slider_vbr.Enable(is_convert)
+                self.lbl_vbr_val.Enable(is_convert)
 
     def get_settings(self):
         summary_parts = []
@@ -292,10 +334,14 @@ class SettingsDialog(wx.Dialog):
         # AUDIO
         a_mode = 'copy' if self.rb_aud_copy.GetValue() else 'convert'
         
-        # Defaults
+        # Values
         sr_sel = self.combo_sr.GetSelection()
         sr_vals = ['original', '44100', '48000', '88200', '96000']
         sample_rate = sr_vals[sr_sel]
+
+        ch_sel = self.combo_ch.GetSelection()
+        ch_vals = ['2', '1', 'original']
+        channels = ch_vals[ch_sel]
         
         bitrate = "192k"
         bit_depth = "original"
@@ -309,7 +355,11 @@ class SettingsDialog(wx.Dialog):
             bit_depth = depth_vals[depth_sel]
             if self.is_flac: flac_comp = self.slider_comp.GetValue()
         else:
-            rate_mode = "vbr" if self.combo_rate_mode.GetSelection() == 1 else "cbr"
+            # Force logic
+            if self.is_ogg: rate_mode = 'vbr'
+            elif self.is_wma: rate_mode = 'cbr'
+            else: rate_mode = "vbr" if self.combo_rate_mode.GetSelection() == 1 else "cbr"
+
             if rate_mode == "cbr":
                 bitrate = self.combo_bitrate.GetStringSelection()
             else:
@@ -322,13 +372,22 @@ class SettingsDialog(wx.Dialog):
                 depth_str = f"{bit_depth}-bit" if bit_depth != 'original' else "Original Depth"
                 summary_parts.append(f"Lossless {depth_str}")
             else:
-                codec_name = "AAC" if "aac" in self.format_label.lower() or "m4a" in self.format_label.lower() else "MP3"
+                codec_name = "MP3"
+                if "aac" in self.format_label.lower() or "m4a" in self.format_label.lower(): codec_name = "AAC"
+                elif "ogg" in self.format_label.lower(): codec_name = "OGG"
+                elif "wma" in self.format_label.lower(): codec_name = "WMA"
+                
                 if rate_mode == 'cbr':
                     summary_parts.append(f"{codec_name} CBR {bitrate}")
                 else:
                     if codec_name == "MP3": q_txt = f"V{qscale}"
+                    elif codec_name == "OGG": q_txt = f"Q{qscale}"
                     else: q_txt = f"Q{qscale}"
                     summary_parts.append(f"{codec_name} VBR ({q_txt})")
+            
+            # Channels / Rate summary
+            if channels == '2': summary_parts.append("Stereo")
+            elif channels == '1': summary_parts.append("Mono")
             
             if sample_rate != 'original':
                 summary_parts.append(f"{sample_rate}Hz")
@@ -342,6 +401,7 @@ class SettingsDialog(wx.Dialog):
             'rate_mode': rate_mode,
             'audio_qscale': qscale,
             'audio_sample_rate': sample_rate,
+            'audio_channels': channels,
             'audio_bit_depth': bit_depth,
             'flac_compression': flac_comp,
             

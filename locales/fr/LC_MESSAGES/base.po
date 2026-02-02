@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 2.0\n"
+"Project-Id-Version: Universal Transcoder 2.1\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 # --- MENUS ---
@@ -89,6 +89,12 @@ msgstr "ALAC - Audio (Apple Lossless)"
 msgid "AAC - Audio (M4A)"
 msgstr "AAC - Audio (M4A)"
 
+msgid "OGG - Audio (Vorbis)"
+msgstr "OGG - Audio (Vorbis)"
+
+msgid "WMA - Audio (Legacy)"
+msgstr "WMA - Audio (Ancien)"
+
 # --- FENÊTRE DE RÉGLAGES (SETTINGS) ---
 msgid "Configure settings for: "
 msgstr "Configurer pour : "
@@ -109,6 +115,18 @@ msgstr "Garde la qualité originale et accélère la conversion.\nAttention : Le
 msgid "Sample Rate:"
 msgstr "Fréquence (Hz) :"
 
+msgid "Channels:"
+msgstr "Canaux :"
+
+msgid "Stereo (Downmix)"
+msgstr "Stéréo (Recommandé)"
+
+msgid "Mono"
+msgstr "Mono"
+
+msgid "Original Channels"
+msgstr "Canaux originaux"
+
 msgid "Original"
 msgstr "Comme l'original"
 
@@ -126,6 +144,9 @@ msgstr "Débit :"
 
 msgid "Quality (VBR):"
 msgstr "Qualité (VBR) :"
+
+msgid "Quality (OGG):"
+msgstr "Qualité (OGG) :"
 
 # Pour MP3 VBR (0-9)
 msgid "Best Quality (V0)"

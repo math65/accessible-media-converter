@@ -25,7 +25,6 @@ class ConversionTask:
 
     def run(self, progress_callback=None, stop_check_callback=None):
         # GESTION EXTENSION
-        # On force .m4a pour l'ALAC (Apple Lossless) ET pour l'AAC
         ext = self.target_format
         if self.target_format in ['alac', 'aac']: 
             ext = 'm4a'
@@ -36,7 +35,6 @@ class ConversionTask:
             output_dir = self.custom_output_dir
         else:
             output_dir = os.path.dirname(self.input_path)
-            
         if not os.path.exists(output_dir): os.makedirs(output_dir)  
         output_path = os.path.join(output_dir, output_filename)
 
@@ -48,19 +46,25 @@ class ConversionTask:
         if audio_mode == 'copy':
             cmd.extend(['-c:a', 'copy'])
         else:
-            # 1. SAMPLE RATE (Commun à tous)
+            # 1. SAMPLE RATE
             sr = self.settings.get('audio_sample_rate', 'original')
             if sr != 'original':
                 cmd.extend(['-ar', sr])
+                
+            # 2. CHANNELS (Nouveau)
+            ch = self.settings.get('audio_channels', 'original')
+            if ch == '2':
+                cmd.extend(['-ac', '2'])
+            elif ch == '1':
+                cmd.extend(['-ac', '1'])
 
-            # 2. CODECS & OPTIONS SPECIFIQUES
+            # 3. CODECS & OPTIONS
             if self.target_format == 'mp3':
                 cmd.extend(['-c:a', 'libmp3lame'])
                 rate_mode = self.settings.get('rate_mode', 'cbr')
                 if rate_mode == 'cbr':
                     cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
                 else:
-                    # VBR MP3: -q:a 0(best) à 9(worst)
                     q = str(self.settings.get('audio_qscale', 0))
                     cmd.extend(['-q:a', q])
                 
@@ -70,12 +74,21 @@ class ConversionTask:
                 if rate_mode == 'cbr':
                     cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
                 else:
-                    # VBR AAC: -q:a 1(worst) à 5(best)
                     q = str(self.settings.get('audio_qscale', 3))
                     cmd.extend(['-q:a', q])
+            
+            elif self.target_format == 'ogg':
+                cmd.extend(['-c:a', 'libvorbis'])
+                # OGG est VBR via qscale
+                q = str(self.settings.get('audio_qscale', 6))
+                cmd.extend(['-q:a', q])
+                
+            elif self.target_format == 'wma':
+                cmd.extend(['-c:a', 'wmav2'])
+                # WMA est CBR
+                cmd.extend(['-b:a', self.settings.get('audio_bitrate', '128k')])
                 
             elif self.target_format == 'wav':
-                # WAV (PCM)
                 depth = self.settings.get('audio_bit_depth', 'original')
                 if depth == '16': codec = 'pcm_s16le'
                 elif depth == '24': codec = 'pcm_s24le'
@@ -85,18 +98,15 @@ class ConversionTask:
                 
             elif self.target_format == 'flac':
                 cmd.extend(['-c:a', 'flac'])
-                # Compression Level (0-8)
                 comp = str(self.settings.get('flac_compression', 5))
                 cmd.extend(['-compression_level', comp])
                 
-                # Bit Depth via sample_fmt
                 depth = self.settings.get('audio_bit_depth', 'original')
                 if depth == '16': cmd.extend(['-sample_fmt', 's16'])
                 elif depth == '24': cmd.extend(['-sample_fmt', 's32'])
                 
             elif self.target_format == 'alac':
                 cmd.extend(['-c:a', 'alac'])
-                # Bit Depth via sample_fmt
                 depth = self.settings.get('audio_bit_depth', 'original')
                 if depth == '16': cmd.extend(['-sample_fmt', 's16p'])
                 elif depth == '24': cmd.extend(['-sample_fmt', 's32p'])
@@ -110,7 +120,6 @@ class ConversionTask:
                 crf = str(self.settings.get('video_crf', 23))
                 cmd.extend(['-c:v', 'libx264', '-crf', crf, '-preset', 'medium'])
         else:
-            # Si format audio pur, on désactive la vidéo
             cmd.append('-vn')
 
         cmd.append(output_path)
@@ -127,7 +136,6 @@ class ConversionTask:
 
         time_pattern = re.compile(r'time=(\d{2}):(\d{2}):(\d{2}\.\d+)')
         while True:
-            # Vérification Arrêt Utilisateur
             if stop_check_callback and stop_check_callback():
                 self.process.kill()
                 raise Exception("Stopped by user")
@@ -147,6 +155,5 @@ class ConversionTask:
                     except: pass
 
         if self.process.returncode != 0:
-            # Si ce n'est pas un arrêt volontaire, c'est une erreur
             if stop_check_callback and not stop_check_callback(): 
                 raise Exception("FFmpeg error")
