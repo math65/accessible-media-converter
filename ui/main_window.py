@@ -6,6 +6,7 @@ import json
 from core import FileProber, ConversionTask
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
+from ui.track_manager import TrackManagerDialog 
 
 class FileListPanel(wx.Panel):
     def __init__(self, parent):
@@ -20,7 +21,7 @@ class FileListPanel(wx.Panel):
 
 class MainWindow(wx.Frame):
     def __init__(self):
-        super().__init__(None, title=_("Universal Transcoder"), size=(900, 650))
+        super().__init__(None, title=_("Universal Transcoder"), size=(950, 650))
         
         self.is_converting = False
         self.stop_requested = False
@@ -28,13 +29,13 @@ class MainWindow(wx.Frame):
         self.prober = FileProber()
         self.audio_data = [] 
         self.video_data = [] 
+        
         app_data = os.getenv('APPDATA')
         config_dir = os.path.join(app_data, "UniversalTranscoder")
         if not os.path.exists(config_dir): os.makedirs(config_dir)
         self.config_path = os.path.join(config_dir, "config.json")
         self.settings_store = self._load_config()
         
-        # --- FORMATS AUDIO ---
         self.audio_formats_display = [
             "MP3 - Audio", 
             "AAC - Audio (M4A)", 
@@ -46,7 +47,6 @@ class MainWindow(wx.Frame):
         ]
         self.audio_formats_keys = ["mp3", "aac", "wav", "flac", "alac", "ogg", "wma"]
         
-        # --- FORMATS VIDEO ---
         self.video_formats_display = ["MP4 - Video (H.264)", "MKV - Video", "MP3 - Audio (Extract)", "AAC - Audio (Extract)"]
         self.video_formats_keys = ["mp4", "mkv", "mp3", "aac"]
         
@@ -60,23 +60,15 @@ class MainWindow(wx.Frame):
 
     def _load_config(self):
         defaults = {
-            # --- MP3 / AAC ---
             'mp3': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 0, 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k / Stereo'},
             'aac': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 3, 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k / Stereo'},
-            
-            # --- OGG / WMA ---
             'ogg': {'audio_mode': 'convert', 'audio_qscale': 6, 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'VBR Q6 / Stereo'},
             'wma': {'audio_mode': 'convert', 'audio_bitrate': '128k', 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 128k / Stereo'},
-            
-            # --- LOSSLESS ---
             'wav': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'audio_channels': 'original', 'summary': 'Lossless'},
             'flac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'flac_compression': 5, 'audio_channels': 'original', 'summary': 'Lossless'},
             'alac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'audio_channels': 'original', 'summary': 'Lossless'},
-            
-            # --- VIDEO ---
             'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k'},
             'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'audio_channels': '2', 'summary': 'CBR 192k'},
-            
             'last_format_audio': 'mp3',
             'last_format_video': 'mp4',
             'output_mode': 'source',
@@ -129,9 +121,9 @@ class MainWindow(wx.Frame):
     def _init_ui(self):
         self.panel = wx.Panel(self)
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
+        
         self.empty_panel = wx.Panel(self.panel)
         self.empty_msg = _("No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here.")
-        self.empty_panel.SetName(self.empty_msg)
         empty_sizer = wx.BoxSizer(wx.VERTICAL)
         self.lbl_empty = wx.StaticText(self.empty_panel, label=self.empty_msg)
         self.lbl_empty.SetFont(wx.Font(14, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
@@ -139,12 +131,19 @@ class MainWindow(wx.Frame):
         empty_sizer.Add(self.lbl_empty, 0, wx.ALIGN_CENTER | wx.ALL, 20)
         empty_sizer.AddStretchSpacer()
         self.empty_panel.SetSizer(empty_sizer)
+        
         self.content_panel = wx.Panel(self.panel)
         self.content_sizer = wx.BoxSizer(wx.VERTICAL)
+        
         self.notebook = wx.Notebook(self.content_panel)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
+        
         self.panel_audio_list = FileListPanel(self.content_panel)
         self.panel_video_list = FileListPanel(self.content_panel)
+        
+        # --- FIX CLAVIER : Utilisation de EVT_CONTEXT_MENU ---
+        self.panel_audio_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
+        self.panel_video_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
         
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
         
@@ -183,6 +182,56 @@ class MainWindow(wx.Frame):
         self.main_sizer.Add(self.content_panel, 1, wx.EXPAND)
         self.panel.SetSizer(self.main_sizer)
 
+    # --- CLIC DROIT & TOUCHE APPLICATION ---
+    def on_context_menu(self, event):
+        if self.is_converting: return
+        
+        # Identification de la liste active et de l'index sélectionné
+        if self.current_tab == 'audio':
+            lst = self.panel_audio_list.list_ctrl
+        else:
+            lst = self.panel_video_list.list_ctrl
+            
+        index = lst.GetFirstSelected()
+        if index == -1: return
+
+        # Vérification format
+        idx_fmt = self.combo_format.GetSelection()
+        if idx_fmt == wx.NOT_FOUND: return
+        fmt_key = self.current_fmt_keys_active[idx_fmt]
+        
+        # Menu
+        menu = wx.Menu()
+        item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
+        
+        if fmt_key not in ['mkv', 'mp4', 'mov']:
+            item_tracks.Enable(False)
+            item_tracks.SetItemLabel(_("Manage Tracks...") + " (MKV/MP4 only)")
+        
+        self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index), item_tracks)
+        
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+    def on_open_track_manager(self, index):
+        if self.current_tab == 'audio':
+            meta = self.audio_data[index]
+        else:
+            meta = self.video_data[index]
+            
+        dlg = TrackManagerDialog(self, meta)
+        if dlg.ShowModal() == wx.ID_OK:
+            config = dlg.get_configuration()
+            meta.track_settings = config 
+            
+            if self.current_tab == 'audio':
+                self.panel_audio_list.list_ctrl.SetItem(index, 2, _("Ready") + " (+Tracks)")
+            else:
+                self.panel_video_list.list_ctrl.SetItem(index, 2, _("Ready") + " (+Tracks)")
+                
+        dlg.Destroy()
+
+    # --- RESTE DU CODE STANDARD ---
     def on_preferences(self, event):
         dlg = PreferencesDialog(self, self.settings_store)
         if dlg.ShowModal() == wx.ID_OK:
@@ -296,6 +345,8 @@ class MainWindow(wx.Frame):
         wx.BeginBusyCursor()
         for path in paths:
             meta = self.prober.analyze(path)
+            meta.track_settings = None 
+            
             if meta.has_video:
                 self.video_data.append(meta)
                 target_list = self.panel_video_list.list_ctrl
@@ -348,7 +399,6 @@ class MainWindow(wx.Frame):
             clean = self.video_formats_display[idx]
             if "Extract" in clean: clean = _(clean)
         
-        # Translation title
         if "WAV" in clean: clean = _("WAV - Audio (Lossless)")
         elif "FLAC" in clean: clean = _("FLAC - Audio (Lossless)")
         elif "ALAC" in clean: clean = _("ALAC - Audio (Apple Lossless)")
@@ -445,7 +495,7 @@ class MainWindow(wx.Frame):
 
             def check_stop(): return self.stop_requested
 
-            task = ConversionTask(meta.full_path, fmt, settings, duration=meta.duration, output_dir=output_dir)
+            task = ConversionTask(meta, fmt, settings, output_dir=output_dir)
             try:
                 task.run(progress_callback=update_progress, stop_check_callback=check_stop)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))

@@ -1,7 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 2.1\n"
+"Project-Id-Version: Universal Transcoder 2.2\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 # --- MENUS ---
 msgid "Universal Transcoder"
@@ -57,6 +58,134 @@ msgstr "Audio"
 msgid "Video"
 msgstr "Vidéo"
 
+# --- TRACK MANAGER (GESTIONNAIRE DE PISTES) ---
+msgid "Track Manager"
+msgstr "Gestionnaire de pistes"
+
+msgid "Audio Tracks"
+msgstr "Pistes Audio"
+
+msgid "Subtitles"
+msgstr "Sous-titres"
+
+msgid "Manage Tracks..."
+msgstr "Gérer les pistes..."
+
+msgid "Move Up"
+msgstr "Monter"
+
+msgid "Move Down"
+msgstr "Descendre"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Track Settings"
+msgstr "Paramètres de la piste"
+
+msgid "Shortcuts: Ctrl+Up/Down to reorder, Space to toggle."
+msgstr "Raccourcis : Ctrl+Haut/Bas pour déplacer, Espace pour cocher."
+
+# --- COLONNES TRACK MANAGER ---
+msgid "#"
+msgstr "N°"
+
+msgid "Codec"
+msgstr "Codec"
+
+msgid "Lang"
+msgstr "Langue"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Flags"
+msgstr "Attributs"
+
+# --- DETAILS TRACK MANAGER ---
+msgid "Language:"
+msgstr "Langue :"
+
+msgid "Track Title:"
+msgstr "Titre de la piste :"
+
+msgid "Attributes:"
+msgstr "Attributs :"
+
+msgid "e.g. Director's Commentary"
+msgstr "ex: Version Longue"
+
+# --- ATTRIBUTS (FLAGS) ---
+msgid "Default"
+msgstr "Défaut"
+
+msgid "Forced"
+msgstr "Forcé"
+
+msgid "Audio Description"
+msgstr "Audio Description"
+
+msgid "Hearing Impaired"
+msgstr "Malentendant"
+
+msgid "Click inside a row (e.g. on the title) to select it first."
+msgstr "Cliquez dans une ligne (ex: sur le titre) pour la sélectionner d'abord."
+
+msgid "Advanced track management is only available for MKV, MP4 and MOV formats."
+msgstr "La gestion avancée des pistes est disponible uniquement pour les formats MKV, MP4 et MOV."
+
+msgid "Info"
+msgstr "Info"
+
+# --- LANGUES ---
+msgid "Undetermined"
+msgstr "Indéterminé"
+
+msgid "French"
+msgstr "Français"
+
+msgid "English"
+msgstr "Anglais"
+
+msgid "Japanese"
+msgstr "Japonais"
+
+msgid "Spanish"
+msgstr "Espagnol"
+
+msgid "German"
+msgstr "Allemand"
+
+msgid "Italian"
+msgstr "Italien"
+
+msgid "Portuguese"
+msgstr "Portugais"
+
+msgid "Russian"
+msgstr "Russe"
+
+msgid "Chinese"
+msgstr "Chinois"
+
+msgid "Dutch"
+msgstr "Néerlandais"
+
+msgid "Polish"
+msgstr "Polonais"
+
+msgid "Korean"
+msgstr "Coréen"
+
+msgid "Hindi"
+msgstr "Hindi"
+
+msgid "Arabic"
+msgstr "Arabe"
+
 # --- FORMATS & OPTIONS ---
 msgid "Conversion Settings"
 msgstr "Paramètres de conversion"
@@ -76,7 +205,6 @@ msgstr "MP3 - Audio (Extraction)"
 msgid "AAC - Audio (Extract)"
 msgstr "AAC - Audio (Extraction)"
 
-# --- NOUVEAUX FORMATS AUDIO ---
 msgid "WAV - Audio (Lossless)"
 msgstr "WAV - Audio (Sans perte)"
 
@@ -148,21 +276,18 @@ msgstr "Qualité (VBR) :"
 msgid "Quality (OGG):"
 msgstr "Qualité (OGG) :"
 
-# Pour MP3 VBR (0-9)
 msgid "Best Quality (V0)"
 msgstr "Meilleure (V0)"
 
 msgid "Smallest Size (V9)"
 msgstr "Fichier léger (V9)"
 
-# Pour AAC VBR (1-5)
 msgid "Audiophile (5)"
 msgstr "Audiophile (5)"
 
 msgid "Low Quality (1)"
 msgstr "Basse Qualité (1)"
 
-# Lossless
 msgid "Bit Depth:"
 msgstr "Profondeur de bits :"
 
@@ -226,9 +351,6 @@ msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
 
 # --- BOUTONS ---
-msgid "Cancel"
-msgstr "Annuler"
-
 msgid "OK"
 msgstr "Valider"
 

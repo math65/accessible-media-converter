@@ -1,34 +1,72 @@
-import subprocess
-import json
 import os
 import sys
+import subprocess
+import json
+import logging # Ajout
 
-# CORRECTION ICI : Le nom est MediaMetadata (et pas FileMetadata)
-class MediaMetadata:
-    def __init__(self, filename, full_path, duration, has_video, audio_codec, video_codec):
-        self.filename = filename
-        self.full_path = full_path
-        self.duration = duration
-        self.has_video = has_video
-        self.audio_codec = audio_codec
-        self.video_codec = video_codec
+class MediaTrack:
+    def __init__(self, stream_index, codec_type, codec_name, language='und', title=None, disposition=None):
+        self.index = stream_index
+        self.codec_type = codec_type
+        self.codec_name = codec_name
+        self.language = language
+        self.title = title
+        self.disposition = disposition if disposition else {}
+
+    def is_default(self): return self.disposition.get('default', 0) == 1
+    def is_forced(self): return self.disposition.get('forced', 0) == 1
+    def is_attached_pic(self): return self.disposition.get('attached_pic', 0) == 1
 
     def get_summary(self):
-        """Retourne un texte court pour l'interface (ex: 'AAC | h264')."""
-        info = []
-        if self.audio_codec:
-            info.append(self.audio_codec.upper())
+        parts = [self.codec_name.upper()]
+        if self.language and self.language != 'und': parts.append(self.language.upper())
+        if self.title: parts.append(f"\"{self.title}\"")
+        return " - ".join(parts)
+
+class MediaMetadata:
+    def __init__(self, path):
+        self.full_path = path
+        self.filename = os.path.basename(path)
+        self.duration = 0
+        self.size_bytes = 0
+        self.video_tracks = []
+        self.audio_tracks = []
+        self.subtitle_tracks = []
+        self.video_codec = ""
+        self.audio_codec = ""
+        self.width = 0
+        self.height = 0
+        self.has_video = False 
+
+    @property
+    def has_audio(self): return len(self.audio_tracks) > 0
+    @property
+    def has_subtitles(self): return len(self.subtitle_tracks) > 0
+
+    def get_summary(self):
+        v_info = ""
+        if self.video_tracks:
+            v = self.video_tracks[0]
+            v_info = f"{v.codec_name.upper()}"
+            if self.width and self.height: v_info += f" ({self.width}x{self.height})"
         
-        if self.has_video and self.video_codec:
-            info.append(self.video_codec.upper())
-        elif self.has_video:
-            info.append("Video")
-            
-        return " + ".join(info) if info else "Unknown"
+        a_info = ""
+        count_a = len(self.audio_tracks)
+        if count_a > 0:
+            a = self.audio_tracks[0]
+            if count_a > 1: a_info = f"{count_a}x Audio"
+            else: a_info = a.codec_name.upper()
+        
+        s_info = ""
+        count_s = len(self.subtitle_tracks)
+        if count_s > 0: s_info = f"{count_s}x Subs"
+
+        parts = [x for x in [v_info, a_info, s_info] if x]
+        return " / ".join(parts)
 
 class FileProber:
     def __init__(self):
-        self.ffprobe_exe = self._get_ffprobe_path()
+        pass
 
     def _get_ffprobe_path(self):
         if getattr(sys, 'frozen', False):
@@ -36,74 +74,85 @@ class FileProber:
         else:
             base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         
-        ffprobe_path = os.path.join(base_path, 'bin', 'ffprobe.exe')
-        if not os.path.exists(ffprobe_path):
-            return "ffprobe"
-        return ffprobe_path
+        probe_path = os.path.join(base_path, 'bin', 'ffprobe.exe')
+        if os.path.exists(probe_path): return probe_path
+        return "ffprobe"
 
-    def analyze(self, filepath):
-        if not os.path.exists(filepath):
-            # Utilisation de MediaMetadata ici aussi
-            return MediaMetadata(os.path.basename(filepath), filepath, 0, False, None, None)
+    def analyze(self, file_path):
+        logging.debug(f"Analyse demandée pour : {file_path}") # LOG
+        meta = MediaMetadata(file_path)
+        
+        if not os.path.exists(file_path):
+            logging.error(f"Fichier introuvable : {file_path}") # LOG
+            return meta
+            
+        meta.size_bytes = os.path.getsize(file_path)
+        ffprobe = self._get_ffprobe_path()
+        logging.debug(f"Utilisation de ffprobe : {ffprobe}") # LOG
 
         cmd = [
-            self.ffprobe_exe, 
+            ffprobe, 
             '-v', 'quiet', 
             '-print_format', 'json', 
             '-show_format', 
             '-show_streams', 
-            filepath
+            file_path
         ]
-
+        
         try:
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            
-            output = subprocess.check_output(
-                cmd, 
-                startupinfo=startupinfo,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
+            logging.debug("Exécution commande ffprobe...")
+            output = subprocess.check_output(cmd, startupinfo=self._get_startup_info())
             data = json.loads(output)
             
-            # 1. Durée
-            duration = float(data.get('format', {}).get('duration', 0))
-            
-            has_video = False
-            audio_codec = None
-            video_codec = None
+            # LOG DU JSON BRUT (Pour comprendre pourquoi il rate des trucs)
+            logging.debug(f"JSON ffprobe reçu (tronqué) : {str(data)[:500]}...") 
 
-            # 2. Analyse des flux (Streams)
-            for stream in data.get('streams', []):
-                codec_type = stream.get('codec_type')
+            fmt = data.get('format', {})
+            try: meta.duration = float(fmt.get('duration', 0))
+            except: meta.duration = 0
+
+            streams = data.get('streams', [])
+            logging.debug(f"Nombre de flux trouvés : {len(streams)}") # LOG
+
+            for stream in streams:
+                idx = stream.get('index')
+                c_type = stream.get('codec_type')
+                c_name = stream.get('codec_name', 'unknown')
+                tags = stream.get('tags', {})
+                lang = tags.get('language', 'und')
+                title = tags.get('title', None)
+                disposition = stream.get('disposition', {})
                 
-                if codec_type == 'audio':
-                    if not audio_codec: # On prend le premier flux audio
-                        audio_codec = stream.get('codec_name')
+                track = MediaTrack(idx, c_type, c_name, lang, title, disposition)
                 
-                elif codec_type == 'video':
-                    # --- DÉTECTION DES POCHETTES ---
-                    disposition = stream.get('disposition', {})
-                    # Si attached_pic vaut 1, c'est une pochette, pas une vidéo
-                    is_cover_art = disposition.get('attached_pic') == 1
-                    
-                    if not is_cover_art:
-                        has_video = True
-                        video_codec = stream.get('codec_name')
+                logging.debug(f"Stream #{idx}: Type={c_type}, Codec={c_name}, Flags={disposition}") # LOG
+
+                if c_type == 'video':
+                    if track.is_attached_pic():
+                        logging.debug(f" -> Ignoré (Cover art)")
                     else:
-                        # C'est une pochette, on ignore
-                        pass
-
-            # Retourne l'objet corrigé MediaMetadata
-            return MediaMetadata(
-                filename=os.path.basename(filepath),
-                full_path=filepath,
-                duration=duration,
-                has_video=has_video,
-                audio_codec=audio_codec,
-                video_codec=video_codec
-            )
+                        meta.video_tracks.append(track)
+                        meta.has_video = True
+                        if meta.width == 0:
+                            meta.width = stream.get('width', 0)
+                            meta.height = stream.get('height', 0)
+                            meta.video_codec = c_name
+                        
+                elif c_type == 'audio':
+                    meta.audio_tracks.append(track)
+                    if not meta.audio_codec: meta.audio_codec = c_name
+                    
+                elif c_type == 'subtitle':
+                    meta.subtitle_tracks.append(track)
 
         except Exception as e:
-            print(f"Error probing file: {e}")
-            return MediaMetadata(os.path.basename(filepath), filepath, 0, False, None, None)
+            logging.error(f"Erreur fatale probing {file_path}", exc_info=True) # LOG CRITIQUE
+            
+        return meta
+
+    def _get_startup_info(self):
+        if os.name == 'nt':
+            info = subprocess.STARTUPINFO()
+            info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            return info
+        return None
