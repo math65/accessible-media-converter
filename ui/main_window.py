@@ -34,25 +34,44 @@ class MainWindow(wx.Frame):
         if not os.path.exists(config_dir): os.makedirs(config_dir)
         self.config_path = os.path.join(config_dir, "config.json")
         self.settings_store = self._load_config()
-        self.audio_formats_display = ["MP3 - Audio", "AAC - Audio"]
-        self.audio_formats_keys = ["mp3", "aac"]
+        
+        # --- FORMATS AUDIO ---
+        self.audio_formats_display = [
+            "MP3 - Audio", 
+            "AAC - Audio (M4A)", 
+            "WAV - Audio (Lossless)", 
+            "FLAC - Audio (Lossless)",
+            "ALAC - Audio (Apple Lossless)"
+        ]
+        self.audio_formats_keys = ["mp3", "aac", "wav", "flac", "alac"]
+        
+        # --- FORMATS VIDEO ---
         self.video_formats_display = ["MP4 - Video (H.264)", "MKV - Video", "MP3 - Audio (Extract)", "AAC - Audio (Extract)"]
         self.video_formats_keys = ["mp4", "mkv", "mp3", "aac"]
+        
         self.current_tab = "audio"
         self._init_menu_bar()
         self._init_ui()
         self._update_ui_state()
         self.Centre()
         
-        # INTERCEPTION DE LA FERMETURE
         self.Bind(wx.EVT_CLOSE, self.on_close_window)
 
     def _load_config(self):
         defaults = {
-            'mp3': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
-            'aac': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
-            'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
-            'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
+            # --- MP3 / AAC ---
+            'mp3': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 0, 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
+            'aac': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_qscale': 3, 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
+            
+            # --- LOSSLESS ---
+            'wav': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'summary': 'Lossless'},
+            'flac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'flac_compression': 5, 'summary': 'Lossless'},
+            'alac': {'audio_mode': 'convert', 'audio_sample_rate': 'original', 'audio_bit_depth': 'original', 'summary': 'Lossless'},
+            
+            # --- VIDEO ---
+            'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
+            'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'audio_sample_rate': 'original', 'summary': 'CBR 192k'},
+            
             'last_format_audio': 'mp3',
             'last_format_video': 'mp4',
             'output_mode': 'source',
@@ -77,7 +96,7 @@ class MainWindow(wx.Frame):
         menubar = wx.MenuBar()
         file_menu = wx.Menu()
         item_add = file_menu.Append(wx.ID_OPEN, _("&Add Files...") + "\tCtrl+O")
-        item_add_dir = file_menu.Append(wx.ID_ANY, _("Add &Folder..."))
+        file_menu.Append(wx.ID_ANY, _("Add &Folder..."))
         file_menu.AppendSeparator()
         item_exit = file_menu.Append(wx.ID_EXIT, _("E&xit") + "\tAlt+F4")
         
@@ -139,21 +158,17 @@ class MainWindow(wx.Frame):
         controls_box.Add(self.gauge, 0, wx.EXPAND | wx.TOP, 10)
         self.gauge.Hide()
         
-        # --- BOUTONS START / STOP ---
         self.btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
         self.btn_convert = wx.Button(self.content_panel, label=_("&Start Conversion"))
         self.btn_convert.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
-        
         self.btn_stop = wx.Button(self.content_panel, label=_("Stop"))
         self.btn_stop.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
-        self.btn_stop.SetForegroundColour(wx.Colour(200, 0, 0)) # Rouge
+        self.btn_stop.SetForegroundColour(wx.Colour(200, 0, 0))
         self.btn_stop.Bind(wx.EVT_BUTTON, self.on_stop)
-        self.btn_stop.Hide() # Caché au début
-        
+        self.btn_stop.Hide()
         self.btn_sizer.Add(self.btn_convert, 1, wx.EXPAND)
-        self.btn_sizer.Add(self.btn_stop, 1, wx.EXPAND) # Sera caché
+        self.btn_sizer.Add(self.btn_stop, 1, wx.EXPAND)
         
         controls_box.Add(self.btn_sizer, 0, wx.EXPAND | wx.TOP, 10)
         
@@ -222,6 +237,11 @@ class MainWindow(wx.Frame):
             if "Extract" in label:
                 if "MP3" in label: label = _("MP3 - Audio (Extract)")
                 if "AAC" in label: label = _("AAC - Audio (Extract)")
+            elif "WAV" in label: label = _("WAV - Audio (Lossless)")
+            elif "FLAC" in label: label = _("FLAC - Audio (Lossless)")
+            elif "ALAC" in label: label = _("ALAC - Audio (Apple Lossless)")
+            elif "AAC" in label: label = _("AAC - Audio (M4A)")
+                
             saved = self.settings_store.get(key, {})
             summary = saved.get('summary', '')
             if summary: choices.append(f"{label} [{summary}]")
@@ -239,7 +259,6 @@ class MainWindow(wx.Frame):
 
     def _update_ui_state(self):
         has_files = (len(self.audio_data) + len(self.video_data)) > 0
-        # Désactiver l'édition si conversion en cours
         if self.is_converting:
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
@@ -261,7 +280,7 @@ class MainWindow(wx.Frame):
         self.Refresh()
 
     def on_add_files(self, event):
-        if self.is_converting: return # Sécurité
+        if self.is_converting: return
         with wx.FileDialog(self, _("Open Media"), wildcard="Media Files|*.*", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE) as dlg:
             if dlg.ShowModal() == wx.ID_CANCEL: return
             self._process_added_files(dlg.GetPaths())
@@ -321,6 +340,13 @@ class MainWindow(wx.Frame):
         else:
             clean = self.video_formats_display[idx]
             if "Extract" in clean: clean = _(clean)
+        
+        # Traduction propre pour le titre de la fenêtre
+        if "WAV" in clean: clean = _("WAV - Audio (Lossless)")
+        elif "FLAC" in clean: clean = _("FLAC - Audio (Lossless)")
+        elif "ALAC" in clean: clean = _("ALAC - Audio (Apple Lossless)")
+        elif "AAC" in clean: clean = _("AAC - Audio (M4A)")
+            
         input_ac = ""
         input_has_vid = (self.current_tab == 'video')
         if self.current_tab == 'audio' and self.audio_data: input_ac = self.audio_data[0].audio_codec
@@ -333,18 +359,13 @@ class MainWindow(wx.Frame):
             self._update_formats_dropdown()
         dlg.Destroy()
 
-    # --- NOUVEAU : GESTION START / STOP / CLOSE ---
-
     def on_stop(self, event):
-        """Appelé quand on clique sur le bouton STOP"""
         self.btn_stop.Disable()
         self.btn_stop.SetLabel(_("Stopping..."))
-        self.stop_requested = True # Le thread va lire ça
+        self.stop_requested = True
 
     def on_close_window(self, event):
-        """Appelé quand on clique sur la croix de la fenêtre"""
         if self.is_converting:
-            # Demande confirmation
             dlg = wx.MessageDialog(self, 
                                    _("A conversion is currently running.\nDo you really want to stop it and exit?"),
                                    _("Confirm Exit"), 
@@ -352,11 +373,11 @@ class MainWindow(wx.Frame):
             
             if dlg.ShowModal() == wx.ID_YES:
                 self.stop_requested = True
-                self.Destroy() # Force la fermeture
+                self.Destroy()
             else:
-                event.Veto() # On annule la fermeture
+                event.Veto()
         else:
-            event.Skip() # Fermeture normale
+            event.Skip()
 
     def on_convert(self, event):
         if self.current_tab == 'audio':
@@ -384,20 +405,18 @@ class MainWindow(wx.Frame):
                 if dlg.ShowModal() == wx.ID_OK: custom_out = dlg.GetPath()
                 else: return 
 
-        # --- UI START STATE ---
         self.is_converting = True
         self.stop_requested = False
         
-        self.btn_convert.Hide() # On cache Start
-        self.btn_stop.Show()    # On montre Stop
+        self.btn_convert.Hide()
+        self.btn_stop.Show()
         self.btn_stop.Enable(True)
         self.btn_stop.SetLabel(_("Stop"))
         
         self.gauge.SetValue(0)
         self.gauge.Show()
-        self.content_panel.Layout() # Important pour redessiner les boutons
+        self.content_panel.Layout()
         
-        # On désactive l'ajout de fichiers
         self._update_ui_state() 
         
         t = threading.Thread(target=self._worker_thread, args=(data, fmt_key, settings, lst, custom_out))
@@ -408,29 +427,23 @@ class MainWindow(wx.Frame):
         errors_count = 0 
         
         for i, meta in enumerate(data_list):
-            # Si on a demandé l'arrêt entre deux fichiers
-            if self.stop_requested:
-                break
+            if self.stop_requested: break
                 
             wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Converting..."))
             def update_progress(pct):
                 wx.CallAfter(self.gauge.SetValue, pct)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, f"{_('Converting...')} {pct}%")
 
-            # Callback pour vérifier l'arrêt PENDANT la conversion d'un fichier
-            def check_stop():
-                return self.stop_requested
+            def check_stop(): return self.stop_requested
 
             task = ConversionTask(meta.full_path, fmt, settings, duration=meta.duration, output_dir=output_dir)
             try:
-                # On passe le callback de vérification
                 task.run(progress_callback=update_progress, stop_check_callback=check_stop)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))
             except Exception as e:
-                # On vérifie si c'est un arrêt volontaire
                 if str(e) == "Stopped by user":
                     wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Stopped by user"))
-                    break # On sort de la boucle for
+                    break
                 else:
                     errors_count += 1 
                     print(e)
@@ -442,26 +455,19 @@ class MainWindow(wx.Frame):
         self.is_converting = False
         self.stop_requested = False
         
-        self.btn_stop.Hide()    # On cache Stop
-        self.btn_convert.Show() # On remet Start
+        self.btn_stop.Hide()
+        self.btn_convert.Show()
         self.gauge.Hide()
         self.content_panel.Layout()
         
-        self._update_ui_state() # Réactive les menus
+        self._update_ui_state()
         
-        if errors_count == 0:
-            # On n'affiche le succès que si on n'a pas annulé manuellement
-            # (si stop_requested était True, on a breaké la boucle, donc errors_count vaut 0 ou x)
-            # Petite astuce : si le label du bouton stop est "Stopping...", c'est qu'on a annulé.
-            if self.btn_stop.GetLabel() == _("Stopping..."):
-                pass # Pas de popup succès si on a annulé
-            else:
+        if self.btn_stop.GetLabel() != _("Stopping..."):
+            if errors_count == 0:
                 wx.MessageBox(_("All tasks completed!"), _("Success"))
-        else:
-            msg = _("All tasks completed!") + f"\n\n{errors_count} " + _("Error")
-            wx.MessageBox(msg, _("Done"), wx.ICON_WARNING)
+            else:
+                msg = _("All tasks completed!") + f"\n\n{errors_count} " + _("Error")
+                wx.MessageBox(msg, _("Done"), wx.ICON_WARNING)
 
-    def on_exit(self, e): 
-        self.Close()
-    def on_about(self, e):
-        wx.MessageBox(_("Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"), _("About"))
+    def on_exit(self, e): self.Close()
+    def on_about(self, e): wx.MessageBox(_("Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"), _("About"))

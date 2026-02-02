@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 1.6\n"
+"Project-Id-Version: Universal Transcoder 2.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 # --- MENUS ---
@@ -76,6 +76,19 @@ msgstr "MP3 - Audio (Extraction)"
 msgid "AAC - Audio (Extract)"
 msgstr "AAC - Audio (Extraction)"
 
+# --- NOUVEAUX FORMATS AUDIO ---
+msgid "WAV - Audio (Lossless)"
+msgstr "WAV - Audio (Sans perte)"
+
+msgid "FLAC - Audio (Lossless)"
+msgstr "FLAC - Audio (Sans perte)"
+
+msgid "ALAC - Audio (Apple Lossless)"
+msgstr "ALAC - Audio (Apple Lossless)"
+
+msgid "AAC - Audio (M4A)"
+msgstr "AAC - Audio (M4A)"
+
 # --- FENÊTRE DE RÉGLAGES (SETTINGS) ---
 msgid "Configure settings for: "
 msgstr "Configurer pour : "
@@ -92,9 +105,71 @@ msgstr "Copier le flux (Avancé)"
 msgid "Keep original quality and speed up conversion.\nWarning: The output format must support the source codec."
 msgstr "Garde la qualité originale et accélère la conversion.\nAttention : Le format de sortie doit supporter le codec source."
 
+# --- RÉGLAGES AUDIO AVANCÉS ---
+msgid "Sample Rate:"
+msgstr "Fréquence (Hz) :"
+
+msgid "Original"
+msgstr "Comme l'original"
+
+msgid "Rate Mode:"
+msgstr "Mode de débit :"
+
+msgid "Constant Bitrate (CBR)"
+msgstr "Constant (CBR)"
+
+msgid "Variable Bitrate (VBR)"
+msgstr "Variable (VBR - Qualité)"
+
 msgid "Bitrate:"
 msgstr "Débit :"
 
+msgid "Quality (VBR):"
+msgstr "Qualité (VBR) :"
+
+# Pour MP3 VBR (0-9)
+msgid "Best Quality (V0)"
+msgstr "Meilleure (V0)"
+
+msgid "Smallest Size (V9)"
+msgstr "Fichier léger (V9)"
+
+# Pour AAC VBR (1-5)
+msgid "Audiophile (5)"
+msgstr "Audiophile (5)"
+
+msgid "Low Quality (1)"
+msgstr "Basse Qualité (1)"
+
+# Lossless
+msgid "Bit Depth:"
+msgstr "Profondeur de bits :"
+
+msgid "16-bit (CD Quality)"
+msgstr "16-bit (Qualité CD)"
+
+msgid "24-bit (Studio Quality)"
+msgstr "24-bit (Qualité Studio)"
+
+msgid "32-bit Float (Pro)"
+msgstr "32-bit Float (Pro)"
+
+msgid "Compression Level:"
+msgstr "Niveau de compression :"
+
+msgid "Fast (0)"
+msgstr "Rapide (0)"
+
+msgid "Standard (5)"
+msgstr "Standard (5)"
+
+msgid "Max (8)"
+msgstr "Max (8)"
+
+msgid "Quality: Lossless (Original)"
+msgstr "Qualité : Sans perte (Originale)"
+
+# --- VIDÉO ---
 msgid "Video Settings"
 msgstr "Paramètres Vidéo"
 
@@ -110,7 +185,7 @@ msgstr "Fichier léger"
 msgid "High Quality (V2)"
 msgstr "Haute Qualité (V2)"
 
-# --- FENÊTRE DE PRÉFÉRENCES (PREFERENCES) ---
+# --- FENÊTRE DE PRÉFÉRENCES ---
 msgid "Output Destination"
 msgstr "Destination des fichiers"
 
