@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 1.0\n"
+"Project-Id-Version: Universal Transcoder 1.1\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
 msgid "Universal Transcoder"
@@ -155,3 +155,17 @@ msgstr "Annuler"
 
 msgid "OK"
 msgstr "Valider"
+
+# --- NOUVEAUX TERMES POUR LES ONGLETS ---
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Video"
+msgstr "Vidéo"
+
+msgid "MP3 - Audio (Extract)"
+msgstr "MP3 - Audio (Extraction)"
+
+msgid "AAC - Audio (Extract)"
+msgstr "AAC - Audio (Extraction)"

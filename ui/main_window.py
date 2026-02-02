@@ -6,12 +6,29 @@ import json
 from core import FileProber, ConversionTask
 from ui.settings_dialog import SettingsDialog
 
+class FileListPanel(wx.Panel):
+    """Un panneau réutilisable qui contient une liste de fichiers."""
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        self.list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN)
+        self.list_ctrl.InsertColumn(0, _("Filename"), width=300)
+        self.list_ctrl.InsertColumn(1, _("Details (Codec/Bitrate)"), width=250)
+        self.list_ctrl.InsertColumn(2, _("Status"), width=150)
+        
+        self.sizer.Add(self.list_ctrl, 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
+
 class MainWindow(wx.Frame):
     def __init__(self):
-        super().__init__(None, title=_("Universal Transcoder"), size=(800, 600))
+        super().__init__(None, title=_("Universal Transcoder"), size=(900, 650))
         
         self.prober = FileProber()
-        self.files_data = []
+        
+        # --- DONNÉES SÉPARÉES ---
+        self.audio_data = [] 
+        self.video_data = [] 
         
         # --- CONFIGURATION ---
         app_data = os.getenv('APPDATA')
@@ -21,6 +38,15 @@ class MainWindow(wx.Frame):
             
         self.config_path = os.path.join(config_dir, "config.json")
         self.settings_store = self._load_config()
+        
+        # Formats disponibles par onglet
+        self.audio_formats_display = ["MP3 - Audio", "AAC - Audio"]
+        self.audio_formats_keys = ["mp3", "aac"]
+        
+        self.video_formats_display = ["MP4 - Video (H.264)", "MKV - Video", "MP3 - Audio (Extract)", "AAC - Audio (Extract)"]
+        self.video_formats_keys = ["mp4", "mkv", "mp3", "aac"]
+        
+        self.current_tab = "audio"
         
         self._init_menu_bar()
         self._init_ui()
@@ -79,41 +105,37 @@ class MainWindow(wx.Frame):
         self.panel = wx.Panel(self)
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # 1. PANNEAU ÉTAT VIDE (Focus NVDA amélioré)
+        # 1. EMPTY STATE
         self.empty_panel = wx.Panel(self.panel)
         self.empty_msg = _("No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here.")
-        # Pour que NVDA lise le message dès qu'on force le focus sur le panel
         self.empty_panel.SetName(self.empty_msg)
-
         empty_sizer = wx.BoxSizer(wx.VERTICAL)
         self.lbl_empty = wx.StaticText(self.empty_panel, label=self.empty_msg)
         self.lbl_empty.SetFont(wx.Font(14, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
-        
         empty_sizer.AddStretchSpacer()
         empty_sizer.Add(self.lbl_empty, 0, wx.ALIGN_CENTER | wx.ALL, 20)
         empty_sizer.AddStretchSpacer()
         self.empty_panel.SetSizer(empty_sizer)
 
-        # 2. PANNEAU CONTENU
+        # 2. CONTENT AREA
         self.content_panel = wx.Panel(self.panel)
-        content_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.content_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.list_ctrl = wx.ListCtrl(self.content_panel, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN)
-        self.list_ctrl.InsertColumn(0, _("Filename"), width=300)
-        self.list_ctrl.InsertColumn(1, _("Details (Codec/Bitrate)"), width=250)
-        self.list_ctrl.InsertColumn(2, _("Status"), width=150)
+        # Notebook et Listes (initialisés mais cachés)
+        self.notebook = wx.Notebook(self.content_panel)
+        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         
-        content_sizer.Add(self.list_ctrl, 1, wx.EXPAND | wx.ALL, 10)
-
+        self.panel_audio_list = FileListPanel(self.content_panel)
+        self.panel_video_list = FileListPanel(self.content_panel)
+        
+        # On n'ajoute rien au sizer pour l'instant, c'est _update_layout_strategy qui s'en charge
+        
+        # 3. CONTROLS
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         lbl_fmt = wx.StaticText(self.content_panel, label=_("Convert to:"))
         
-        self.base_formats = ["MP3 - Audio", "AAC - Audio", "MP4 - Video (H.264)", "MKV - Video"]
-        self.fmt_keys = ["mp3", "aac", "mp4", "mkv"]
-        
-        self.combo_format = wx.Choice(self.content_panel, choices=self.base_formats)
-        self.combo_format.SetSelection(0)
+        self.combo_format = wx.Choice(self.content_panel)
         self.combo_format.Bind(wx.EVT_CHOICE, self.on_format_changed)
         
         self.btn_settings = wx.Button(self.content_panel, label=_("&Settings / Quality..."))
@@ -129,39 +151,136 @@ class MainWindow(wx.Frame):
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
         
         controls_box.Add(self.btn_convert, 0, wx.EXPAND | wx.TOP, 10)
-        content_sizer.Add(controls_box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-        self.content_panel.SetSizer(content_sizer)
+        
+        self.content_sizer.Add(controls_box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        self.content_panel.SetSizer(self.content_sizer)
 
         self.main_sizer.Add(self.empty_panel, 1, wx.EXPAND)
         self.main_sizer.Add(self.content_panel, 1, wx.EXPAND)
         self.panel.SetSizer(self.main_sizer)
+
+    def _update_layout_strategy(self):
+        """Affiche les onglets ou les listes simples selon le contenu."""
+        count_audio = len(self.audio_data)
+        count_video = len(self.video_data)
         
-        self.on_format_changed(None)
+        # 1. NETTOYAGE TOTAL : On cache tout et on détache tout
+        self.notebook.Hide()
+        self.panel_audio_list.Hide()
+        self.panel_video_list.Hide()
+        
+        self.content_sizer.Detach(self.notebook)
+        self.content_sizer.Detach(self.panel_audio_list)
+        self.content_sizer.Detach(self.panel_video_list)
+        
+        while self.notebook.GetPageCount() > 0:
+            self.notebook.RemovePage(0)
+            
+        # 2. RECONSTRUCTION
+        # CAS 1 : MIXTE -> ONGLETS
+        if count_audio > 0 and count_video > 0:
+            self.panel_audio_list.Reparent(self.notebook)
+            self.panel_video_list.Reparent(self.notebook)
+            
+            self.notebook.AddPage(self.panel_audio_list, _("Audio") + f" ({count_audio})")
+            self.notebook.AddPage(self.panel_video_list, _("Video") + f" ({count_video})")
+            
+            # On ré-affiche ce dont on a besoin
+            self.notebook.Show()
+            self.panel_audio_list.Show()
+            self.panel_video_list.Show()
+            
+            self.content_sizer.Insert(0, self.notebook, 1, wx.EXPAND | wx.ALL, 5)
+            
+            if self.current_tab == 'video':
+                self.notebook.SetSelection(1)
+            else:
+                self.notebook.SetSelection(0)
+
+        # CAS 2 : AUDIO SEULEMENT -> LISTE SIMPLE
+        elif count_audio > 0:
+            self.current_tab = 'audio'
+            
+            self.panel_audio_list.Reparent(self.content_panel)
+            self.panel_audio_list.Show() # IMPORTANT : On ne montre que lui
+            
+            self.content_sizer.Insert(0, self.panel_audio_list, 1, wx.EXPAND | wx.ALL, 10)
+
+        # CAS 3 : VIDÉO SEULEMENT -> LISTE SIMPLE
+        elif count_video > 0:
+            self.current_tab = 'video'
+            
+            self.panel_video_list.Reparent(self.content_panel)
+            self.panel_video_list.Show() # IMPORTANT : On ne montre que lui
+            
+            self.content_sizer.Insert(0, self.panel_video_list, 1, wx.EXPAND | wx.ALL, 10)
+
+        self.content_panel.Layout()
+        self._update_formats_dropdown()
+
+    def _update_formats_dropdown(self):
+        old_sel = self.combo_format.GetStringSelection()
+        
+        if self.current_tab == 'audio':
+            keys = self.audio_formats_keys
+            displays = self.audio_formats_display
+        else:
+            keys = self.video_formats_keys
+            displays = self.video_formats_display
+            
+        self.current_fmt_keys_active = keys 
+        
+        choices = []
+        for i, key in enumerate(keys):
+            label = displays[i]
+            if "Extract" in label:
+                if "MP3" in label: label = _("MP3 - Audio (Extract)")
+                if "AAC" in label: label = _("AAC - Audio (Extract)")
+            
+            saved = self.settings_store.get(key, {})
+            summary = saved.get('summary', '')
+            if summary:
+                choices.append(f"{label} [{summary}]")
+            else:
+                choices.append(label)
+                
+        self.combo_format.Set(choices)
+        
+        if old_sel in choices:
+            self.combo_format.SetStringSelection(old_sel)
+        else:
+            if choices: self.combo_format.SetSelection(0)
+
+    def on_tab_changed(self, event):
+        sel = self.notebook.GetSelection()
+        if sel == 0:
+            self.current_tab = 'audio'
+        else:
+            self.current_tab = 'video'
+        self._update_formats_dropdown()
+        event.Skip()
 
     def _update_ui_state(self):
-        has_files = len(self.files_data) > 0
+        has_files = (len(self.audio_data) + len(self.video_data)) > 0
+        
         if has_files:
             self.empty_panel.Hide()
+            self._update_layout_strategy()
             self.content_panel.Show()
             self.item_clear.Enable(True)
             self.item_remove.Enable(True)
-            self.panel.Layout()
-            # On force le focus sur la liste pour NVDA
-            wx.CallAfter(self.list_ctrl.SetFocus)
-            if self.list_ctrl.GetItemCount() > 0:
-                wx.CallAfter(self.list_ctrl.Select, 0)
         else:
             self.content_panel.Hide()
             self.empty_panel.Show()
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
-            self.panel.Layout()
-            # On force le focus sur le panneau vide pour que NVDA lise les instructions
             wx.CallAfter(self.empty_panel.SetFocus)
+            
+        self.panel.Layout()
         self.Refresh()
 
     def on_add_files(self, event):
-        with wx.FileDialog(self, _("Open Media"), wildcard="Media Files|*.mp4;*.mkv;*.avi;*.mp3;*.wav;*.flac;*.mov|All Files|*.*",
+        with wx.FileDialog(self, _("Open Media"), wildcard="Media Files|*.*",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE) as dlg:
             if dlg.ShowModal() == wx.ID_CANCEL: return
             self._process_added_files(dlg.GetPaths())
@@ -170,75 +289,104 @@ class MainWindow(wx.Frame):
         wx.BeginBusyCursor()
         for path in paths:
             meta = self.prober.analyze(path)
-            self.files_data.append(meta)
-            index = self.list_ctrl.GetItemCount()
-            self.list_ctrl.InsertItem(index, meta.filename)
-            self.list_ctrl.SetItem(index, 1, meta.get_summary())
-            self.list_ctrl.SetItem(index, 2, _("Ready"))
+            
+            if meta.has_video:
+                self.video_data.append(meta)
+                target_list = self.panel_video_list.list_ctrl
+            else:
+                self.audio_data.append(meta)
+                target_list = self.panel_audio_list.list_ctrl
+                
+            index = target_list.GetItemCount()
+            target_list.InsertItem(index, meta.filename)
+            target_list.SetItem(index, 1, meta.get_summary())
+            target_list.SetItem(index, 2, _("Ready"))
+            
         wx.EndBusyCursor()
         self._update_ui_state()
 
     def on_clear_list(self, event):
-        self.files_data = []
-        self.list_ctrl.DeleteAllItems()
+        self.audio_data = []
+        self.video_data = []
+        self.panel_audio_list.list_ctrl.DeleteAllItems()
+        self.panel_video_list.list_ctrl.DeleteAllItems()
         self._update_ui_state()
 
     def on_remove_selected(self, event):
-        selected_idx = self.list_ctrl.GetFirstSelected()
+        if self.current_tab == 'audio':
+            lst = self.panel_audio_list.list_ctrl
+            data = self.audio_data
+        else:
+            lst = self.panel_video_list.list_ctrl
+            data = self.video_data
+            
+        selected_idx = lst.GetFirstSelected()
         if selected_idx != -1:
-            self.list_ctrl.DeleteItem(selected_idx)
-            del self.files_data[selected_idx]
+            lst.DeleteItem(selected_idx)
+            del data[selected_idx]
             self._update_ui_state()
 
     def on_format_changed(self, event):
-        idx = self.combo_format.GetSelection()
-        fmt_key = self.fmt_keys[idx]
-        saved = self.settings_store.get(fmt_key, {})
-        summary = saved.get('summary', '')
-        clean_label = self.base_formats[idx]
-        if summary:
-            new_label = f"{clean_label} [{summary}]"
-            self.combo_format.SetString(idx, new_label)
-        else:
-            self.combo_format.SetString(idx, clean_label)
-        self.combo_format.SetSelection(idx)
+        pass 
 
     def on_open_settings(self, event):
         idx = self.combo_format.GetSelection()
-        fmt_key = self.fmt_keys[idx]
-        clean_label = self.base_formats[idx]
-        input_audio_codec = ""
-        input_has_video = False
-        if self.files_data:
-            input_audio_codec = self.files_data[0].audio_codec
-            input_has_video = self.files_data[0].has_video
+        if idx == wx.NOT_FOUND: return
+        fmt_key = self.current_fmt_keys_active[idx]
+        
+        # Récupération du label
+        if self.current_tab == 'audio':
+            clean = self.audio_formats_display[idx]
+        else:
+            clean = self.video_formats_display[idx]
+            if "Extract" in clean: clean = _(clean) # Traduction manuelle si nécessaire
+
+        input_ac = ""
+        input_has_vid = (self.current_tab == 'video')
+        if self.current_tab == 'audio' and self.audio_data:
+            input_ac = self.audio_data[0].audio_codec
+        elif self.current_tab == 'video' and self.video_data:
+            input_ac = self.video_data[0].audio_codec
+        
         current_saved = self.settings_store.get(fmt_key, {})
-        dlg = SettingsDialog(self, clean_label, input_has_video, input_audio_codec, current_saved)
+        
+        dlg = SettingsDialog(self, clean, input_has_vid, input_ac, current_saved)
         if dlg.ShowModal() == wx.ID_OK:
             self.settings_store[fmt_key] = dlg.get_settings()
             self._save_config()
-            self.on_format_changed(None)
+            self._update_formats_dropdown()
         dlg.Destroy()
 
     def on_convert(self, event):
-        if not self.files_data: return
+        if self.current_tab == 'audio':
+            data = self.audio_data
+            lst = self.panel_audio_list.list_ctrl
+        else:
+            data = self.video_data
+            lst = self.panel_video_list.list_ctrl
+            
+        if not data: return
+        
         idx = self.combo_format.GetSelection()
-        fmt_key = self.fmt_keys[idx]
+        if idx == wx.NOT_FOUND: return
+        
+        fmt_key = self.current_fmt_keys_active[idx]
         settings = self.settings_store.get(fmt_key, {})
+        
         self.btn_convert.Disable()
-        t = threading.Thread(target=self._worker_thread, args=(fmt_key, settings))
+        t = threading.Thread(target=self._worker_thread, args=(data, fmt_key, settings, lst))
         t.daemon = True 
         t.start()
 
-    def _worker_thread(self, fmt, settings):
-        for i, meta in enumerate(self.files_data):
-            wx.CallAfter(self.list_ctrl.SetItem, i, 2, _("Converting..."))
+    def _worker_thread(self, data_list, fmt, settings, list_ctrl_obj):
+        for i, meta in enumerate(data_list):
+            wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Converting..."))
             task = ConversionTask(meta.full_path, fmt, settings)
             try:
                 task.run()
-                wx.CallAfter(self.list_ctrl.SetItem, i, 2, _("Done"))
+                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))
             except Exception as e:
-                wx.CallAfter(self.list_ctrl.SetItem, i, 2, _("Error"))
+                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Error"))
         wx.CallAfter(self._on_batch_complete)
 
     def _on_batch_complete(self):
