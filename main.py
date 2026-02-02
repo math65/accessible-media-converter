@@ -1,34 +1,39 @@
 import os
-from core import ConversionTask
+from core import FileProber
 
-def test_backend():
-    print("--- Starting Backend Test ---")
+def test_probe():
+    print("--- Testing FFprobe Analysis ---")
     
-    # 1. Create a fake file just to test paths
-    dummy_input = "test_file.txt"
-    with open(dummy_input, "w") as f:
-        f.write("Dummy content")
+    # Mettez ici le chemin d'un VRAI fichier vidéo ou audio sur votre PC pour tester
+    # Exemple : "C:\\Users\\Mathieu\\Downloads\\video.mp4"
+    # Si vous n'en avez pas, le script va essayer de créer un faux fichier (qui donnera une erreur d'analyse, c'est normal)
     
+    # Changez ce chemin !
+    test_file = "C:\\Windows\\Media\\chimes.wav" 
+    
+    if not os.path.exists(test_file):
+        print(f"Test file not found at: {test_file}")
+        print("Please edit main.py and set 'test_file' to a real media file.")
+        return
+
     try:
-        # 2. Initialize the task (this checks if ffmpeg.exe exists)
-        task = ConversionTask(dummy_input, "mp3")
-        print(f"[OK] FFmpeg found at: {task.ffmpeg_exe}")
+        prober = FileProber()
+        print(f"FFprobe found at: {prober.ffprobe_exe}")
         
-        # 3. Try running it (it will fail because txt -> mp3 is impossible, but it proves ffmpeg started)
-        print("Attempting to run FFmpeg...")
-        task.run()
+        print(f"Analyzing: {test_file} ...")
+        meta = prober.analyze(test_file)
         
-    except FileNotFoundError as e:
-        print(f"[ERROR] Path issue: {e}")
-    except RuntimeError as e:
-        # If we get a Runtime Error from FFmpeg, it means FFmpeg STARTED successfully!
-        print(f"[SUCCESS] FFmpeg ran and complained (expected): {e}")
+        print("\n--- Results ---")
+        print(f"Filename: {meta.filename}")
+        print(f"Format:   {meta.format_long}")
+        print(f"Duration: {meta.duration_sec:.2f} seconds")
+        print(f"Summary:  {meta.get_summary()}")
+        
+        if meta.has_audio:
+            print(f"Audio Details: {meta.audio_codec}, {meta.audio_bitrate}, {meta.audio_channels} channels")
+        
     except Exception as e:
-        print(f"[ERROR] Unexpected: {e}")
-    finally:
-        # Cleanup
-        if os.path.exists(dummy_input):
-            os.remove(dummy_input)
+        print(f"CRITICAL ERROR: {e}")
 
 if __name__ == "__main__":
-    test_backend()
+    test_probe()
