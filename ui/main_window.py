@@ -55,10 +55,14 @@ class MainWindow(wx.Frame):
 
     def _load_config(self):
         defaults = {
+            # Réglages par format
             'mp3': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
             'aac': {'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
             'mp4': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
-            'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'}
+            'mkv': {'video_mode': 'convert', 'video_crf': 23, 'audio_mode': 'convert', 'rate_mode': 'cbr', 'audio_bitrate': '192k', 'summary': 'CBR 192k'},
+            # MÉMOIRE DU DERNIER FORMAT UTILISÉ (Ajouté ici)
+            'last_format_audio': 'mp3',
+            'last_format_video': 'mp4'
         }
         if os.path.exists(self.config_path):
             try:
@@ -121,14 +125,12 @@ class MainWindow(wx.Frame):
         self.content_panel = wx.Panel(self.panel)
         self.content_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Notebook et Listes (initialisés mais cachés)
+        # Notebook et Listes
         self.notebook = wx.Notebook(self.content_panel)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         
         self.panel_audio_list = FileListPanel(self.content_panel)
         self.panel_video_list = FileListPanel(self.content_panel)
-        
-        # On n'ajoute rien au sizer pour l'instant, c'est _update_layout_strategy qui s'en charge
         
         # 3. CONTROLS
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
@@ -160,11 +162,9 @@ class MainWindow(wx.Frame):
         self.panel.SetSizer(self.main_sizer)
 
     def _update_layout_strategy(self):
-        """Affiche les onglets ou les listes simples selon le contenu."""
         count_audio = len(self.audio_data)
         count_video = len(self.video_data)
         
-        # 1. NETTOYAGE TOTAL : On cache tout et on détache tout
         self.notebook.Hide()
         self.panel_audio_list.Hide()
         self.panel_video_list.Hide()
@@ -176,8 +176,6 @@ class MainWindow(wx.Frame):
         while self.notebook.GetPageCount() > 0:
             self.notebook.RemovePage(0)
             
-        # 2. RECONSTRUCTION
-        # CAS 1 : MIXTE -> ONGLETS
         if count_audio > 0 and count_video > 0:
             self.panel_audio_list.Reparent(self.notebook)
             self.panel_video_list.Reparent(self.notebook)
@@ -185,7 +183,6 @@ class MainWindow(wx.Frame):
             self.notebook.AddPage(self.panel_audio_list, _("Audio") + f" ({count_audio})")
             self.notebook.AddPage(self.panel_video_list, _("Video") + f" ({count_video})")
             
-            # On ré-affiche ce dont on a besoin
             self.notebook.Show()
             self.panel_audio_list.Show()
             self.panel_video_list.Show()
@@ -197,40 +194,39 @@ class MainWindow(wx.Frame):
             else:
                 self.notebook.SetSelection(0)
 
-        # CAS 2 : AUDIO SEULEMENT -> LISTE SIMPLE
         elif count_audio > 0:
             self.current_tab = 'audio'
-            
             self.panel_audio_list.Reparent(self.content_panel)
-            self.panel_audio_list.Show() # IMPORTANT : On ne montre que lui
-            
+            self.panel_audio_list.Show() 
             self.content_sizer.Insert(0, self.panel_audio_list, 1, wx.EXPAND | wx.ALL, 10)
 
-        # CAS 3 : VIDÉO SEULEMENT -> LISTE SIMPLE
         elif count_video > 0:
             self.current_tab = 'video'
-            
             self.panel_video_list.Reparent(self.content_panel)
-            self.panel_video_list.Show() # IMPORTANT : On ne montre que lui
-            
+            self.panel_video_list.Show()
             self.content_sizer.Insert(0, self.panel_video_list, 1, wx.EXPAND | wx.ALL, 10)
 
         self.content_panel.Layout()
         self._update_formats_dropdown()
 
     def _update_formats_dropdown(self):
-        old_sel = self.combo_format.GetStringSelection()
-        
+        """Met à jour le menu ET sélectionne le dernier format utilisé."""
         if self.current_tab == 'audio':
             keys = self.audio_formats_keys
             displays = self.audio_formats_display
+            # On cherche quel était le dernier format utilisé en Audio
+            last_used = self.settings_store.get('last_format_audio', 'mp3')
         else:
             keys = self.video_formats_keys
             displays = self.video_formats_display
+            # On cherche quel était le dernier format utilisé en Vidéo
+            last_used = self.settings_store.get('last_format_video', 'mp4')
             
         self.current_fmt_keys_active = keys 
         
         choices = []
+        target_selection_index = 0
+        
         for i, key in enumerate(keys):
             label = displays[i]
             if "Extract" in label:
@@ -243,13 +239,16 @@ class MainWindow(wx.Frame):
                 choices.append(f"{label} [{summary}]")
             else:
                 choices.append(label)
+            
+            # Si c'est notre dernier format utilisé, on note son index
+            if key == last_used:
+                target_selection_index = i
                 
         self.combo_format.Set(choices)
         
-        if old_sel in choices:
-            self.combo_format.SetStringSelection(old_sel)
-        else:
-            if choices: self.combo_format.SetSelection(0)
+        # On applique la sélection mémorisée
+        if choices:
+            self.combo_format.SetSelection(target_selection_index)
 
     def on_tab_changed(self, event):
         sel = self.notebook.GetSelection()
@@ -327,19 +326,30 @@ class MainWindow(wx.Frame):
             self._update_ui_state()
 
     def on_format_changed(self, event):
-        pass 
+        """Enregistre le choix de l'utilisateur comme 'Dernier utilisé'."""
+        idx = self.combo_format.GetSelection()
+        if idx == wx.NOT_FOUND: return
+        
+        fmt_key = self.current_fmt_keys_active[idx]
+        
+        # Sauvegarde immédiate
+        if self.current_tab == 'audio':
+            self.settings_store['last_format_audio'] = fmt_key
+        else:
+            self.settings_store['last_format_video'] = fmt_key
+            
+        self._save_config()
 
     def on_open_settings(self, event):
         idx = self.combo_format.GetSelection()
         if idx == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx]
         
-        # Récupération du label
         if self.current_tab == 'audio':
             clean = self.audio_formats_display[idx]
         else:
             clean = self.video_formats_display[idx]
-            if "Extract" in clean: clean = _(clean) # Traduction manuelle si nécessaire
+            if "Extract" in clean: clean = _(clean)
 
         input_ac = ""
         input_has_vid = (self.current_tab == 'video')
