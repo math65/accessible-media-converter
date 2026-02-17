@@ -44,7 +44,7 @@ class ConversionTask:
         if self.custom_output_dir and os.path.isdir(self.custom_output_dir):
             output_dir = self.custom_output_dir
         else:
-            output_dir = os.path.dirname(self.input_path)
+            output_dir = os.path.dirname(self.input_path) or os.getcwd()
             
         if not os.path.exists(output_dir): os.makedirs(output_dir)  
         output_path = os.path.join(output_dir, output_filename)
@@ -74,8 +74,10 @@ class ConversionTask:
                     cmd.extend([f"-metadata:s:a:{out_audio_idx}", f"title={track['title']}"])
                 
                 dispositions = []
-                if track['is_default']: dispositions.append('default')
-                if track['is_forced']: dispositions.append('forced')
+                is_default = bool(track.get('default', track.get('is_default', False)))
+                is_forced = bool(track.get('forced', track.get('is_forced', False)))
+                if is_default: dispositions.append('default')
+                if is_forced: dispositions.append('forced')
                 val = "+".join(dispositions) if dispositions else "0"
                 cmd.extend([f"-disposition:a:{out_audio_idx}", val])
                 out_audio_idx += 1
@@ -90,8 +92,10 @@ class ConversionTask:
                 if track['title']:
                     cmd.extend([f"-metadata:s:s:{out_sub_idx}", f"title={track['title']}"])
                 dispositions = []
-                if track['is_default']: dispositions.append('default')
-                if track['is_forced']: dispositions.append('forced')
+                is_default = bool(track.get('default', track.get('is_default', False)))
+                is_forced = bool(track.get('forced', track.get('is_forced', False)))
+                if is_default: dispositions.append('default')
+                if is_forced: dispositions.append('forced')
                 val = "+".join(dispositions) if dispositions else "0"
                 cmd.extend([f"-disposition:s:{out_sub_idx}", val])
                 out_sub_idx += 1

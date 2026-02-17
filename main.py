@@ -1,11 +1,11 @@
 import wx
-import gettext
 import os
 import sys
 import logging
 
 # On importe notre nouveau logger
 from core.logger import setup_logger
+from core.i18n import install_language
 
 # --- CONFIGURATION LANGUE (GETTEXT) ---
 def init_i18n():
@@ -14,18 +14,14 @@ def init_i18n():
         base_path = sys._MEIPASS
     else:
         base_path = os.path.dirname(os.path.abspath(__file__))
-    
     locale_dir = os.path.join(base_path, 'locales')
     logging.debug(f"Dossier locales détecté : {locale_dir}")
-    
-    import builtins
+
     try:
-        lang = gettext.translation('base', localedir=locale_dir, languages=['fr'])
-        lang.install()
-        logging.info("Langue 'fr' chargée avec succès.")
+        lang_code, source = install_language(preferred_lang='fr', prefer_po=True)
+        logging.info(f"Langue '{lang_code}' chargée depuis: {source}.")
     except Exception as e:
         logging.warning(f"Échec du chargement de la langue : {e}. Fallback sur anglais.")
-        builtins.__dict__['_'] = lambda s: s
 
 def main():
     # 1. D'ABORD : On allume les micros (Logger)
