@@ -60,6 +60,11 @@ class TrackPanel(wx.Panel):
         
         # --- ZONE HAUTE : LA LISTE ---
         self.list_ctrl = EditableListCtrl(self)
+        if self.track_type == 'audio':
+            self.list_ctrl.SetName(_("Audio tracks list"))
+        else:
+            self.list_ctrl.SetName(_("Subtitle tracks list"))
+        self.list_ctrl.SetToolTip(_("Use Space to keep or remove a track. Use Ctrl+Up and Ctrl+Down to reorder."))
         
         # Colonne ID Fixe
         self.list_ctrl.InsertColumn(0, _("#"), width=30)
@@ -74,6 +79,8 @@ class TrackPanel(wx.Panel):
         btn_box = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_up = wx.Button(self, label=_("Move Up") + " (Ctrl+Up)")
         self.btn_down = wx.Button(self, label=_("Move Down") + " (Ctrl+Down)")
+        self.btn_up.SetName(_("Move selected track up"))
+        self.btn_down.SetName(_("Move selected track down"))
         self.btn_up.Bind(wx.EVT_BUTTON, lambda e: self.move_item(-1))
         self.btn_down.Bind(wx.EVT_BUTTON, lambda e: self.move_item(1))
         
@@ -91,12 +98,15 @@ class TrackPanel(wx.Panel):
         # 1. LANGUE
         lbl_lang = wx.StaticText(self, label=_("Language:"))
         self.combo_lang = wx.Choice(self, choices=[x[0] for x in self.languages_choices])
+        self.combo_lang.SetName(_("Language"))
+        self.combo_lang.SetToolTip(_("Track language"))
         grid.Add(lbl_lang, 0, wx.ALIGN_CENTER_VERTICAL)
         grid.Add(self.combo_lang, 1, wx.EXPAND)
         
         # 2. TITRE
         lbl_title = wx.StaticText(self, label=_("Track Title:"))
         self.txt_title = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+        self.txt_title.SetName(_("Track title"))
         grid.Add(lbl_title, 0, wx.ALIGN_CENTER_VERTICAL)
         grid.Add(self.txt_title, 1, wx.EXPAND)
         
@@ -106,6 +116,8 @@ class TrackPanel(wx.Panel):
         
         self.chk_default = wx.CheckBox(self, label=_("Default"))
         self.chk_forced = wx.CheckBox(self, label=_("Forced"))
+        self.chk_default.SetName(_("Set selected track as default"))
+        self.chk_forced.SetName(_("Set selected track as forced"))
         self.flags_sizer.Add(self.chk_default, 0, wx.RIGHT, 15)
         self.flags_sizer.Add(self.chk_forced, 0, wx.RIGHT, 15)
         
@@ -114,6 +126,7 @@ class TrackPanel(wx.Panel):
             self.chk_special = wx.CheckBox(self, label=_("Audio Description"))
         else:
             self.chk_special = wx.CheckBox(self, label=_("Hearing Impaired"))
+        self.chk_special.SetName(self.chk_special.GetLabel())
             
         self.flags_sizer.Add(self.chk_special, 0)
         
@@ -151,6 +164,12 @@ class TrackPanel(wx.Panel):
             self._update_row_display(idx)
             self.list_ctrl.SetItemData(idx, i)
 
+    def _sync_keep_from_ui(self):
+        if self.list_ctrl.GetItemCount() != len(self.tracks_data):
+            return
+        for i, track in enumerate(self.tracks_data):
+            track['keep'] = self.list_ctrl.IsItemChecked(i)
+
     def _update_row_display(self, index):
         if index < 0 or index >= len(self.tracks_data): return
         track = self.tracks_data[index]
@@ -187,6 +206,7 @@ class TrackPanel(wx.Panel):
         if self.chk_special: self.chk_special.Enable(enable)
         
         if not enable:
+            self.combo_lang.SetSelection(wx.NOT_FOUND)
             self.txt_title.Clear()
             self.chk_default.SetValue(False)
             self.chk_forced.SetValue(False)
@@ -258,7 +278,9 @@ class TrackPanel(wx.Panel):
         if key == wx.WXK_SPACE:
             if self.current_selection != -1:
                 curr = self.list_ctrl.IsItemChecked(self.current_selection)
-                self.list_ctrl.CheckItem(self.current_selection, not curr)
+                new_state = not curr
+                self.list_ctrl.CheckItem(self.current_selection, new_state)
+                self.tracks_data[self.current_selection]['keep'] = new_state
                 return
 
         event.Skip()
@@ -269,27 +291,20 @@ class TrackPanel(wx.Panel):
         
         new_idx = idx + direction
         if new_idx < 0 or new_idx >= len(self.tracks_data): return
+
+        # Préserve l'état "Keep" de toutes les lignes avant réordonnancement.
+        self._sync_keep_from_ui()
         
         self.tracks_data[idx], self.tracks_data[new_idx] = self.tracks_data[new_idx], self.tracks_data[idx]
-        
-        checked_curr = self.list_ctrl.IsItemChecked(idx)
-        checked_new = self.list_ctrl.IsItemChecked(new_idx)
-        
-        # On regénère tout pour que l'ID suive bien sa position de donnée
-        # (Chaque ligne affichera le 'ui_id' de l'objet qui est maintenant à sa position)
+
+        # On regénère tout pour que l'ID suive bien sa position de donnée.
         self._fill_list()
-        
-        # Restauration des cases "Keep"
-        # Comme _fill_list utilise track['keep'], on doit d'abord sauver l'état Keep visuel dans les données
-        # Oups, _fill_list lit track['keep']. Il faut s'assurer que track['keep'] est à jour avant _fill_list
-        # FIX RAPIDE : On force l'état visuel après
-        self.list_ctrl.CheckItem(idx, checked_new)
-        self.list_ctrl.CheckItem(new_idx, checked_curr)
-        
+
         # On resélectionne
         self.list_ctrl.SetItemState(new_idx, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
         self.list_ctrl.EnsureVisible(new_idx)
         self.current_selection = new_idx
+        self._load_details_to_ui()
 
     def get_tracks_config(self):
         final_list = []
@@ -304,8 +319,10 @@ class TrackPanel(wx.Panel):
 class TrackManagerDialog(wx.Dialog):
     def __init__(self, parent, file_meta):
         super().__init__(parent, title=_("Track Manager") + f" - {file_meta.filename}", size=(800, 600))
+        self.SetName(_("Track manager dialog"))
         
         self.notebook = wx.Notebook(self)
+        self.notebook.SetName(_("Track categories"))
         
         self.audio_panel = TrackPanel(self.notebook, file_meta.audio_tracks, 'audio')
         self.notebook.AddPage(self.audio_panel, _("Audio Tracks"))
@@ -315,10 +332,13 @@ class TrackManagerDialog(wx.Dialog):
         
         lbl_hint = wx.StaticText(self, label=_("Shortcuts: Ctrl+Up/Down to reorder, Space to toggle."))
         lbl_hint.SetForegroundColour(wx.Colour(100, 100, 100))
+        lbl_hint.SetName(_("Keyboard shortcuts hint"))
         
         btn_sizer = wx.StdDialogButtonSizer()
         btn_ok = wx.Button(self, wx.ID_OK, label=_("Apply"))
         btn_cancel = wx.Button(self, wx.ID_CANCEL, label=_("Cancel"))
+        btn_ok.SetName(_("Apply track settings"))
+        btn_cancel.SetName(_("Cancel track settings"))
         btn_sizer.AddButton(btn_ok)
         btn_sizer.AddButton(btn_cancel)
         btn_sizer.Realize()
@@ -329,6 +349,8 @@ class TrackManagerDialog(wx.Dialog):
         sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
         
         self.SetSizer(sizer)
+        self.SetAffirmativeId(wx.ID_OK)
+        self.SetEscapeId(wx.ID_CANCEL)
         self.Centre()
 
     def get_configuration(self):

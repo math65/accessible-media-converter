@@ -109,6 +109,9 @@ msgstr "Attributs"
 msgid "Language:"
 msgstr "Langue :"
 
+msgid "Language"
+msgstr "Langue"
+
 msgid "Track Title:"
 msgstr "Titre de la piste :"
 
@@ -193,6 +196,9 @@ msgstr "Paramètres de conversion"
 msgid "Convert to:"
 msgstr "Convertir en :"
 
+msgid "Convert to"
+msgstr "Convertir en"
+
 msgid "&Settings / Quality..."
 msgstr "&Réglages / Qualité..."
 
@@ -243,17 +249,23 @@ msgstr "Garde la qualité originale et accélère la conversion.\nAttention : Le
 msgid "Sample Rate:"
 msgstr "Fréquence (Hz) :"
 
+msgid "Sample Rate"
+msgstr "Fréquence"
+
 msgid "Channels:"
 msgstr "Canaux :"
 
+msgid "Channels"
+msgstr "Canaux"
+
 msgid "Stereo (Downmix)"
-msgstr "Stéréo (Recommandé)"
+msgstr "Stéréo"
 
 msgid "Mono"
 msgstr "Mono"
 
 msgid "Original Channels"
-msgstr "Canaux originaux"
+msgstr "Original"
 
 msgid "Original"
 msgstr "Comme l'original"
@@ -261,26 +273,60 @@ msgstr "Comme l'original"
 msgid "Rate Mode:"
 msgstr "Mode de débit :"
 
+msgid "Rate Mode"
+msgstr "Mode de débit"
+
 msgid "Constant Bitrate (CBR)"
-msgstr "Constant (CBR)"
+msgstr "Constant"
 
 msgid "Variable Bitrate (VBR)"
-msgstr "Variable (VBR - Qualité)"
+msgstr "Variable"
 
 msgid "Bitrate:"
 msgstr "Débit :"
 
+msgid "Bitrate"
+msgstr "Débit"
+
 msgid "Quality (VBR):"
 msgstr "Qualité (VBR) :"
+
+msgid "Quality"
+msgstr "Qualité"
 
 msgid "Quality (OGG):"
 msgstr "Qualité (OGG) :"
 
+# --- DESCRIPTIONS DE QUALITÉ (AJOUTS RÉCENTS) ---
 msgid "Best Quality (V0)"
 msgstr "Meilleure (V0)"
 
 msgid "Smallest Size (V9)"
-msgstr "Fichier léger (V9)"
+msgstr "Taille Min (V9)"
+
+msgid "Best Quality"
+msgstr "Meilleure"
+
+msgid "High Quality"
+msgstr "Haute Qualité"
+
+msgid "Medium"
+msgstr "Moyenne"
+
+msgid "Smallest Size"
+msgstr "Taille Min"
+
+msgid "Audiophile"
+msgstr "Audiophile"
+
+msgid "Low"
+msgstr "Faible"
+
+msgid "High"
+msgstr "Haute"
+
+msgid "Ultra Slow"
+msgstr "Ultra Lent (Max)"
 
 msgid "Audiophile (5)"
 msgstr "Audiophile (5)"
@@ -290,6 +336,9 @@ msgstr "Basse Qualité (1)"
 
 msgid "Bit Depth:"
 msgstr "Profondeur de bits :"
+
+msgid "Bit Depth"
+msgstr "Profondeur"
 
 msgid "16-bit (CD Quality)"
 msgstr "16-bit (Qualité CD)"
@@ -303,14 +352,26 @@ msgstr "32-bit Float (Pro)"
 msgid "Compression Level:"
 msgstr "Niveau de compression :"
 
+msgid "Compression"
+msgstr "Compression"
+
 msgid "Fast (0)"
 msgstr "Rapide (0)"
+
+msgid "Fast"
+msgstr "Rapide"
 
 msgid "Standard (5)"
 msgstr "Standard (5)"
 
+msgid "Standard"
+msgstr "Standard"
+
 msgid "Max (8)"
 msgstr "Max (8)"
+
+msgid "Max"
+msgstr "Max"
 
 msgid "Quality: Lossless (Original)"
 msgstr "Qualité : Sans perte (Originale)"
@@ -349,6 +410,12 @@ msgstr "Parcourir..."
 
 msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
+
+msgid "Select a folder to add"
+msgstr "Sélectionner un dossier à ajouter"
+
+msgid "No compatible media files found in this folder."
+msgstr "Aucun fichier média compatible trouvé dans ce dossier."
 
 # --- BOUTONS ---
 msgid "OK"

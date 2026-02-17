@@ -9,13 +9,16 @@ from ui.preferences_dialog import PreferencesDialog
 from ui.track_manager import TrackManagerDialog 
 
 class FileListPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, list_name):
         super().__init__(parent)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN)
+        # CORRECTION A03 : Suppression de wx.LC_SINGLE_SEL pour permettre la sélection multiple
+        self.list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.BORDER_SUNKEN)
         self.list_ctrl.InsertColumn(0, _("Filename"), width=300)
         self.list_ctrl.InsertColumn(1, _("Details (Codec/Bitrate)"), width=250)
         self.list_ctrl.InsertColumn(2, _("Status"), width=150)
+        self.list_ctrl.SetName(list_name)
+        self.list_ctrl.SetToolTip(_("Use arrows to browse files. Press Delete to remove selected entries."))
         self.sizer.Add(self.list_ctrl, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
 
@@ -53,6 +56,9 @@ class MainWindow(wx.Frame):
         self.current_tab = "audio"
         self._init_menu_bar()
         self._init_ui()
+        self._init_accessibility()
+        self.CreateStatusBar(1)
+        self._set_status(_("Ready. Add files to begin."))
         self._update_ui_state()
         self.Centre()
         
@@ -93,7 +99,8 @@ class MainWindow(wx.Frame):
         menubar = wx.MenuBar()
         file_menu = wx.Menu()
         item_add = file_menu.Append(wx.ID_OPEN, _("&Add Files...") + "\tCtrl+O")
-        file_menu.Append(wx.ID_ANY, _("Add &Folder..."))
+        # CORRECTION A02 : On garde la référence pour le bind
+        item_add_folder = file_menu.Append(wx.ID_ANY, _("Add &Folder..."))
         file_menu.AppendSeparator()
         item_exit = file_menu.Append(wx.ID_EXIT, _("E&xit") + "\tAlt+F4")
         
@@ -107,6 +114,8 @@ class MainWindow(wx.Frame):
         item_about = help_menu.Append(wx.ID_ABOUT, _("&About"))
 
         self.Bind(wx.EVT_MENU, self.on_add_files, item_add)
+        # CORRECTION A02 : Le Bind manquant !
+        self.Bind(wx.EVT_MENU, self.on_add_folder, item_add_folder)
         self.Bind(wx.EVT_MENU, self.on_exit, item_exit)
         self.Bind(wx.EVT_MENU, self.on_clear_list, self.item_clear)
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
@@ -138,22 +147,21 @@ class MainWindow(wx.Frame):
         self.notebook = wx.Notebook(self.content_panel)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_changed)
         
-        self.panel_audio_list = FileListPanel(self.content_panel)
-        self.panel_video_list = FileListPanel(self.content_panel)
+        self.panel_audio_list = FileListPanel(self.content_panel, _("Audio files list"))
+        self.panel_video_list = FileListPanel(self.content_panel, _("Video files list"))
         
-        # --- FIX CLAVIER : Utilisation de EVT_CONTEXT_MENU ---
         self.panel_audio_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
         self.panel_video_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
         
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
         
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_fmt = wx.StaticText(self.content_panel, label=_("Convert to:"))
+        self.lbl_fmt = wx.StaticText(self.content_panel, label=_("Convert to:"))
         self.combo_format = wx.Choice(self.content_panel)
         self.combo_format.Bind(wx.EVT_CHOICE, self.on_format_changed)
         self.btn_settings = wx.Button(self.content_panel, label=_("&Settings / Quality..."))
         self.btn_settings.Bind(wx.EVT_BUTTON, self.on_open_settings)
-        row1.Add(lbl_fmt, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        row1.Add(self.lbl_fmt, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         row1.Add(self.combo_format, 1, wx.EXPAND | wx.RIGHT, 10)
         row1.Add(self.btn_settings, 0)
         controls_box.Add(row1, 0, wx.EXPAND | wx.ALL, 5)
@@ -161,6 +169,10 @@ class MainWindow(wx.Frame):
         self.gauge = wx.Gauge(self.content_panel, range=100, size=(250, 20))
         controls_box.Add(self.gauge, 0, wx.EXPAND | wx.TOP, 10)
         self.gauge.Hide()
+
+        self.lbl_progress = wx.StaticText(self.content_panel, label="")
+        controls_box.Add(self.lbl_progress, 0, wx.EXPAND | wx.TOP, 5)
+        self.lbl_progress.Hide()
         
         self.btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_convert = wx.Button(self.content_panel, label=_("&Start Conversion"))
@@ -182,11 +194,61 @@ class MainWindow(wx.Frame):
         self.main_sizer.Add(self.content_panel, 1, wx.EXPAND)
         self.panel.SetSizer(self.main_sizer)
 
-    # --- CLIC DROIT & TOUCHE APPLICATION ---
+    def _init_accessibility(self):
+        self.panel.SetName(_("Main panel"))
+        self.notebook.SetName(_("File categories"))
+        self.empty_panel.SetName(_("Empty file list panel"))
+        self.lbl_empty.SetName(_("No files selected information"))
+
+        self.lbl_fmt.SetName(_("Convert to"))
+        self.combo_format.SetName(_("Convert to"))
+        self.combo_format.SetToolTip(_("Select the target output format."))
+        self.btn_settings.SetName(_("Settings and quality"))
+        self.btn_settings.SetToolTip(_("Open format-specific settings."))
+
+        self.gauge.SetName(_("Conversion progress percentage"))
+        self.gauge.SetToolTip(_("Shows conversion progress from 0 to 100 percent."))
+        self.lbl_progress.SetName(_("Conversion progress details"))
+
+        self.btn_convert.SetName(_("Start conversion"))
+        self.btn_stop.SetName(_("Stop conversion"))
+
+    def _update_combo_format_accessible_name(self):
+        # Keep a stable control name; selected value is announced separately by the combo itself.
+        self.combo_format.SetName(_("Convert to"))
+
+    def _set_status(self, message):
+        if self.GetStatusBar():
+            self.SetStatusText(message)
+
+    # --- CORRECTION A02 : AJOUT DE LA FONCTION ---
+    def on_add_folder(self, event):
+        if self.is_converting: return
+        with wx.DirDialog(self, _("Select a folder to add"), style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_CANCEL: return
+            folder_path = dlg.GetPath()
+            
+            files_to_add = []
+            valid_exts = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a', '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm']
+            
+            wx.BeginBusyCursor()
+            for root, dirs, files in os.walk(folder_path):
+                for f in files:
+                    if os.path.splitext(f)[1].lower() in valid_exts:
+                        files_to_add.append(os.path.join(root, f))
+            
+            if files_to_add:
+                self._process_added_files(files_to_add)
+                self._set_status(f"{len(files_to_add)} " + _("file(s) added from folder."))
+            else:
+                wx.MessageBox(_("No compatible media files found in this folder."), _("Info"))
+                self._set_status(_("No compatible media files found in this folder."))
+            
+            wx.EndBusyCursor()
+
     def on_context_menu(self, event):
         if self.is_converting: return
         
-        # Identification de la liste active et de l'index sélectionné
         if self.current_tab == 'audio':
             lst = self.panel_audio_list.list_ctrl
         else:
@@ -195,12 +257,10 @@ class MainWindow(wx.Frame):
         index = lst.GetFirstSelected()
         if index == -1: return
 
-        # Vérification format
         idx_fmt = self.combo_format.GetSelection()
         if idx_fmt == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx_fmt]
         
-        # Menu
         menu = wx.Menu()
         item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
         
@@ -231,7 +291,6 @@ class MainWindow(wx.Frame):
                 
         dlg.Destroy()
 
-    # --- RESTE DU CODE STANDARD ---
     def on_preferences(self, event):
         dlg = PreferencesDialog(self, self.settings_store)
         if dlg.ShowModal() == wx.ID_OK:
@@ -304,13 +363,19 @@ class MainWindow(wx.Frame):
             else: choices.append(label)
             if key == last_used: target_selection_index = i
         self.combo_format.Set(choices)
-        if choices: self.combo_format.SetSelection(target_selection_index)
+        if choices:
+            self.combo_format.SetSelection(target_selection_index)
+        self._update_combo_format_accessible_name()
 
     def on_tab_changed(self, event):
         sel = self.notebook.GetSelection()
         if sel == 0: self.current_tab = 'audio'
         else: self.current_tab = 'video'
         self._update_formats_dropdown()
+        if self.current_tab == 'audio':
+            self._set_status(_("Audio tab selected."))
+        else:
+            self._set_status(_("Video tab selected."))
         event.Skip()
 
     def _update_ui_state(self):
@@ -326,12 +391,17 @@ class MainWindow(wx.Frame):
             self.content_panel.Show()
             self.item_clear.Enable(True)
             self.item_remove.Enable(True)
+            self._set_status(
+                f"{len(self.audio_data)} " + _("audio file(s), ") +
+                f"{len(self.video_data)} " + _("video file(s) loaded.")
+            )
         else:
             self.content_panel.Hide()
             self.empty_panel.Show()
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
             wx.CallAfter(self.empty_panel.SetFocus)
+            self._set_status(_("No files loaded."))
         self.panel.Layout()
         self.Refresh()
 
@@ -343,6 +413,7 @@ class MainWindow(wx.Frame):
 
     def _process_added_files(self, paths):
         wx.BeginBusyCursor()
+        added_count = 0
         for path in paths:
             meta = self.prober.analyze(path)
             meta.track_settings = None 
@@ -357,8 +428,11 @@ class MainWindow(wx.Frame):
             target_list.InsertItem(index, meta.filename)
             target_list.SetItem(index, 1, meta.get_summary())
             target_list.SetItem(index, 2, _("Ready"))
+            added_count += 1
         wx.EndBusyCursor()
         self._update_ui_state()
+        if added_count:
+            self._set_status(f"{added_count} " + _("file(s) added."))
 
     def on_clear_list(self, event):
         if self.is_converting: return
@@ -367,7 +441,9 @@ class MainWindow(wx.Frame):
         self.panel_audio_list.list_ctrl.DeleteAllItems()
         self.panel_video_list.list_ctrl.DeleteAllItems()
         self._update_ui_state()
+        self._set_status(_("List cleared."))
 
+    # CORRECTION A03 : Support de la sélection multiple
     def on_remove_selected(self, event):
         if self.is_converting: return
         if self.current_tab == 'audio':
@@ -376,11 +452,24 @@ class MainWindow(wx.Frame):
         else:
             lst = self.panel_video_list.list_ctrl
             data = self.video_data
-        selected_idx = lst.GetFirstSelected()
-        if selected_idx != -1:
-            lst.DeleteItem(selected_idx)
-            del data[selected_idx]
-            self._update_ui_state()
+            
+        # GetNextSelected loop
+        selected_indices = []
+        idx = lst.GetFirstSelected()
+        while idx != -1:
+            selected_indices.append(idx)
+            idx = lst.GetNextSelected(idx)
+            
+        # Delete in reverse order to keep indices valid
+        removed = 0
+        for idx in reversed(selected_indices):
+            lst.DeleteItem(idx)
+            del data[idx]
+            removed += 1
+            
+        self._update_ui_state()
+        if removed:
+            self._set_status(f"{removed} " + _("file(s) removed."))
 
     def on_format_changed(self, event):
         idx = self.combo_format.GetSelection()
@@ -389,11 +478,16 @@ class MainWindow(wx.Frame):
         if self.current_tab == 'audio': self.settings_store['last_format_audio'] = fmt_key
         else: self.settings_store['last_format_video'] = fmt_key
         self._save_config()
+        self._update_combo_format_accessible_name()
+        self._set_status(_("Output format selected: ") + self.combo_format.GetString(idx))
 
     def on_open_settings(self, event):
         idx = self.combo_format.GetSelection()
         if idx == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx]
+        
+        # Format key est passé à la boite de dialogue pour corrections (WMA...)
+        
         if self.current_tab == 'audio': clean = self.audio_formats_display[idx]
         else:
             clean = self.video_formats_display[idx]
@@ -411,17 +505,21 @@ class MainWindow(wx.Frame):
         if self.current_tab == 'audio' and self.audio_data: input_ac = self.audio_data[0].audio_codec
         elif self.current_tab == 'video' and self.video_data: input_ac = self.video_data[0].audio_codec
         current_saved = self.settings_store.get(fmt_key, {})
-        dlg = SettingsDialog(self, clean, input_has_vid, input_ac, current_saved)
+        
+        # Passage du fmt_key pour la logique interne
+        dlg = SettingsDialog(self, clean, input_has_vid, input_ac, current_saved, fmt_key)
         if dlg.ShowModal() == wx.ID_OK:
             self.settings_store[fmt_key] = dlg.get_settings()
             self._save_config()
             self._update_formats_dropdown()
+            self._set_status(_("Settings updated for format: ") + clean)
         dlg.Destroy()
 
     def on_stop(self, event):
         self.btn_stop.Disable()
         self.btn_stop.SetLabel(_("Stopping..."))
         self.stop_requested = True
+        self._set_status(_("Stop requested."))
 
     def on_close_window(self, event):
         if self.is_converting:
@@ -445,7 +543,9 @@ class MainWindow(wx.Frame):
         else:
             data = self.video_data
             lst = self.panel_video_list.list_ctrl
-        if not data: return
+        if not data:
+            self._set_status(_("No files to convert."))
+            return
         idx = self.combo_format.GetSelection()
         if idx == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx]
@@ -474,7 +574,10 @@ class MainWindow(wx.Frame):
         
         self.gauge.SetValue(0)
         self.gauge.Show()
+        self.lbl_progress.SetLabel(_("Preparing conversion..."))
+        self.lbl_progress.Show()
         self.content_panel.Layout()
+        self._set_status(_("Conversion started."))
         
         self._update_ui_state() 
         
@@ -490,8 +593,11 @@ class MainWindow(wx.Frame):
                 
             wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Converting..."))
             def update_progress(pct):
+                progress_txt = f"{_('Converting...')} {pct}%"
                 wx.CallAfter(self.gauge.SetValue, pct)
-                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, f"{_('Converting...')} {pct}%")
+                wx.CallAfter(self.lbl_progress.SetLabel, progress_txt)
+                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, progress_txt)
+                wx.CallAfter(self._set_status, progress_txt)
 
             def check_stop(): return self.stop_requested
 
@@ -499,14 +605,17 @@ class MainWindow(wx.Frame):
             try:
                 task.run(progress_callback=update_progress, stop_check_callback=check_stop)
                 wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))
+                wx.CallAfter(self._set_status, _("File converted successfully."))
             except Exception as e:
                 if str(e) == "Stopped by user":
                     wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Stopped by user"))
+                    wx.CallAfter(self._set_status, _("Conversion stopped by user."))
                     break
                 else:
                     errors_count += 1 
                     print(e)
                     wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Error"))
+                    wx.CallAfter(self._set_status, _("An error occurred during conversion."))
         
         wx.CallAfter(self._on_batch_complete, errors_count)
 
@@ -517,6 +626,7 @@ class MainWindow(wx.Frame):
         self.btn_stop.Hide()
         self.btn_convert.Show()
         self.gauge.Hide()
+        self.lbl_progress.Hide()
         self.content_panel.Layout()
         
         self._update_ui_state()
@@ -524,9 +634,11 @@ class MainWindow(wx.Frame):
         if self.btn_stop.GetLabel() != _("Stopping..."):
             if errors_count == 0:
                 wx.MessageBox(_("All tasks completed!"), _("Success"))
+                self._set_status(_("All tasks completed successfully."))
             else:
                 msg = _("All tasks completed!") + f"\n\n{errors_count} " + _("Error")
                 wx.MessageBox(msg, _("Done"), wx.ICON_WARNING)
+                self._set_status(f"{errors_count} " + _("error(s) during conversion."))
 
     def on_exit(self, e): self.Close()
     def on_about(self, e): wx.MessageBox(_("Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"), _("About"))
