@@ -34,6 +34,9 @@ dist/
 # 1. User Configuration
 # We ignore this so your personal settings don't go to Git
 config.json
+debug.log
+crash_report.txt
+error_log.txt
 
 # 2. Binary Dependencies (FFmpeg)
 # It is bad practice to commit large .exe files to Git.
