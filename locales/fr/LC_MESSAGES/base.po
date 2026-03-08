@@ -155,17 +155,32 @@ msgstr "AAC - Audio (M4A)"
 msgid "WAV - Audio (Lossless)"
 msgstr "WAV - Audio (sans perte)"
 
+msgid "WAV - Audio (Extract)"
+msgstr "WAV - Audio (extraction)"
+
 msgid "FLAC - Audio (Lossless)"
 msgstr "FLAC - Audio (sans perte)"
+
+msgid "FLAC - Audio (Extract)"
+msgstr "FLAC - Audio (extraction)"
 
 msgid "ALAC - Audio (Apple Lossless)"
 msgstr "ALAC - Audio (sans perte Apple)"
 
+msgid "ALAC - Audio (Extract)"
+msgstr "ALAC - Audio (extraction)"
+
 msgid "OGG - Audio (Vorbis)"
 msgstr "OGG - Audio (Vorbis)"
 
+msgid "OGG - Audio (Extract)"
+msgstr "OGG - Audio (extraction)"
+
 msgid "WMA - Audio (Legacy)"
 msgstr "WMA - Audio (ancien)"
+
+msgid "WMA - Audio (Extract)"
+msgstr "WMA - Audio (extraction)"
 
 msgid "MP4 - Video (H.264)"
 msgstr "MP4 - Vidéo (H.264)"
@@ -184,6 +199,9 @@ msgstr "Prêt"
 
 msgid "Ready (+Tracks)"
 msgstr "Prêt (+pistes)"
+
+msgid "Ready (+Audio Track)"
+msgstr "Prêt (+piste audio)"
 
 msgid "Conversion progress percentage"
 msgstr "Pourcentage d'avancement de la conversion"
@@ -308,8 +326,8 @@ msgstr "Confirmer la fermeture"
 msgid "About"
 msgstr "À propos"
 
-msgid "Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"
-msgstr "Universal Transcoder V1.0\nPropulsé par FFmpeg et wxPython"
+msgid "Powered by FFmpeg & wxPython"
+msgstr "Propulsé par FFmpeg et wxPython"
 
 # --- RÉSUMÉS DE FORMATS ---
 msgid "CBR {bitrate}"
@@ -523,9 +541,6 @@ msgstr "Mode vidéo réencodage"
 msgid "Video mode copy stream"
 msgstr "Mode vidéo copie du flux"
 
-msgid "Quality CRF slider"
-msgstr "Curseur de qualité CRF"
-
 msgid "Lower CRF means better quality and bigger file."
 msgstr "Un CRF plus faible donne une meilleure qualité et un fichier plus volumineux."
 
@@ -535,17 +550,32 @@ msgstr "Qualité vidéo CRF"
 msgid "Quality (CRF):"
 msgstr "Qualité (CRF) :"
 
-msgid "Balanced"
-msgstr "Équilibré"
+msgid "CRF {value} ({label})"
+msgstr "CRF {value} ({label})"
 
-msgid "Small Size"
-msgstr "Taille réduite"
+msgid "Custom"
+msgstr "Personnalisé"
 
-msgid "High Quality (V2)"
-msgstr "Haute qualité (V2)"
+msgid "Very High Quality"
+msgstr "Très haute qualité"
 
-msgid "CRF: 23"
-msgstr "CRF : 23"
+msgid "Balanced Quality"
+msgstr "Qualité équilibrée"
+
+msgid "Balanced - Recommended"
+msgstr "Équilibré - recommandé"
+
+msgid "Compact"
+msgstr "Compact"
+
+msgid "More Compact"
+msgstr "Plus compact"
+
+msgid "Small File"
+msgstr "Petit fichier"
+
+msgid "Very Compact"
+msgstr "Très compact"
 
 # --- FENÊTRE DE PRÉFÉRENCES ---
 msgid "Preferences dialog"
@@ -609,6 +639,9 @@ msgstr "Catégories de pistes"
 msgid "Audio Tracks"
 msgstr "Pistes audio"
 
+msgid "Video Tracks"
+msgstr "Pistes vidéo"
+
 msgid "Subtitles"
 msgstr "Sous-titres"
 
@@ -618,6 +651,9 @@ msgstr "Gérer les pistes..."
 msgid "Manage Tracks... (MKV/MP4 only)"
 msgstr "Gérer les pistes... (MKV/MP4 uniquement)"
 
+msgid "Choose Audio Track..."
+msgstr "Choisir la piste audio..."
+
 msgid "Shortcuts: Ctrl+Up/Down to reorder, Space to toggle."
 msgstr "Raccourcis : Ctrl+Haut/Bas pour réordonner, Espace pour activer ou désactiver."
 
@@ -626,6 +662,9 @@ msgstr "Aide des raccourcis clavier"
 
 msgid "Audio tracks list"
 msgstr "Liste des pistes audio"
+
+msgid "Video tracks list"
+msgstr "Liste des pistes vidéo"
 
 msgid "Subtitle tracks list"
 msgstr "Liste des pistes de sous-titres"
@@ -681,6 +720,9 @@ msgstr "Titre de la piste"
 msgid "Attributes:"
 msgstr "Attributs :"
 
+msgid "Advanced dispositions"
+msgstr "Dispositions avancées"
+
 msgid "Default"
 msgstr "Par défaut"
 
@@ -699,6 +741,33 @@ msgstr "Audiodescription"
 msgid "Hearing Impaired"
 msgstr "Malentendants"
 
+msgid "Captions"
+msgstr "Sous-titres de transcription"
+
+msgid "Descriptions"
+msgstr "Descriptions"
+
+msgid "Comment"
+msgstr "Commentaire"
+
+msgid "Commentary"
+msgstr "Commentaire"
+
+msgid "Dub"
+msgstr "Doublage"
+
+msgid "Lyrics"
+msgstr "Paroles"
+
+msgid "Karaoke"
+msgstr "Karaoké"
+
+msgid "Clean Effects"
+msgstr "Effets seuls"
+
+msgid "Non-Diegetic"
+msgstr "Non diégétique"
+
 msgid "HI"
 msgstr "HI"
 
@@ -716,6 +785,30 @@ msgstr "Annuler"
 
 msgid "Cancel track settings"
 msgstr "Annuler les réglages des pistes"
+
+msgid "Audio extract track dialog"
+msgstr "Boîte de dialogue de choix de la piste audio"
+
+msgid "Select the audio track to extract. Only one track can be kept."
+msgstr "Sélectionnez la piste audio à extraire. Une seule piste peut être conservée."
+
+msgid "Audio extraction tracks list"
+msgstr "Liste des pistes audio à extraire"
+
+msgid "Select the single audio track to extract."
+msgstr "Sélectionnez l'unique piste audio à extraire."
+
+msgid "Apply audio extraction track"
+msgstr "Appliquer la piste audio d'extraction"
+
+msgid "Cancel audio extraction track"
+msgstr "Annuler le choix de la piste audio d'extraction"
+
+msgid "Audio extraction track selected: {track}"
+msgstr "Piste audio d'extraction sélectionnée : {track}"
+
+msgid "At least one video track must be kept."
+msgstr "Au moins une piste vidéo doit être conservée."
 
 # --- LANGUES ---
 msgid "Undetermined"

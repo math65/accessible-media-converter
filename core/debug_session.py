@@ -11,7 +11,7 @@ APP_DIR_NAME = "UniversalTranscoder"
 DEBUG_DIR_NAME = "debug"
 SESSION_STATE_FILENAME = "session-state.json"
 DEBUG_LOG_FILENAME = "debug.log"
-SESSION_STATE_SCHEMA_VERSION = 1
+SESSION_STATE_SCHEMA_VERSION = 2
 
 DEBUG_ENABLED_KEY = "debug_enabled"
 DEBUG_RESTORE_PENDING_KEY = "debug_restore_pending"
@@ -175,6 +175,7 @@ def _serialize_media_collection(media_collection):
             {
                 "path": meta.full_path,
                 "track_settings": copy.deepcopy(getattr(meta, "track_settings", None)),
+                "audio_extract_track": copy.deepcopy(getattr(meta, "audio_extract_track", None)),
             }
         )
     return items

@@ -3,6 +3,19 @@ import wx
 from core.formatting import DEFAULT_FORMAT_SETTINGS, build_format_summary
 
 
+VIDEO_CRF_PRESET_OPTIONS = (
+    (16, "Very High Quality"),
+    (18, "High Quality"),
+    (20, "Quality"),
+    (22, "Balanced Quality"),
+    (23, "Balanced - Recommended"),
+    (24, "Compact"),
+    (26, "More Compact"),
+    (28, "Small File"),
+    (30, "Very Compact"),
+)
+
+
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent, title_format, has_video, input_ac, current_settings, format_key):
         super().__init__(parent, title=_("Configure settings for: ") + title_format, size=(500, 600))
@@ -126,16 +139,9 @@ class SettingsDialog(wx.Dialog):
             
             self.lbl_crf = wx.StaticText(self.panel_video_opts, label=_("Quality (CRF):"))
             grid_vid.Add(self.lbl_crf, 0, wx.ALIGN_CENTER_VERTICAL)
-            
-            sizer_crf = wx.BoxSizer(wx.HORIZONTAL)
-            self.slider_crf = wx.Slider(self.panel_video_opts, value=23, minValue=0, maxValue=51, style=wx.SL_HORIZONTAL)
-            self.lbl_crf_val = wx.StaticText(self.panel_video_opts, label=_("CRF: 23"))
-            self.slider_crf.Bind(wx.EVT_SLIDER, self.on_slider_crf)
-            
-            sizer_crf.Add(self.slider_crf, 1, wx.EXPAND | wx.RIGHT, 5)
-            sizer_crf.Add(self.lbl_crf_val, 0, wx.ALIGN_CENTER_VERTICAL)
-            
-            grid_vid.Add(sizer_crf, 1, wx.EXPAND)
+
+            self.combo_crf = wx.Choice(self.panel_video_opts, choices=[])
+            grid_vid.Add(self.combo_crf, 1, wx.EXPAND)
             
             self.panel_video_opts.SetSizer(grid_vid)
             video_sizer.Add(self.panel_video_opts, 1, wx.EXPAND | wx.ALL, 10)
@@ -165,6 +171,8 @@ class SettingsDialog(wx.Dialog):
         self.combo_quality.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_depth.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_comp.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
+        if hasattr(self, 'combo_crf'):
+            self.combo_crf.Bind(wx.EVT_CHOICE, self.on_video_option_change)
         
         self._load_from_settings()
         self._update_visibility()
@@ -212,9 +220,7 @@ class SettingsDialog(wx.Dialog):
         if hasattr(self, 'rb_v_convert'):
             if s.get('video_mode') == 'copy': self.rb_v_copy.SetValue(True)
             else: self.rb_v_convert.SetValue(True)
-            crf = int(s.get('video_crf', 23))
-            self.slider_crf.SetValue(crf)
-            self.on_slider_crf(None)
+            self._populate_crf_combo(s.get('video_crf', DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']))
 
     def _populate_quality_combo(self):
         self.combo_quality.Clear()
@@ -257,15 +263,9 @@ class SettingsDialog(wx.Dialog):
         self._update_dynamic_accessible_names()
         e.Skip()
 
-    def on_slider_crf(self, e):
-        val = self.slider_crf.GetValue()
-        desc = ""
-        if val == 18: desc = _("High Quality (V2)")
-        elif val == 23: desc = _("Balanced")
-        elif val == 28: desc = _("Small Size")
-        summary = f"{val} {desc}".strip()
-        self.lbl_crf_val.SetLabel(summary)
-        self.slider_crf.SetName(f"{_('Quality (CRF):')} {summary}")
+    def on_video_option_change(self, e):
+        self._update_dynamic_accessible_names()
+        e.Skip()
 
     def _update_visibility(self, preserve_focus=None):
         is_convert = self.rb_convert.GetValue()
@@ -360,8 +360,8 @@ class SettingsDialog(wx.Dialog):
             self.panel_video_opts.SetName(_("Video settings panel"))
             self.rb_v_convert.SetName(_("Video mode re-encode"))
             self.rb_v_copy.SetName(_("Video mode copy stream"))
-            self.slider_crf.SetName(_("Quality CRF slider"))
-            self.slider_crf.SetToolTip(_("Lower CRF means better quality and bigger file."))
+            self.combo_crf.SetName(_("Video quality CRF"))
+            self.combo_crf.SetToolTip(_("Lower CRF means better quality and bigger file."))
             self.lbl_crf.SetName(_("Video quality CRF"))
 
         self._update_dynamic_accessible_names()
@@ -375,12 +375,57 @@ class SettingsDialog(wx.Dialog):
         self.combo_quality.SetName(_("Quality"))
         self.combo_depth.SetName(_("Bit Depth"))
         self.combo_comp.SetName(_("Compression"))
+        if hasattr(self, 'combo_crf'):
+            self.combo_crf.SetName(_("Video quality CRF"))
 
     def _focus_primary_audio_control(self):
         for ctrl in [self.combo_sr, self.combo_ch, self.combo_rate_mode, self.combo_bitrate, self.combo_quality, self.combo_depth, self.combo_comp]:
             if ctrl.IsShown() and ctrl.IsEnabled():
                 ctrl.SetFocus()
                 return
+
+    def _coerce_video_crf_value(self, value):
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']
+
+        if 0 <= parsed <= 51:
+            return parsed
+        return DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']
+
+    def _build_crf_choice_label(self, value, label_msgid=None, custom=False):
+        if custom:
+            label = _("Custom")
+        else:
+            label = _(label_msgid or "Balanced - Recommended")
+        return _("CRF {value} ({label})").format(value=value, label=label)
+
+    def _populate_crf_combo(self, current_value):
+        value = self._coerce_video_crf_value(current_value)
+        preset_values = {preset_value for preset_value, _ in VIDEO_CRF_PRESET_OPTIONS}
+        custom_value = value if value not in preset_values else None
+
+        self.video_crf_values = []
+        choices = []
+        custom_inserted = False
+
+        for preset_value, label_msgid in VIDEO_CRF_PRESET_OPTIONS:
+            if custom_value is not None and not custom_inserted and custom_value < preset_value:
+                self.video_crf_values.append(custom_value)
+                choices.append(self._build_crf_choice_label(custom_value, custom=True))
+                custom_inserted = True
+
+            self.video_crf_values.append(preset_value)
+            choices.append(self._build_crf_choice_label(preset_value, label_msgid=label_msgid))
+
+        if custom_value is not None and not custom_inserted:
+            self.video_crf_values.append(custom_value)
+            choices.append(self._build_crf_choice_label(custom_value, custom=True))
+
+        self.combo_crf.Set(choices)
+        selected_value = value if value in self.video_crf_values else DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']
+        self.combo_crf.SetSelection(self.video_crf_values.index(selected_value))
 
     def get_settings(self):
         s = {}
@@ -414,7 +459,13 @@ class SettingsDialog(wx.Dialog):
 
         if hasattr(self, 'rb_v_convert'):
             s['video_mode'] = 'copy' if self.rb_v_copy.GetValue() else 'convert'
-            s['video_crf'] = self.slider_crf.GetValue()
+            selected_index = self.combo_crf.GetSelection()
+            if selected_index == wx.NOT_FOUND:
+                s['video_crf'] = self._coerce_video_crf_value(
+                    self.current_settings.get('video_crf', DEFAULT_FORMAT_SETTINGS['mp4']['video_crf'])
+                )
+            else:
+                s['video_crf'] = self.video_crf_values[selected_index]
 
         s['summary'] = build_format_summary(self.format_key, s)
         return s

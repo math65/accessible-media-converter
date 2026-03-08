@@ -2,7 +2,7 @@ import builtins
 
 
 AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "wav", "flac", "alac", "ogg", "wma")
-VIDEO_OUTPUT_FORMAT_KEYS = ("mp4", "mkv", "mp3", "aac")
+VIDEO_OUTPUT_FORMAT_KEYS = ("mp4", "mkv", *AUDIO_OUTPUT_FORMAT_KEYS)
 VIDEO_CONTAINER_FORMAT_KEYS = ("mp4", "mkv")
 LOSSLESS_AUDIO_FORMAT_KEYS = ("wav", "flac", "alac")
 VALID_OUTPUT_MODES = ("source", "custom", "ask")
@@ -100,10 +100,17 @@ def _translatef(msgid, **kwargs):
 
 
 def build_format_label(format_key, context="audio"):
-    if context == "video" and format_key == "mp3":
-        return _translate("MP3 - Audio (Extract)")
-    if context == "video" and format_key == "aac":
-        return _translate("AAC - Audio (Extract)")
+    if context == "video" and format_key in AUDIO_OUTPUT_FORMAT_KEYS:
+        extraction_labels = {
+            "mp3": _translate("MP3 - Audio (Extract)"),
+            "aac": _translate("AAC - Audio (Extract)"),
+            "wav": _translate("WAV - Audio (Extract)"),
+            "flac": _translate("FLAC - Audio (Extract)"),
+            "alac": _translate("ALAC - Audio (Extract)"),
+            "ogg": _translate("OGG - Audio (Extract)"),
+            "wma": _translate("WMA - Audio (Extract)"),
+        }
+        return extraction_labels.get(format_key, format_key.upper())
 
     labels = {
         "mp3": _translate("MP3 - Audio"),

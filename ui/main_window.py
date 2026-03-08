@@ -4,6 +4,7 @@ import threading
 
 import wx
 
+from core.app_info import APP_ABOUT_TAGLINE, APP_NAME, APP_VERSION
 from core import FileProber, ConversionTask
 from core.debug_session import (
     clear_debug_artifacts,
@@ -18,6 +19,7 @@ from core.debug_session import (
 )
 from core.formatting import (
     AUDIO_OUTPUT_FORMAT_KEYS,
+    VIDEO_CONTAINER_FORMAT_KEYS,
     VIDEO_OUTPUT_FORMAT_KEYS,
     build_default_settings_store,
     build_format_label,
@@ -25,7 +27,7 @@ from core.formatting import (
 )
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
-from ui.track_manager import TrackManagerDialog 
+from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog
 
 class FileListPanel(wx.Panel):
     def __init__(self, parent, list_name):
@@ -43,7 +45,7 @@ class FileListPanel(wx.Panel):
 
 class MainWindow(wx.Frame):
     def __init__(self):
-        super().__init__(None, title=_("Universal Transcoder"), size=(950, 650))
+        super().__init__(None, title=_(APP_NAME), size=(950, 650))
         
         self.is_converting = False
         self.stop_requested = False
@@ -168,6 +170,8 @@ class MainWindow(wx.Frame):
         
         self.panel_audio_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
         self.panel_video_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
+        self.panel_audio_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
+        self.panel_video_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
         
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
         
@@ -238,6 +242,11 @@ class MainWindow(wx.Frame):
             self.SetStatusText(message)
 
     def _append_media_metadata(self, meta):
+        if not hasattr(meta, 'track_settings'):
+            meta.track_settings = None
+        if not hasattr(meta, 'audio_extract_track'):
+            meta.audio_extract_track = None
+
         if meta.has_video:
             self.video_data.append(meta)
             target_list = self.panel_video_list.list_ctrl
@@ -248,9 +257,33 @@ class MainWindow(wx.Frame):
         index = target_list.GetItemCount()
         target_list.InsertItem(index, meta.filename)
         target_list.SetItem(index, 1, meta.get_summary())
-        status_label = _("Ready (+Tracks)") if getattr(meta, 'track_settings', None) else _("Ready")
-        target_list.SetItem(index, 2, status_label)
+        target_list.SetItem(index, 2, self._get_media_status_label(meta))
         return index
+
+    def _get_media_status_label(self, meta):
+        if getattr(meta, 'track_settings', None):
+            return _("Ready (+Tracks)")
+        if getattr(meta, 'audio_extract_track', None):
+            return _("Ready (+Audio Track)")
+        return _("Ready")
+
+    def _describe_audio_extract_track(self, track_data):
+        if not isinstance(track_data, dict):
+            return ""
+
+        parts = [str(track_data.get('codec_name', '')).upper()]
+        language = track_data.get('language')
+        if language and language != 'und':
+            parts.append(language.upper())
+        title = track_data.get('title')
+        if title:
+            parts.append(f"\"{title}\"")
+        return " - ".join([part for part in parts if part])
+
+    def _get_current_media_collection(self):
+        if self.current_tab == 'audio':
+            return self.panel_audio_list.list_ctrl, self.audio_data
+        return self.panel_video_list.list_ctrl, self.video_data
 
     def _restore_list_selection(self, list_ctrl, selected_indices):
         if not isinstance(selected_indices, list):
@@ -271,6 +304,7 @@ class MainWindow(wx.Frame):
 
         meta = self.prober.analyze(file_path)
         meta.track_settings = entry.get('track_settings')
+        meta.audio_extract_track = entry.get('audio_extract_track')
         self._append_media_metadata(meta)
 
     def restore_debug_session_if_needed(self):
@@ -410,30 +444,90 @@ class MainWindow(wx.Frame):
 
     def on_context_menu(self, event):
         if self.is_converting: return
-        
-        if self.current_tab == 'audio':
-            lst = self.panel_audio_list.list_ctrl
-        else:
-            lst = self.panel_video_list.list_ctrl
-            
-        index = lst.GetFirstSelected()
-        if index == -1: return
+
+        list_ctrl, data, index, popup_position = self._resolve_context_menu_target(event)
+        if list_ctrl is None or index == -1:
+            return
+        meta = data[index]
 
         idx_fmt = self.combo_format.GetSelection()
         if idx_fmt == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx_fmt]
-        
+
         menu = wx.Menu()
-        item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
-        
-        if fmt_key not in ['mkv', 'mp4', 'mov']:
-            item_tracks.Enable(False)
-            item_tracks.SetItemLabel(_("Manage Tracks... (MKV/MP4 only)"))
-        
-        self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index), item_tracks)
-        
-        self.PopupMenu(menu)
+
+        if (
+            self.current_tab == 'video'
+            and meta.has_video
+            and fmt_key in VIDEO_CONTAINER_FORMAT_KEYS
+        ):
+            item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
+            self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index), item_tracks)
+        if (
+            self.current_tab == 'video'
+            and fmt_key in AUDIO_OUTPUT_FORMAT_KEYS
+            and meta.has_video
+            and len(meta.audio_tracks) > 1
+        ):
+            item_audio_track = menu.Append(wx.ID_ANY, _("Choose Audio Track..."))
+            self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index), item_audio_track)
+
+        if menu.GetMenuItemCount() == 0:
+            menu.Destroy()
+            return
+
+        if popup_position is None:
+            list_ctrl.PopupMenu(menu)
+        else:
+            list_ctrl.PopupMenu(menu, popup_position)
         menu.Destroy()
+
+    def on_list_item_right_click(self, event):
+        list_ctrl = event.GetEventObject()
+        index = event.GetIndex()
+        if index != -1:
+            self._focus_single_list_item(list_ctrl, index)
+        self.on_context_menu(event)
+
+    def _focus_single_list_item(self, list_ctrl, index):
+        current = list_ctrl.GetFirstSelected()
+        while current != -1:
+            next_selected = list_ctrl.GetNextSelected(current)
+            if current != index:
+                list_ctrl.SetItemState(current, 0, wx.LIST_STATE_SELECTED)
+            current = next_selected
+        list_ctrl.SetItemState(index, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED)
+        list_ctrl.EnsureVisible(index)
+
+    def _resolve_context_menu_target(self, event):
+        source_ctrl = event.GetEventObject()
+        if source_ctrl == self.panel_audio_list.list_ctrl:
+            list_ctrl = self.panel_audio_list.list_ctrl
+            data = self.audio_data
+        elif source_ctrl == self.panel_video_list.list_ctrl:
+            list_ctrl = self.panel_video_list.list_ctrl
+            data = self.video_data
+        else:
+            list_ctrl, data = self._get_current_media_collection()
+
+        index = getattr(event, "GetIndex", lambda: -1)()
+        popup_position = None
+
+        if index == -1 and hasattr(event, "GetPosition"):
+            screen_position = event.GetPosition()
+            if screen_position != wx.DefaultPosition and screen_position != wx.Point(-1, -1):
+                client_position = list_ctrl.ScreenToClient(screen_position)
+                hit_index, _ = list_ctrl.HitTest(client_position)
+                if hit_index != wx.NOT_FOUND:
+                    index = hit_index
+                    popup_position = client_position
+
+        if index != -1:
+            self._focus_single_list_item(list_ctrl, index)
+        else:
+            index = list_ctrl.GetFirstSelected()
+
+        return list_ctrl, data, index, popup_position
 
     def on_open_track_manager(self, index):
         if self.current_tab == 'audio':
@@ -445,12 +539,26 @@ class MainWindow(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             config = dlg.get_configuration()
             meta.track_settings = config 
-            
-            if self.current_tab == 'audio':
-                self.panel_audio_list.list_ctrl.SetItem(index, 2, _("Ready (+Tracks)"))
-            else:
-                self.panel_video_list.list_ctrl.SetItem(index, 2, _("Ready (+Tracks)"))
+            _, data = self._get_current_media_collection()
+            target_list = self.panel_audio_list.list_ctrl if self.current_tab == 'audio' else self.panel_video_list.list_ctrl
+            target_list.SetItem(index, 2, self._get_media_status_label(data[index]))
                 
+        dlg.Destroy()
+
+    def on_choose_audio_extract_track(self, index):
+        meta = self.video_data[index]
+
+        dlg = AudioExtractTrackDialog(self, meta, getattr(meta, 'audio_extract_track', None))
+        if dlg.ShowModal() == wx.ID_OK:
+            selected_track = dlg.get_selected_track()
+            if selected_track:
+                meta.audio_extract_track = selected_track
+                self.panel_video_list.list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
+                self._set_status(
+                    _("Audio extraction track selected: {track}").format(
+                        track=self._describe_audio_extract_track(selected_track)
+                    )
+                )
         dlg.Destroy()
 
     def on_preferences(self, event):
@@ -776,4 +884,6 @@ class MainWindow(wx.Frame):
                 self._set_status(_("{count} error(s) during conversion.").format(count=errors_count))
 
     def on_exit(self, e): self.Close()
-    def on_about(self, e): wx.MessageBox(_("Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"), _("About"))
+    def on_about(self, e):
+        message = f"{APP_NAME} {APP_VERSION}\n{_(APP_ABOUT_TAGLINE)}"
+        wx.MessageBox(message, _("About"))

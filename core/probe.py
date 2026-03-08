@@ -5,6 +5,8 @@ import json
 import logging # Ajout
 import builtins
 
+from core.track_settings import is_ui_track_visible
+
 
 def _translate(msgid):
     translator = builtins.__dict__.get('_')
@@ -28,6 +30,7 @@ class MediaTrack:
     def is_default(self): return self.disposition.get('default', 0) == 1
     def is_forced(self): return self.disposition.get('forced', 0) == 1
     def is_attached_pic(self): return self.disposition.get('attached_pic', 0) == 1
+    def is_hidden_from_ui(self): return not is_ui_track_visible(self)
 
     def get_summary(self):
         parts = [self.codec_name.upper()]
@@ -49,11 +52,34 @@ class MediaMetadata:
         self.width = 0
         self.height = 0
         self.has_video = False 
+        self.track_settings = None
+        self.audio_extract_track = None
 
     @property
     def has_audio(self): return len(self.audio_tracks) > 0
     @property
     def has_subtitles(self): return len(self.subtitle_tracks) > 0
+
+    def get_audio_track_by_index(self, original_index):
+        for track in self.audio_tracks:
+            if track.index == original_index:
+                return track
+        return None
+
+    def get_default_audio_track(self):
+        for track in self.audio_tracks:
+            if track.is_default():
+                return track
+        if self.audio_tracks:
+            return self.audio_tracks[0]
+        return None
+
+    def get_preferred_audio_track(self, preferred_index=None):
+        if preferred_index is not None:
+            preferred_track = self.get_audio_track_by_index(preferred_index)
+            if preferred_track is not None:
+                return preferred_track
+        return self.get_default_audio_track()
 
     def get_summary(self):
         v_info = ""
@@ -140,8 +166,8 @@ class FileProber:
                 logging.debug(f"Stream #{idx}: Type={c_type}, Codec={c_name}, Flags={disposition}") # LOG
 
                 if c_type == 'video':
-                    if track.is_attached_pic():
-                        logging.debug(f" -> Ignoré (Cover art)")
+                    if track.is_hidden_from_ui():
+                        logging.debug(" -> Flux vidéo ignoré (hors UI)")
                     else:
                         meta.video_tracks.append(track)
                         meta.has_video = True
@@ -151,11 +177,17 @@ class FileProber:
                             meta.video_codec = c_name
                         
                 elif c_type == 'audio':
-                    meta.audio_tracks.append(track)
-                    if not meta.audio_codec: meta.audio_codec = c_name
+                    if track.is_hidden_from_ui():
+                        logging.debug(" -> Flux audio ignoré (hors UI)")
+                    else:
+                        meta.audio_tracks.append(track)
+                        if not meta.audio_codec: meta.audio_codec = c_name
                     
                 elif c_type == 'subtitle':
-                    meta.subtitle_tracks.append(track)
+                    if track.is_hidden_from_ui():
+                        logging.debug(" -> Flux de sous-titres ignoré (hors UI)")
+                    else:
+                        meta.subtitle_tracks.append(track)
 
         except Exception as e:
             logging.error(f"Erreur fatale probing {file_path}", exc_info=True) # LOG CRITIQUE
