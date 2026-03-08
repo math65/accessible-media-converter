@@ -1,5 +1,8 @@
 import wx
 
+from core.formatting import DEFAULT_FORMAT_SETTINGS, build_format_summary
+
+
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent, title_format, has_video, input_ac, current_settings, format_key):
         super().__init__(parent, title=_("Configure settings for: ") + title_format, size=(500, 600))
@@ -126,7 +129,7 @@ class SettingsDialog(wx.Dialog):
             
             sizer_crf = wx.BoxSizer(wx.HORIZONTAL)
             self.slider_crf = wx.Slider(self.panel_video_opts, value=23, minValue=0, maxValue=51, style=wx.SL_HORIZONTAL)
-            self.lbl_crf_val = wx.StaticText(self.panel_video_opts, label="CRF: 23")
+            self.lbl_crf_val = wx.StaticText(self.panel_video_opts, label=_("CRF: 23"))
             self.slider_crf.Bind(wx.EVT_SLIDER, self.on_slider_crf)
             
             sizer_crf.Add(self.slider_crf, 1, wx.EXPAND | wx.RIGHT, 5)
@@ -393,8 +396,14 @@ class SettingsDialog(wx.Dialog):
         br_vals = ['320k', '256k', '192k', '160k', '128k', '96k', '64k']
         s['audio_bitrate'] = br_vals[self.combo_bitrate.GetSelection()]
         
-        # Récupération Qualité depuis la Liste
         qual_idx = self.combo_quality.GetSelection()
+        if qual_idx == wx.NOT_FOUND:
+            qual_idx = int(
+                self.current_settings.get(
+                    'audio_qscale',
+                    DEFAULT_FORMAT_SETTINGS.get(self.format_key, DEFAULT_FORMAT_SETTINGS['mp3']).get('audio_qscale', 0)
+                )
+            )
         if self.format_key == 'aac': s['audio_qscale'] = qual_idx + 1
         else: s['audio_qscale'] = qual_idx
         
@@ -402,17 +411,10 @@ class SettingsDialog(wx.Dialog):
         s['audio_bit_depth'] = d_vals[self.combo_depth.GetSelection()]
         
         s['flac_compression'] = self.combo_comp.GetSelection()
-        
-        parts = []
-        if s['audio_mode'] == 'copy': parts.append("Copy")
-        else:
-            if self.format_key in ['wav', 'flac', 'alac']: parts.append(_("Quality: Lossless (Original)"))
-            elif s['rate_mode'] == 'cbr': parts.append(f"CBR {s['audio_bitrate']}")
-            else: parts.append(f"VBR Q{s['audio_qscale']}")
-        s['summary'] = " / ".join(parts)
-        
+
         if hasattr(self, 'rb_v_convert'):
             s['video_mode'] = 'copy' if self.rb_v_copy.GetValue() else 'convert'
             s['video_crf'] = self.slider_crf.GetValue()
-            
+
+        s['summary'] = build_format_summary(self.format_key, s)
         return s

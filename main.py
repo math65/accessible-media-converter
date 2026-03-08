@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 
+from core.debug_session import get_debug_flags, load_raw_config
 # On importe notre nouveau logger
 from core.logger import setup_logger
 from core.i18n import install_language
@@ -24,11 +25,10 @@ def init_i18n():
         logging.warning(f"Échec du chargement de la langue : {e}. Fallback sur anglais.")
 
 def main():
-    # 1. D'ABORD : On allume les micros (Logger)
-    setup_logger()
+    debug_flags = get_debug_flags(load_raw_config())
+    setup_logger(debug_enabled=debug_flags['debug_enabled'])
     
     try:
-        # 2. On active la langue
         init_i18n()
         
         logging.info("Importation de l'interface graphique...")
@@ -39,6 +39,8 @@ def main():
         
         logging.info("Création de la fenêtre principale...")
         frame = MainWindow()
+        if debug_flags['debug_restore_pending']:
+            frame.restore_debug_session_if_needed()
         frame.Show()
         
         logging.info("Entrée dans la boucle principale (MainLoop)...")

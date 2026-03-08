@@ -1,48 +1,46 @@
 import logging
-import os
-import sys
 import platform
+import sys
 
-# Chemin du fichier de log (à côté du main.py)
-if getattr(sys, 'frozen', False):
-    BASE_DIR = os.path.dirname(sys.executable)
-else:
-    BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, '..')))
+from core.debug_session import ensure_debug_dir, get_debug_log_path
 
-LOG_FILE = os.path.join(BASE_DIR, "debug.log")
 
-def setup_logger():
-    # On supprime l'ancien log à chaque démarrage pour y voir clair
-    if os.path.exists(LOG_FILE):
+def setup_logger(debug_enabled=False):
+    root_logger = logging.getLogger()
+    for handler in list(root_logger.handlers):
+        root_logger.removeHandler(handler)
         try:
-            os.remove(LOG_FILE)
-        except: pass
+            handler.close()
+        except Exception:
+            pass
 
-    # Configuration du format : [HEURE] [NIVEAU] [FICHIER] Message
-    log_format = "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
-    date_format = "%H:%M:%S"
+    handlers = [logging.StreamHandler(sys.stdout)]
+    level = logging.INFO
 
-    # On capture TOUT (DEBUG est le niveau le plus bas)
+    if debug_enabled:
+        ensure_debug_dir()
+        handlers.insert(0, logging.FileHandler(get_debug_log_path(), mode="w", encoding="utf-8"))
+        level = logging.DEBUG
+
     logging.basicConfig(
-        level=logging.DEBUG,
-        format=log_format,
-        datefmt=date_format,
-        handlers=[
-            logging.FileHandler(LOG_FILE, mode='w', encoding='utf-8'), # Écrit dans le fichier
-            logging.StreamHandler(sys.stdout) # Écrit aussi dans la console
-        ]
+        level=level,
+        format="%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s",
+        datefmt="%H:%M:%S",
+        handlers=handlers,
+        force=True,
     )
 
-    logging.info("=== DÉMARRAGE DE LA SESSION DE LOG ===")
+    logging.info("=== SESSION STARTED ===")
+    logging.info(f"Debug mode: {'enabled' if debug_enabled else 'disabled'}")
     logging.info(f"OS: {platform.system()} {platform.release()}")
     logging.info(f"Python: {sys.version}")
-    logging.info(f"Dossier de base: {BASE_DIR}")
+    if debug_enabled:
+        logging.info(f"Debug log path: {get_debug_log_path()}")
 
-    # Capture des exceptions non gérées (Crashs brutaux)
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
-        logging.critical("CRASH NON GÉRÉ (Uncaught Exception):", exc_info=(exc_type, exc_value, exc_traceback))
+        logging.critical("Unhandled exception:", exc_info=(exc_type, exc_value, exc_traceback))
 
     sys.excepthook = handle_exception

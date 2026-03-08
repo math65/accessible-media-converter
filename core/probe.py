@@ -3,6 +3,18 @@ import sys
 import subprocess
 import json
 import logging # Ajout
+import builtins
+
+
+def _translate(msgid):
+    translator = builtins.__dict__.get('_')
+    if callable(translator):
+        return translator(msgid)
+    return msgid
+
+
+def _translatef(msgid, **kwargs):
+    return _translate(msgid).format(**kwargs)
 
 class MediaTrack:
     def __init__(self, stream_index, codec_type, codec_name, language='und', title=None, disposition=None):
@@ -54,12 +66,12 @@ class MediaMetadata:
         count_a = len(self.audio_tracks)
         if count_a > 0:
             a = self.audio_tracks[0]
-            if count_a > 1: a_info = f"{count_a}x Audio"
+            if count_a > 1: a_info = _translatef("{count}x Audio", count=count_a)
             else: a_info = a.codec_name.upper()
         
         s_info = ""
         count_s = len(self.subtitle_tracks)
-        if count_s > 0: s_info = f"{count_s}x Subs"
+        if count_s > 0: s_info = _translatef("{count}x Subtitles", count=count_s)
 
         parts = [x for x in [v_info, a_info, s_info] if x]
         return " / ".join(parts)

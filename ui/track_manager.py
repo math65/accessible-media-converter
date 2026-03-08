@@ -184,8 +184,8 @@ class TrackPanel(wx.Panel):
         flags = []
         if track['default']: flags.append(_("Default"))
         if track['forced']: flags.append(_("Forced"))
-        if track['hearing_impaired']: flags.append("HI")
-        if track['visual_impaired']: flags.append("AD")
+        if track['hearing_impaired']: flags.append(_("HI"))
+        if track['visual_impaired']: flags.append(_("AD"))
         
         self.list_ctrl.SetItem(index, 4, ", ".join(flags))
 

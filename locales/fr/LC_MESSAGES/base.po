@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 2.2\n"
+"Project-Id-Version: Universal Transcoder 2.3\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
@@ -15,13 +15,16 @@ msgid "&Add Files..."
 msgstr "&Ajouter des fichiers..."
 
 msgid "Add &Folder..."
-msgstr "Ajouter un &Dossier..."
+msgstr "Ajouter un &dossier..."
 
 msgid "E&xit"
 msgstr "&Quitter"
 
 msgid "&Edit"
 msgstr "&Édition"
+
+msgid "&Debug"
+msgstr "&Debug"
 
 msgid "&Clear List"
 msgstr "&Vider la liste"
@@ -32,24 +35,60 @@ msgstr "&Supprimer la sélection"
 msgid "Preferences"
 msgstr "Préférences"
 
+msgid "Enable &Debug"
+msgstr "Activer le &debug"
+
+msgid "Show Debug &Folder"
+msgstr "Afficher le &dossier debug"
+
+msgid "&Disable Debug"
+msgstr "&Désactiver le debug"
+
+msgid "&Clear Debug Data"
+msgstr "&Effacer les données debug"
+
 msgid "&Help"
 msgstr "&Aide"
 
 msgid "&About"
-msgstr "À &Propos"
+msgstr "À &propos"
 
 # --- INTERFACE PRINCIPALE ---
 msgid "Filename"
 msgstr "Nom du fichier"
 
 msgid "Details (Codec/Bitrate)"
-msgstr "Détails (Codec/Débit)"
+msgstr "Détails (codec/débit)"
 
 msgid "Status"
 msgstr "Statut"
 
 msgid "No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here."
-msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter\nou glissez des fichiers ici."
+msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter des fichiers\nou glissez-déposez-les ici."
+
+msgid "Use arrows to browse files. Press Delete to remove selected entries."
+msgstr "Utilisez les flèches pour parcourir les fichiers. Appuyez sur Suppr pour retirer les éléments sélectionnés."
+
+msgid "Ready. Add files to begin."
+msgstr "Prêt. Ajoutez des fichiers pour commencer."
+
+msgid "Audio files list"
+msgstr "Liste des fichiers audio"
+
+msgid "Video files list"
+msgstr "Liste des fichiers vidéo"
+
+msgid "Main panel"
+msgstr "Panneau principal"
+
+msgid "File categories"
+msgstr "Catégories de fichiers"
+
+msgid "Empty file list panel"
+msgstr "Panneau de liste vide"
+
+msgid "No files selected information"
+msgstr "Information : aucun fichier sélectionné"
 
 # --- ONGLETS ---
 msgid "Audio"
@@ -58,12 +97,517 @@ msgstr "Audio"
 msgid "Video"
 msgstr "Vidéo"
 
-# --- TRACK MANAGER (GESTIONNAIRE DE PISTES) ---
+msgid "Audio tab selected."
+msgstr "Onglet audio sélectionné."
+
+msgid "Video tab selected."
+msgstr "Onglet vidéo sélectionné."
+
+# --- FORMATS ET CONVERSION ---
+msgid "Conversion Settings"
+msgstr "Réglages de conversion"
+
+msgid "Convert to:"
+msgstr "Convertir en :"
+
+msgid "Convert to"
+msgstr "Convertir en"
+
+msgid "Select the target output format."
+msgstr "Sélectionnez le format de sortie."
+
+msgid "Settings and quality"
+msgstr "Réglages et qualité"
+
+msgid "Open format-specific settings."
+msgstr "Ouvrir les réglages du format sélectionné."
+
+msgid "&Settings / Quality..."
+msgstr "&Réglages / Qualité..."
+
+msgid "&Start Conversion"
+msgstr "&Lancer la conversion"
+
+msgid "Start conversion"
+msgstr "Lancer la conversion"
+
+msgid "Stop"
+msgstr "Arrêter"
+
+msgid "Stop conversion"
+msgstr "Arrêter la conversion"
+
+msgid "Media Files"
+msgstr "Fichiers média"
+
+msgid "MP3 - Audio"
+msgstr "MP3 - Audio"
+
+msgid "MP3 - Audio (Extract)"
+msgstr "MP3 - Audio (extraction)"
+
+msgid "AAC - Audio (Extract)"
+msgstr "AAC - Audio (extraction)"
+
+msgid "AAC - Audio (M4A)"
+msgstr "AAC - Audio (M4A)"
+
+msgid "WAV - Audio (Lossless)"
+msgstr "WAV - Audio (sans perte)"
+
+msgid "FLAC - Audio (Lossless)"
+msgstr "FLAC - Audio (sans perte)"
+
+msgid "ALAC - Audio (Apple Lossless)"
+msgstr "ALAC - Audio (sans perte Apple)"
+
+msgid "OGG - Audio (Vorbis)"
+msgstr "OGG - Audio (Vorbis)"
+
+msgid "WMA - Audio (Legacy)"
+msgstr "WMA - Audio (ancien)"
+
+msgid "MP4 - Video (H.264)"
+msgstr "MP4 - Vidéo (H.264)"
+
+msgid "MKV - Video"
+msgstr "MKV - Vidéo"
+
+msgid "Output format selected: {format}"
+msgstr "Format de sortie sélectionné : {format}"
+
+msgid "Settings updated for format: {format}"
+msgstr "Réglages mis à jour pour le format : {format}"
+
+msgid "Ready"
+msgstr "Prêt"
+
+msgid "Ready (+Tracks)"
+msgstr "Prêt (+pistes)"
+
+msgid "Conversion progress percentage"
+msgstr "Pourcentage d'avancement de la conversion"
+
+msgid "Shows conversion progress from 0 to 100 percent."
+msgstr "Affiche la progression de la conversion de 0 à 100 %."
+
+msgid "Conversion progress details"
+msgstr "Détails d'avancement de la conversion"
+
+msgid "Preparing conversion..."
+msgstr "Préparation de la conversion..."
+
+msgid "Conversion started."
+msgstr "Conversion démarrée."
+
+msgid "Converting..."
+msgstr "Conversion en cours..."
+
+msgid "Done"
+msgstr "Terminé"
+
+msgid "Stopping..."
+msgstr "Arrêt en cours..."
+
+msgid "Stop requested."
+msgstr "Arrêt demandé."
+
+msgid "Stopped by user"
+msgstr "Arrêté par l'utilisateur"
+
+msgid "Conversion stopped by user."
+msgstr "Conversion arrêtée par l'utilisateur."
+
+msgid "File converted successfully."
+msgstr "Fichier converti avec succès."
+
+msgid "All tasks completed!"
+msgstr "Toutes les tâches sont terminées !"
+
+msgid "All tasks completed successfully."
+msgstr "Toutes les tâches sont terminées avec succès."
+
+msgid "All tasks completed!\n\n{count} error(s)"
+msgstr "Toutes les tâches sont terminées !\n\n{count} erreur(s)"
+
+msgid "{count} error(s) during conversion."
+msgstr "{count} erreur(s) pendant la conversion."
+
+msgid "An error occurred during conversion."
+msgstr "Une erreur est survenue pendant la conversion."
+
+msgid "Debug mode cannot be changed during an active conversion."
+msgstr "Le mode debug ne peut pas être modifié pendant une conversion en cours."
+
+msgid "Disable debug mode before clearing debug data."
+msgstr "Désactivez le mode debug avant d'effacer les données debug."
+
+msgid "Unable to restart the application in debug mode."
+msgstr "Impossible de redémarrer l'application en mode debug."
+
+msgid "Unable to open the debug folder."
+msgstr "Impossible d'ouvrir le dossier debug."
+
+msgid "Debug data cleared ({count} file(s))."
+msgstr "Données debug effacées ({count} fichier(s))."
+
+msgid "Debug folder opened: {path}"
+msgstr "Dossier debug ouvert : {path}"
+
+msgid "{audio_count} audio file(s), {video_count} video file(s) loaded."
+msgstr "{audio_count} fichier(s) audio, {video_count} fichier(s) vidéo chargés."
+
+msgid "{count} file(s) added."
+msgstr "{count} fichier(s) ajouté(s)."
+
+msgid "{count} file(s) removed."
+msgstr "{count} fichier(s) supprimé(s)."
+
+msgid "{count} file(s) added from folder."
+msgstr "{count} fichier(s) ajouté(s) depuis le dossier."
+
+msgid "No files loaded."
+msgstr "Aucun fichier chargé."
+
+msgid "No files to convert."
+msgstr "Aucun fichier à convertir."
+
+msgid "List cleared."
+msgstr "Liste vidée."
+
+msgid "Open Media"
+msgstr "Ouvrir un média"
+
+msgid "Success"
+msgstr "Succès"
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Warning"
+msgstr "Attention"
+
+msgid "Custom folder not found. Using source folder."
+msgstr "Dossier personnalisé introuvable. Utilisation du dossier source."
+
+msgid "Select a folder to add"
+msgstr "Sélectionner un dossier à ajouter"
+
+msgid "No compatible media files found in this folder."
+msgstr "Aucun fichier média compatible trouvé dans ce dossier."
+
+msgid "Info"
+msgstr "Information"
+
+msgid "A conversion is currently running.\nDo you really want to stop it and exit?"
+msgstr "Une conversion est en cours.\nVoulez-vous vraiment l'arrêter et quitter ?"
+
+msgid "Confirm Exit"
+msgstr "Confirmer la fermeture"
+
+msgid "About"
+msgstr "À propos"
+
+msgid "Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"
+msgstr "Universal Transcoder V1.0\nPropulsé par FFmpeg et wxPython"
+
+# --- RÉSUMÉS DE FORMATS ---
+msgid "CBR {bitrate}"
+msgstr "CBR {bitrate}"
+
+msgid "VBR Q{quality}"
+msgstr "VBR Q{quality}"
+
+msgid "Copy"
+msgstr "Copie"
+
+msgid "Lossless"
+msgstr "Sans perte"
+
+msgid "Stereo"
+msgstr "Stéréo"
+
+msgid "Video: Copy"
+msgstr "Vidéo : copie"
+
+msgid "H.264 CRF {crf}"
+msgstr "H.264 CRF {crf}"
+
+msgid "Audio: Copy"
+msgstr "Audio : copie"
+
+msgid "Audio: {summary}"
+msgstr "Audio : {summary}"
+
+msgid "{count}x Audio"
+msgstr "{count}x audio"
+
+msgid "{count}x Subtitles"
+msgstr "{count}x sous-titres"
+
+# --- FENÊTRE DE RÉGLAGES ---
+msgid "Configure settings for: "
+msgstr "Configurer les réglages de : "
+
+msgid "Format settings dialog"
+msgstr "Boîte de dialogue des réglages du format"
+
+msgid "Audio Settings"
+msgstr "Réglages audio"
+
+msgid "Audio settings panel"
+msgstr "Panneau des réglages audio"
+
+msgid "Use Tab to navigate audio options."
+msgstr "Utilisez Tab pour parcourir les options audio."
+
+msgid "Re-encode (Recommended)"
+msgstr "Réencoder (recommandé)"
+
+msgid "Copy Stream (Advanced)"
+msgstr "Copie du flux (avancé)"
+
+msgid "Audio mode re-encode"
+msgstr "Mode audio réencodage"
+
+msgid "Audio mode copy stream"
+msgstr "Mode audio copie du flux"
+
+msgid "Re-encode audio with detailed settings."
+msgstr "Réencoder l'audio avec des réglages détaillés."
+
+msgid "Copy source audio without re-encoding."
+msgstr "Copier l'audio source sans le réencoder."
+
+msgid "Keep original quality and speed up conversion.\nWarning: The output format must support the source codec."
+msgstr "Conserve la qualité d'origine et accélère la conversion.\nAttention : le format de sortie doit prendre en charge le codec source."
+
+msgid "Copy mode warning"
+msgstr "Avertissement du mode copie"
+
+msgid "Sample Rate:"
+msgstr "Fréquence d'échantillonnage :"
+
+msgid "Sample Rate"
+msgstr "Fréquence d'échantillonnage"
+
+msgid "Target sample rate."
+msgstr "Fréquence d'échantillonnage cible."
+
+msgid "Channels:"
+msgstr "Canaux :"
+
+msgid "Channels"
+msgstr "Canaux"
+
+msgid "Target channel layout."
+msgstr "Disposition des canaux cible."
+
+msgid "Stereo (Downmix)"
+msgstr "Stéréo (mixage réduit)"
+
+msgid "Mono"
+msgstr "Mono"
+
+msgid "Original Channels"
+msgstr "Canaux d'origine"
+
+msgid "Original"
+msgstr "D'origine"
+
+msgid "Rate Mode:"
+msgstr "Mode de débit :"
+
+msgid "Rate Mode"
+msgstr "Mode de débit"
+
+msgid "Choose CBR or VBR mode."
+msgstr "Choisir un mode CBR ou VBR."
+
+msgid "Constant Bitrate (CBR)"
+msgstr "Débit constant (CBR)"
+
+msgid "Variable Bitrate (VBR)"
+msgstr "Débit variable (VBR)"
+
+msgid "Bitrate:"
+msgstr "Débit :"
+
+msgid "Bitrate"
+msgstr "Débit"
+
+msgid "Bitrate used in CBR mode."
+msgstr "Débit utilisé en mode CBR."
+
+msgid "Quality (VBR):"
+msgstr "Qualité (VBR) :"
+
+msgid "Quality (OGG):"
+msgstr "Qualité (OGG) :"
+
+msgid "Quality"
+msgstr "Qualité"
+
+msgid "Quality scale used in VBR mode."
+msgstr "Échelle de qualité utilisée en mode VBR."
+
+msgid "Best Quality"
+msgstr "Qualité maximale"
+
+msgid "High Quality"
+msgstr "Haute qualité"
+
+msgid "Medium"
+msgstr "Moyenne"
+
+msgid "Smallest Size"
+msgstr "Taille minimale"
+
+msgid "Audiophile"
+msgstr "Audiophile"
+
+msgid "Low"
+msgstr "Faible"
+
+msgid "High"
+msgstr "Élevée"
+
+msgid "Bit Depth:"
+msgstr "Profondeur en bits :"
+
+msgid "Bit Depth"
+msgstr "Profondeur en bits"
+
+msgid "Bit depth for lossless formats."
+msgstr "Profondeur en bits pour les formats sans perte."
+
+msgid "16-bit (CD Quality)"
+msgstr "16 bits (qualité CD)"
+
+msgid "24-bit (Studio Quality)"
+msgstr "24 bits (qualité studio)"
+
+msgid "32-bit Float (Pro)"
+msgstr "32 bits flottants (pro)"
+
+msgid "Compression Level:"
+msgstr "Niveau de compression :"
+
+msgid "Compression"
+msgstr "Compression"
+
+msgid "Compression level for FLAC."
+msgstr "Niveau de compression pour le FLAC."
+
+msgid "Fast"
+msgstr "Rapide"
+
+msgid "Standard"
+msgstr "Standard"
+
+msgid "Max"
+msgstr "Maximum"
+
+msgid "Ultra Slow"
+msgstr "Très lent"
+
+msgid "Video Settings"
+msgstr "Réglages vidéo"
+
+msgid "Video settings panel"
+msgstr "Panneau des réglages vidéo"
+
+msgid "Video mode re-encode"
+msgstr "Mode vidéo réencodage"
+
+msgid "Video mode copy stream"
+msgstr "Mode vidéo copie du flux"
+
+msgid "Quality CRF slider"
+msgstr "Curseur de qualité CRF"
+
+msgid "Lower CRF means better quality and bigger file."
+msgstr "Un CRF plus faible donne une meilleure qualité et un fichier plus volumineux."
+
+msgid "Video quality CRF"
+msgstr "Qualité vidéo CRF"
+
+msgid "Quality (CRF):"
+msgstr "Qualité (CRF) :"
+
+msgid "Balanced"
+msgstr "Équilibré"
+
+msgid "Small Size"
+msgstr "Taille réduite"
+
+msgid "High Quality (V2)"
+msgstr "Haute qualité (V2)"
+
+msgid "CRF: 23"
+msgstr "CRF : 23"
+
+# --- FENÊTRE DE PRÉFÉRENCES ---
+msgid "Preferences dialog"
+msgstr "Boîte de dialogue des préférences"
+
+msgid "Output Destination"
+msgstr "Destination de sortie"
+
+msgid "Same as source file"
+msgstr "Même dossier que le fichier source"
+
+msgid "Output in source folder"
+msgstr "Sortie dans le dossier source"
+
+msgid "Specific folder:"
+msgstr "Dossier spécifique :"
+
+msgid "Output in specific folder"
+msgstr "Sortie dans un dossier spécifique"
+
+msgid "Custom output folder path"
+msgstr "Chemin du dossier de sortie personnalisé"
+
+msgid "Browse..."
+msgstr "Parcourir..."
+
+msgid "Browse output folder"
+msgstr "Parcourir le dossier de sortie"
+
+msgid "Type or paste the destination folder path."
+msgstr "Saisissez ou collez le chemin du dossier de destination."
+
+msgid "Ask every time (Batch)"
+msgstr "Demander à chaque fois (lot)"
+
+msgid "Ask output folder each time"
+msgstr "Demander le dossier de sortie à chaque fois"
+
+msgid "Save preferences"
+msgstr "Enregistrer les préférences"
+
+msgid "Cancel preferences"
+msgstr "Annuler les préférences"
+
+msgid "Select Output Folder"
+msgstr "Sélectionner le dossier de sortie"
+
+msgid "OK"
+msgstr "Valider"
+
+# --- TRACK MANAGER ---
 msgid "Track Manager"
 msgstr "Gestionnaire de pistes"
 
+msgid "Track manager dialog"
+msgstr "Boîte de dialogue du gestionnaire de pistes"
+
+msgid "Track categories"
+msgstr "Catégories de pistes"
+
 msgid "Audio Tracks"
-msgstr "Pistes Audio"
+msgstr "Pistes audio"
 
 msgid "Subtitles"
 msgstr "Sous-titres"
@@ -71,25 +615,24 @@ msgstr "Sous-titres"
 msgid "Manage Tracks..."
 msgstr "Gérer les pistes..."
 
-msgid "Move Up"
-msgstr "Monter"
-
-msgid "Move Down"
-msgstr "Descendre"
-
-msgid "Apply"
-msgstr "Appliquer"
-
-msgid "Cancel"
-msgstr "Annuler"
-
-msgid "Track Settings"
-msgstr "Paramètres de la piste"
+msgid "Manage Tracks... (MKV/MP4 only)"
+msgstr "Gérer les pistes... (MKV/MP4 uniquement)"
 
 msgid "Shortcuts: Ctrl+Up/Down to reorder, Space to toggle."
-msgstr "Raccourcis : Ctrl+Haut/Bas pour déplacer, Espace pour cocher."
+msgstr "Raccourcis : Ctrl+Haut/Bas pour réordonner, Espace pour activer ou désactiver."
 
-# --- COLONNES TRACK MANAGER ---
+msgid "Keyboard shortcuts hint"
+msgstr "Aide des raccourcis clavier"
+
+msgid "Audio tracks list"
+msgstr "Liste des pistes audio"
+
+msgid "Subtitle tracks list"
+msgstr "Liste des pistes de sous-titres"
+
+msgid "Use Space to keep or remove a track. Use Ctrl+Up and Ctrl+Down to reorder."
+msgstr "Utilisez Espace pour conserver ou retirer une piste. Utilisez Ctrl+Haut et Ctrl+Bas pour la réordonner."
+
 msgid "#"
 msgstr "N°"
 
@@ -105,43 +648,74 @@ msgstr "Titre"
 msgid "Flags"
 msgstr "Attributs"
 
-# --- DETAILS TRACK MANAGER ---
+msgid "Move Up"
+msgstr "Monter"
+
+msgid "Move Down"
+msgstr "Descendre"
+
+msgid "Move selected track up"
+msgstr "Monter la piste sélectionnée"
+
+msgid "Move selected track down"
+msgstr "Descendre la piste sélectionnée"
+
+msgid "Track Settings"
+msgstr "Réglages de la piste"
+
 msgid "Language:"
 msgstr "Langue :"
 
 msgid "Language"
 msgstr "Langue"
 
+msgid "Track language"
+msgstr "Langue de la piste"
+
 msgid "Track Title:"
 msgstr "Titre de la piste :"
+
+msgid "Track title"
+msgstr "Titre de la piste"
 
 msgid "Attributes:"
 msgstr "Attributs :"
 
-msgid "e.g. Director's Commentary"
-msgstr "ex: Version Longue"
-
-# --- ATTRIBUTS (FLAGS) ---
 msgid "Default"
-msgstr "Défaut"
+msgstr "Par défaut"
 
 msgid "Forced"
-msgstr "Forcé"
+msgstr "Forcée"
+
+msgid "Set selected track as default"
+msgstr "Définir la piste sélectionnée par défaut"
+
+msgid "Set selected track as forced"
+msgstr "Définir la piste sélectionnée comme forcée"
 
 msgid "Audio Description"
-msgstr "Audio Description"
+msgstr "Audiodescription"
 
 msgid "Hearing Impaired"
-msgstr "Malentendant"
+msgstr "Malentendants"
 
-msgid "Click inside a row (e.g. on the title) to select it first."
-msgstr "Cliquez dans une ligne (ex: sur le titre) pour la sélectionner d'abord."
+msgid "HI"
+msgstr "HI"
 
-msgid "Advanced track management is only available for MKV, MP4 and MOV formats."
-msgstr "La gestion avancée des pistes est disponible uniquement pour les formats MKV, MP4 et MOV."
+msgid "AD"
+msgstr "AD"
 
-msgid "Info"
-msgstr "Info"
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Apply track settings"
+msgstr "Appliquer les réglages des pistes"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Cancel track settings"
+msgstr "Annuler les réglages des pistes"
 
 # --- LANGUES ---
 msgid "Undetermined"
@@ -188,287 +762,3 @@ msgstr "Hindi"
 
 msgid "Arabic"
 msgstr "Arabe"
-
-# --- FORMATS & OPTIONS ---
-msgid "Conversion Settings"
-msgstr "Paramètres de conversion"
-
-msgid "Convert to:"
-msgstr "Convertir en :"
-
-msgid "Convert to"
-msgstr "Convertir en"
-
-msgid "&Settings / Quality..."
-msgstr "&Réglages / Qualité..."
-
-msgid "&Start Conversion"
-msgstr "&Lancer la conversion"
-
-msgid "MP3 - Audio (Extract)"
-msgstr "MP3 - Audio (Extraction)"
-
-msgid "AAC - Audio (Extract)"
-msgstr "AAC - Audio (Extraction)"
-
-msgid "WAV - Audio (Lossless)"
-msgstr "WAV - Audio (Sans perte)"
-
-msgid "FLAC - Audio (Lossless)"
-msgstr "FLAC - Audio (Sans perte)"
-
-msgid "ALAC - Audio (Apple Lossless)"
-msgstr "ALAC - Audio (Apple Lossless)"
-
-msgid "AAC - Audio (M4A)"
-msgstr "AAC - Audio (M4A)"
-
-msgid "OGG - Audio (Vorbis)"
-msgstr "OGG - Audio (Vorbis)"
-
-msgid "WMA - Audio (Legacy)"
-msgstr "WMA - Audio (Ancien)"
-
-# --- FENÊTRE DE RÉGLAGES (SETTINGS) ---
-msgid "Configure settings for: "
-msgstr "Configurer pour : "
-
-msgid "Audio Settings"
-msgstr "Paramètres Audio"
-
-msgid "Re-encode (Recommended)"
-msgstr "Ré-encoder (Recommandé)"
-
-msgid "Copy Stream (Advanced)"
-msgstr "Copier le flux (Avancé)"
-
-msgid "Keep original quality and speed up conversion.\nWarning: The output format must support the source codec."
-msgstr "Garde la qualité originale et accélère la conversion.\nAttention : Le format de sortie doit supporter le codec source."
-
-# --- RÉGLAGES AUDIO AVANCÉS ---
-msgid "Sample Rate:"
-msgstr "Fréquence (Hz) :"
-
-msgid "Sample Rate"
-msgstr "Fréquence"
-
-msgid "Channels:"
-msgstr "Canaux :"
-
-msgid "Channels"
-msgstr "Canaux"
-
-msgid "Stereo (Downmix)"
-msgstr "Stéréo"
-
-msgid "Mono"
-msgstr "Mono"
-
-msgid "Original Channels"
-msgstr "Original"
-
-msgid "Original"
-msgstr "Comme l'original"
-
-msgid "Rate Mode:"
-msgstr "Mode de débit :"
-
-msgid "Rate Mode"
-msgstr "Mode de débit"
-
-msgid "Constant Bitrate (CBR)"
-msgstr "Constant"
-
-msgid "Variable Bitrate (VBR)"
-msgstr "Variable"
-
-msgid "Bitrate:"
-msgstr "Débit :"
-
-msgid "Bitrate"
-msgstr "Débit"
-
-msgid "Quality (VBR):"
-msgstr "Qualité (VBR) :"
-
-msgid "Quality"
-msgstr "Qualité"
-
-msgid "Quality (OGG):"
-msgstr "Qualité (OGG) :"
-
-# --- DESCRIPTIONS DE QUALITÉ (AJOUTS RÉCENTS) ---
-msgid "Best Quality (V0)"
-msgstr "Meilleure (V0)"
-
-msgid "Smallest Size (V9)"
-msgstr "Taille Min (V9)"
-
-msgid "Best Quality"
-msgstr "Meilleure"
-
-msgid "High Quality"
-msgstr "Haute Qualité"
-
-msgid "Medium"
-msgstr "Moyenne"
-
-msgid "Smallest Size"
-msgstr "Taille Min"
-
-msgid "Audiophile"
-msgstr "Audiophile"
-
-msgid "Low"
-msgstr "Faible"
-
-msgid "High"
-msgstr "Haute"
-
-msgid "Ultra Slow"
-msgstr "Ultra Lent (Max)"
-
-msgid "Audiophile (5)"
-msgstr "Audiophile (5)"
-
-msgid "Low Quality (1)"
-msgstr "Basse Qualité (1)"
-
-msgid "Bit Depth:"
-msgstr "Profondeur de bits :"
-
-msgid "Bit Depth"
-msgstr "Profondeur"
-
-msgid "16-bit (CD Quality)"
-msgstr "16-bit (Qualité CD)"
-
-msgid "24-bit (Studio Quality)"
-msgstr "24-bit (Qualité Studio)"
-
-msgid "32-bit Float (Pro)"
-msgstr "32-bit Float (Pro)"
-
-msgid "Compression Level:"
-msgstr "Niveau de compression :"
-
-msgid "Compression"
-msgstr "Compression"
-
-msgid "Fast (0)"
-msgstr "Rapide (0)"
-
-msgid "Fast"
-msgstr "Rapide"
-
-msgid "Standard (5)"
-msgstr "Standard (5)"
-
-msgid "Standard"
-msgstr "Standard"
-
-msgid "Max (8)"
-msgstr "Max (8)"
-
-msgid "Max"
-msgstr "Max"
-
-msgid "Quality: Lossless (Original)"
-msgstr "Qualité : Sans perte (Originale)"
-
-# --- VIDÉO ---
-msgid "Video Settings"
-msgstr "Paramètres Vidéo"
-
-msgid "Quality (CRF):"
-msgstr "Qualité (CRF) :"
-
-msgid "Balanced"
-msgstr "Équilibré"
-
-msgid "Small Size"
-msgstr "Fichier léger"
-
-msgid "High Quality (V2)"
-msgstr "Haute Qualité (V2)"
-
-# --- FENÊTRE DE PRÉFÉRENCES ---
-msgid "Output Destination"
-msgstr "Destination des fichiers"
-
-msgid "Same as source file"
-msgstr "Même dossier que le fichier source"
-
-msgid "Specific folder:"
-msgstr "Dossier spécifique :"
-
-msgid "Ask every time (Batch)"
-msgstr "Demander à chaque fois"
-
-msgid "Browse..."
-msgstr "Parcourir..."
-
-msgid "Select Output Folder"
-msgstr "Sélectionner le dossier de sortie"
-
-msgid "Select a folder to add"
-msgstr "Sélectionner un dossier à ajouter"
-
-msgid "No compatible media files found in this folder."
-msgstr "Aucun fichier média compatible trouvé dans ce dossier."
-
-# --- BOUTONS ---
-msgid "OK"
-msgstr "Valider"
-
-msgid "Stop"
-msgstr "Arrêter"
-
-# --- MESSAGES & ERREURS ---
-msgid "Open Media"
-msgstr "Ouvrir un média"
-
-msgid "All tasks completed!"
-msgstr "Toutes les tâches sont terminées !"
-
-msgid "Success"
-msgstr "Succès"
-
-msgid "Error"
-msgstr "Erreur"
-
-msgid "Warning"
-msgstr "Attention"
-
-msgid "Custom folder not found. Using source folder."
-msgstr "Dossier personnalisé introuvable. Utilisation du dossier source."
-
-msgid "Converting..."
-msgstr "Conversion en cours..."
-
-msgid "Done"
-msgstr "Terminé"
-
-msgid "Ready"
-msgstr "Prêt"
-
-msgid "Stopping..."
-msgstr "Arrêt en cours..."
-
-msgid "Stopped by user"
-msgstr "Arrêté par l'utilisateur"
-
-msgid "Conversion in progress"
-msgstr "Conversion en cours"
-
-msgid "A conversion is currently running.\nDo you really want to stop it and exit?"
-msgstr "Une conversion est en cours.\nVoulez-vous vraiment l'arrêter et quitter ?"
-
-msgid "Confirm Exit"
-msgstr "Confirmer la sortie"
-
-msgid "About"
-msgstr "À Propos"
-
-msgid "Universal Transcoder V1.0\nPowered by FFmpeg & wxPython"
-msgstr "Universal Transcoder V1.0\nPropulsé par FFmpeg & wxPython"
