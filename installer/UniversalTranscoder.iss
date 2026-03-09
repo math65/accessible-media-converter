@@ -1,23 +1,26 @@
 #ifndef AppName
-  #define AppName "Universal Transcoder"
+  #define AppName "Accessible Media Converter"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.1.0"
+#endif
+#ifndef AppDistDirName
+  #define AppDistDirName "AccessibleMediaConverter"
 #endif
 #ifndef AppExeName
-  #define AppExeName "UniversalTranscoder.exe"
+  #define AppExeName "AccessibleMediaConverter.exe"
 #endif
 #ifndef AppOutputBaseFilename
-  #define AppOutputBaseFilename "UniversalTranscoder-Setup-1.0.0"
+  #define AppOutputBaseFilename "AccessibleMediaConverter-Setup-1.1.0"
 #endif
 #ifndef AppId
   #define AppId "{{7E285383-842B-4F3B-8455-DF3F9F74F4F7}"
 #endif
 #ifndef AppInstallDirName
-  #define AppInstallDirName "Universal Transcoder"
+  #define AppInstallDirName "Accessible Media Converter"
 #endif
 #ifndef AppPublisher
-  #define AppPublisher "Universal Transcoder"
+  #define AppPublisher "Accessible Media Converter"
 #endif
 
 [Setup]
@@ -47,7 +50,7 @@ Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\{#AppDistDirName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"

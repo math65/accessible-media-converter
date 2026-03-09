@@ -79,6 +79,7 @@ try {
     }
     $metadata = $metadataJson | ConvertFrom-Json
     $innoAppId = $metadata.APP_ID -replace "^\{", "{{"
+    $distAppDir = Join-Path $DistDir $metadata.APP_EXE_NAME
 
     Write-Host "Compiling translation catalogs..."
     $compileTranslationsScript = @"
@@ -164,7 +165,7 @@ print(output_path)
 
     $env:UT_VERSION_FILE = $VersionInfoPath
     try {
-        Write-Host "Building dist\UniversalTranscoder.exe with PyInstaller..."
+        Write-Host "Building application executable with PyInstaller..."
         & $PythonExe -m PyInstaller --clean --noconfirm $SpecPath
         if ($LASTEXITCODE -ne 0) {
             throw "PyInstaller build failed."
@@ -174,18 +175,21 @@ print(output_path)
         Remove-Item Env:UT_VERSION_FILE -ErrorAction SilentlyContinue
     }
 
-    $distExePath = Join-Path $DistDir $metadata.APP_EXECUTABLE_FILENAME
+    Assert-FileExists -Path $distAppDir -Label "Built application folder"
+    $distExePath = Join-Path $distAppDir $metadata.APP_EXECUTABLE_FILENAME
     Assert-FileExists -Path $distExePath -Label "Built executable"
+    Write-Host "Application folder built: $distAppDir"
     Write-Host "Executable built: $distExePath"
 
     $isccPath = Get-IsccPath
     if (-not $isccPath) {
-        throw "Inno Setup Compiler (ISCC.exe) was not found. Install Inno Setup 6 and rerun the script. The application executable was built successfully: $distExePath"
+        throw "Inno Setup Compiler (ISCC.exe) was not found. Install Inno Setup 6 and rerun the script. The application folder was built successfully: $distAppDir"
     }
 
     Write-Host "Building installer with Inno Setup..."
     & $isccPath `
         "/DAppName=$($metadata.APP_NAME)" `
+        "/DAppDistDirName=$($metadata.APP_EXE_NAME)" `
         "/DAppVersion=$($metadata.APP_VERSION)" `
         "/DAppExeName=$($metadata.APP_EXECUTABLE_FILENAME)" `
         "/DAppOutputBaseFilename=$($metadata.APP_INSTALLER_BASENAME)-$($metadata.APP_VERSION)" `

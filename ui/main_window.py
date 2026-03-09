@@ -40,6 +40,23 @@ from ui.preferences_dialog import PreferencesDialog
 from ui.support_dialog import SupportContactDialog
 from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog
 
+SUPPORTED_MEDIA_EXTENSIONS = {
+    '.mp3',
+    '.wav',
+    '.flac',
+    '.aac',
+    '.ogg',
+    '.wma',
+    '.m4a',
+    '.mp4',
+    '.mkv',
+    '.avi',
+    '.mov',
+    '.wmv',
+    '.webm',
+}
+
+
 class FileListPanel(wx.Panel):
     def __init__(self, parent, list_name):
         super().__init__(parent)
@@ -88,6 +105,7 @@ class MainWindow(wx.Frame):
         self.Centre()
         
         self.Bind(wx.EVT_CLOSE, self.on_close_window)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_char_hook)
 
     def _load_config(self):
         self._config_needs_save = False
@@ -123,6 +141,8 @@ class MainWindow(wx.Frame):
         item_exit = file_menu.Append(wx.ID_EXIT, _("E&xit") + "\tAlt+F4")
         
         edit_menu = wx.Menu()
+        item_paste = edit_menu.Append(wx.ID_PASTE, _("&Paste Files") + "\tCtrl+V")
+        edit_menu.AppendSeparator()
         self.item_clear = edit_menu.Append(wx.ID_ANY, _("&Clear List") + "\tAlt+C")
         self.item_remove = edit_menu.Append(wx.ID_ANY, _("Remove &Selected") + "\tDel")
         edit_menu.AppendSeparator()
@@ -144,6 +164,7 @@ class MainWindow(wx.Frame):
         # CORRECTION A02 : Le Bind manquant !
         self.Bind(wx.EVT_MENU, self.on_add_folder, item_add_folder)
         self.Bind(wx.EVT_MENU, self.on_exit, item_exit)
+        self.Bind(wx.EVT_MENU, self.on_paste_files, item_paste)
         self.Bind(wx.EVT_MENU, self.on_clear_list, self.item_clear)
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
         self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs)
@@ -439,24 +460,90 @@ class MainWindow(wx.Frame):
         with wx.DirDialog(self, _("Select a folder to add"), style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dlg:
             if dlg.ShowModal() == wx.ID_CANCEL: return
             folder_path = dlg.GetPath()
-            
-            files_to_add = []
-            valid_exts = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a', '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm']
-            
-            wx.BeginBusyCursor()
-            for root, dirs, files in os.walk(folder_path):
-                for f in files:
-                    if os.path.splitext(f)[1].lower() in valid_exts:
-                        files_to_add.append(os.path.join(root, f))
-            
+
+            files_to_add = self._collect_media_paths([folder_path])
             if files_to_add:
                 self._process_added_files(files_to_add)
                 self._set_status(_("{count} file(s) added from folder.").format(count=len(files_to_add)))
             else:
                 wx.MessageBox(_("No compatible media files found in this folder."), _("Info"))
                 self._set_status(_("No compatible media files found in this folder."))
-            
+
+    def on_paste_files(self, event):
+        if self.is_converting:
+            return
+
+        clipboard_paths = self._get_paths_from_clipboard()
+        if not clipboard_paths:
+            self._set_status(_("Clipboard does not contain files or folders."))
+            return
+
+        files_to_add = self._collect_media_paths(clipboard_paths)
+        if not files_to_add:
+            wx.MessageBox(_("No compatible media files found in the clipboard."), _("Info"))
+            self._set_status(_("No compatible media files found in the clipboard."))
+            return
+
+        self._process_added_files(files_to_add)
+        self._set_status(_("{count} file(s) pasted from the clipboard.").format(count=len(files_to_add)))
+
+    def on_char_hook(self, event):
+        key_code = event.GetKeyCode()
+        if event.ControlDown() and not event.AltDown() and not event.ShiftDown() and key_code in (ord('V'), ord('v')):
+            focused = wx.Window.FindFocus()
+            if focused and isinstance(focused, wx.TextEntry):
+                event.Skip()
+                return
+            self.on_paste_files(None)
+            return
+        event.Skip()
+
+    def _get_paths_from_clipboard(self):
+        file_data = wx.FileDataObject()
+        if not wx.TheClipboard.Open():
+            return []
+
+        try:
+            if not wx.TheClipboard.GetData(file_data):
+                return []
+            return [path for path in file_data.GetFilenames() if path]
+        finally:
+            wx.TheClipboard.Close()
+
+    def _collect_media_paths(self, input_paths):
+        media_paths = []
+        seen = set()
+
+        wx.BeginBusyCursor()
+        try:
+            for input_path in input_paths:
+                if not input_path:
+                    continue
+
+                normalized = os.path.normpath(input_path)
+                if not os.path.exists(normalized):
+                    continue
+
+                if os.path.isfile(normalized):
+                    if self._is_supported_media_file(normalized) and normalized not in seen:
+                        media_paths.append(normalized)
+                        seen.add(normalized)
+                    continue
+
+                if os.path.isdir(normalized):
+                    for root, dirs, files in os.walk(normalized):
+                        for filename in files:
+                            candidate = os.path.join(root, filename)
+                            if self._is_supported_media_file(candidate) and candidate not in seen:
+                                media_paths.append(candidate)
+                                seen.add(candidate)
+        finally:
             wx.EndBusyCursor()
+
+        return media_paths
+
+    def _is_supported_media_file(self, path):
+        return os.path.splitext(path)[1].lower() in SUPPORTED_MEDIA_EXTENSIONS
 
     def on_context_menu(self, event):
         if self.is_converting: return

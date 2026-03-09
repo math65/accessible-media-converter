@@ -1,12 +1,12 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Universal Transcoder 2.3\n"
+"Project-Id-Version: Accessible Media Converter 2.3\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 # --- MENUS ---
-msgid "Universal Transcoder"
-msgstr "Universal Transcoder"
+msgid "Accessible Media Converter"
+msgstr "Accessible Media Converter"
 
 msgid "&File"
 msgstr "&Fichier"
@@ -22,6 +22,9 @@ msgstr "&Quitter"
 
 msgid "&Edit"
 msgstr "&Édition"
+
+msgid "&Paste Files"
+msgstr "C&oller des fichiers"
 
 msgid "&Debug"
 msgstr "&Debug"
@@ -473,6 +476,15 @@ msgstr "Sélectionner un dossier à ajouter"
 
 msgid "No compatible media files found in this folder."
 msgstr "Aucun fichier média compatible trouvé dans ce dossier."
+
+msgid "Clipboard does not contain files or folders."
+msgstr "Le presse-papiers ne contient ni fichier ni dossier."
+
+msgid "No compatible media files found in the clipboard."
+msgstr "Aucun fichier média compatible trouvé dans le presse-papiers."
+
+msgid "{count} file(s) pasted from the clipboard."
+msgstr "{count} fichier(s) collé(s) depuis le presse-papiers."
 
 msgid "Info"
 msgstr "Information"

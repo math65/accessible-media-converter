@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 
-APP_DIR_NAME = "UniversalTranscoder"
+APP_DIR_NAME = "AccessibleMediaConverter"
 DEBUG_DIR_NAME = "debug"
 SESSION_STATE_FILENAME = "session-state.json"
 DEBUG_LOG_FILENAME = "debug.log"
