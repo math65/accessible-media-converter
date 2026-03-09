@@ -20,8 +20,31 @@ MP4_TEXT_SUBTITLE_CODECS = frozenset(
 )
 
 
+def get_output_extension(target_format):
+    if target_format in ['alac', 'aac']:
+        return 'm4a'
+    return target_format
+
+
+def build_output_filename(input_path, target_format):
+    extension = get_output_extension(target_format)
+    base_name = os.path.splitext(os.path.basename(input_path))[0]
+    return f"{base_name}.{extension}"
+
+
+def resolve_output_dir(input_path, custom_output_dir=None):
+    if custom_output_dir and os.path.isdir(custom_output_dir):
+        return custom_output_dir
+    return os.path.dirname(input_path) or os.getcwd()
+
+
+def build_output_path(input_path, target_format, custom_output_dir=None):
+    output_dir = resolve_output_dir(input_path, custom_output_dir=custom_output_dir)
+    return os.path.join(output_dir, build_output_filename(input_path, target_format))
+
+
 class ConversionTask:
-    def __init__(self, input_data, target_format, settings, output_dir=None):
+    def __init__(self, input_data, target_format, settings, output_dir=None, output_path=None):
         self.meta = None
         if hasattr(input_data, 'full_path'):
             self.meta = input_data
@@ -34,6 +57,7 @@ class ConversionTask:
         self.target_format = target_format
         self.settings = settings
         self.custom_output_dir = output_dir
+        self.output_path = output_path
         self.ffmpeg_exe = self._get_ffmpeg_path()
         self.process = None
         
@@ -185,19 +209,26 @@ class ConversionTask:
 
         return mapped_entries
 
+    def stop(self):
+        if self.process and self.process.poll() is None:
+            try:
+                self.process.kill()
+                logging.info("Processus FFmpeg interrompu pour: %s", self.input_path)
+            except Exception:
+                logging.exception("Impossible d'interrompre FFmpeg pour: %s", self.input_path)
+
     def run(self, progress_callback=None, stop_check_callback=None):
-        ext = self.target_format
-        if self.target_format in ['alac', 'aac']: ext = 'm4a'
-        
-        output_filename = os.path.splitext(os.path.basename(self.input_path))[0] + "." + ext
-        
-        if self.custom_output_dir and os.path.isdir(self.custom_output_dir):
-            output_dir = self.custom_output_dir
-        else:
-            output_dir = os.path.dirname(self.input_path) or os.getcwd()
-            
-        if not os.path.exists(output_dir): os.makedirs(output_dir)  
-        output_path = os.path.join(output_dir, output_filename)
+        output_path = self.output_path
+        if not output_path:
+            output_path = build_output_path(
+                self.input_path,
+                self.target_format,
+                custom_output_dir=self.custom_output_dir,
+            )
+
+        output_dir = os.path.dirname(output_path) or os.getcwd()
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
         # Construction Commande
         cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
@@ -321,8 +352,9 @@ class ConversionTask:
                         except: pass
 
         if self.process.returncode != 0:
-            if stop_check_callback and not stop_check_callback(): 
-                logging.error(f"FFmpeg a échoué avec le code {self.process.returncode}")
-                raise Exception("FFmpeg error")
+            if stop_check_callback and stop_check_callback():
+                raise Exception("Stopped by user")
+            logging.error(f"FFmpeg a échoué avec le code {self.process.returncode}")
+            raise Exception("FFmpeg error")
         else:
             logging.info("Conversion terminée avec succès.")

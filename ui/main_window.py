@@ -1,11 +1,21 @@
 import logging
 import os
-import threading
 
 import wx
 
 from core.app_info import APP_ABOUT_TAGLINE, APP_NAME, APP_VERSION
-from core import FileProber, ConversionTask
+from core.batch_manager import (
+    JOB_STATE_DONE,
+    JOB_STATE_ERROR,
+    JOB_STATE_QUEUED,
+    JOB_STATE_RUNNING,
+    JOB_STATE_SKIPPED,
+    JOB_STATE_STOPPED,
+    SKIP_REASON_BATCH_STOPPED,
+    SKIP_REASON_EXISTS,
+    BatchConversionManager,
+)
+from core import FileProber
 from core.debug_session import (
     clear_debug_artifacts,
     get_config_path,
@@ -27,6 +37,7 @@ from core.formatting import (
 )
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
+from ui.support_dialog import SupportContactDialog
 from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog
 
 class FileListPanel(wx.Panel):
@@ -50,6 +61,8 @@ class MainWindow(wx.Frame):
         self.is_converting = False
         self.stop_requested = False
         self._is_relaunching = False
+        self.batch_manager = None
+        self._current_batch_list_ctrl = None
         
         self.prober = FileProber()
         self.audio_data = [] 
@@ -123,6 +136,8 @@ class MainWindow(wx.Frame):
         self.item_debug_clear = self.debug_menu.Append(wx.ID_ANY, _("&Clear Debug Data"))
         
         help_menu = wx.Menu()
+        item_contact_support = help_menu.Append(wx.ID_ANY, _("Contact &Support..."))
+        help_menu.AppendSeparator()
         item_about = help_menu.Append(wx.ID_ABOUT, _("&About"))
 
         self.Bind(wx.EVT_MENU, self.on_add_files, item_add)
@@ -136,6 +151,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_open_debug_folder, self.item_debug_open_folder)
         self.Bind(wx.EVT_MENU, self.on_disable_debug, self.item_debug_disable)
         self.Bind(wx.EVT_MENU, self.on_clear_debug_data, self.item_debug_clear)
+        self.Bind(wx.EVT_MENU, self.on_contact_support, item_contact_support)
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
 
         menubar.Append(file_menu, _("&File"))
@@ -759,6 +775,8 @@ class MainWindow(wx.Frame):
         self.btn_stop.Disable()
         self.btn_stop.SetLabel(_("Stopping..."))
         self.stop_requested = True
+        if self.batch_manager:
+            self.batch_manager.stop()
         self._set_status(_("Stop requested."))
 
     def on_close_window(self, event):
@@ -773,6 +791,8 @@ class MainWindow(wx.Frame):
             
             if dlg.ShowModal() == wx.ID_YES:
                 self.stop_requested = True
+                if self.batch_manager:
+                    self.batch_manager.stop()
                 self.Destroy()
             else:
                 event.Veto()
@@ -809,6 +829,7 @@ class MainWindow(wx.Frame):
 
         self.is_converting = True
         self.stop_requested = False
+        self._current_batch_list_ctrl = lst
         
         self.btn_convert.Hide()
         self.btn_stop.Show()
@@ -822,49 +843,93 @@ class MainWindow(wx.Frame):
         self.content_panel.Layout()
         self._set_status(_("Conversion started."))
         
-        self._update_ui_state() 
-        
-        t = threading.Thread(target=self._worker_thread, args=(data, fmt_key, settings, lst, custom_out))
-        t.daemon = True 
-        t.start()
+        self._update_ui_state()
 
-    def _worker_thread(self, data_list, fmt, settings, list_ctrl_obj, output_dir):
-        errors_count = 0 
-        
-        for i, meta in enumerate(data_list):
-            if self.stop_requested: break
-                
-            wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Converting..."))
-            def update_progress(pct):
-                progress_txt = f"{_('Converting...')} {pct}%"
-                wx.CallAfter(self.gauge.SetValue, pct)
-                wx.CallAfter(self.lbl_progress.SetLabel, progress_txt)
-                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, progress_txt)
-                wx.CallAfter(self._set_status, progress_txt)
+        self.batch_manager = BatchConversionManager(
+            data,
+            fmt_key,
+            settings,
+            output_dir=custom_out,
+            max_concurrent=self.settings_store.get('max_concurrent_jobs', 2),
+            output_policy=self.settings_store.get('existing_output_policy', 'rename'),
+            continue_on_error=self.settings_store.get('continue_on_error', True),
+            on_job_update=lambda payload: wx.CallAfter(self._on_batch_job_update, payload),
+            on_batch_update=lambda payload: wx.CallAfter(self._on_batch_progress_update, payload),
+            on_batch_complete=lambda payload: wx.CallAfter(self._on_batch_complete, payload),
+        )
+        self.batch_manager.start()
 
-            def check_stop(): return self.stop_requested
+    def _format_batch_job_status(self, payload):
+        state = payload.get('state')
+        if state == JOB_STATE_RUNNING:
+            return f"{_('Converting...')} {payload.get('progress', 0)}%"
+        if state == JOB_STATE_QUEUED:
+            return _("Queued")
+        if state == JOB_STATE_DONE:
+            return _("Done")
+        if state == JOB_STATE_ERROR:
+            return _("Error")
+        if state == JOB_STATE_STOPPED:
+            return _("Stopped by user")
+        if state == JOB_STATE_SKIPPED:
+            if payload.get('skip_reason') == SKIP_REASON_EXISTS:
+                return _("Skipped (Exists)")
+            if payload.get('skip_reason') == SKIP_REASON_BATCH_STOPPED:
+                return _("Skipped (Batch stopped)")
+            return _("Skipped")
+        return _("Ready")
 
-            task = ConversionTask(meta, fmt, settings, output_dir=output_dir)
-            try:
-                task.run(progress_callback=update_progress, stop_check_callback=check_stop)
-                wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Done"))
-                wx.CallAfter(self._set_status, _("File converted successfully."))
-            except Exception as e:
-                if str(e) == "Stopped by user":
-                    wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Stopped by user"))
-                    wx.CallAfter(self._set_status, _("Conversion stopped by user."))
-                    break
-                else:
-                    errors_count += 1 
-                    logging.exception("Conversion task failed.")
-                    wx.CallAfter(list_ctrl_obj.SetItem, i, 2, _("Error"))
-                    wx.CallAfter(self._set_status, _("An error occurred during conversion."))
-        
-        wx.CallAfter(self._on_batch_complete, errors_count)
+    def _format_batch_progress_label(self, summary):
+        template = _(
+            "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error"
+        )
+        if summary.get('stopped', 0):
+            template = _(
+                "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error / {stopped} stopped"
+            )
+        return template.format(
+            progress=summary.get('overall_progress', 0),
+            running=summary.get('running', 0),
+            queued=summary.get('queued', 0),
+            done=summary.get('done', 0),
+            skipped=summary.get('skipped', 0),
+            error=summary.get('error', 0),
+            stopped=summary.get('stopped', 0),
+        )
 
-    def _on_batch_complete(self, errors_count):
+    def _on_batch_job_update(self, payload):
+        if not self._current_batch_list_ctrl:
+            return
+        row_index = payload.get('index', -1)
+        if row_index < 0 or row_index >= self._current_batch_list_ctrl.GetItemCount():
+            return
+        self._current_batch_list_ctrl.SetItem(row_index, 2, self._format_batch_job_status(payload))
+
+    def _on_batch_progress_update(self, summary):
+        progress_value = summary.get('overall_progress', 0)
+        self.gauge.SetValue(progress_value)
+        progress_label = self._format_batch_progress_label(summary)
+        self.lbl_progress.SetLabel(progress_label)
+        self._set_status(progress_label)
+
+    def _open_batch_output_folder_if_needed(self, summary):
+        if summary.get('user_stopped'):
+            return
+        if not self.settings_store.get('open_output_folder_after_batch', False):
+            return
+        output_dir = summary.get('primary_output_dir')
+        if not output_dir or not os.path.isdir(output_dir):
+            return
+        try:
+            os.startfile(output_dir)
+        except Exception:
+            logging.exception("Unable to open output folder: %s", output_dir)
+
+    def _on_batch_complete(self, summary):
         self.is_converting = False
         self.stop_requested = False
+        self.batch_manager = None
+        self._current_batch_list_ctrl = None
         
         self.btn_stop.Hide()
         self.btn_convert.Show()
@@ -873,17 +938,41 @@ class MainWindow(wx.Frame):
         self.content_panel.Layout()
         
         self._update_ui_state()
-        
-        if self.btn_stop.GetLabel() != _("Stopping..."):
-            if errors_count == 0:
-                wx.MessageBox(_("All tasks completed!"), _("Success"))
-                self._set_status(_("All tasks completed successfully."))
-            else:
-                msg = _("All tasks completed!\n\n{count} error(s)").format(count=errors_count)
-                wx.MessageBox(msg, _("Done"), wx.ICON_WARNING)
-                self._set_status(_("{count} error(s) during conversion.").format(count=errors_count))
+
+        if summary.get('user_stopped'):
+            self._set_status(_("Batch stopped by user."))
+            return
+
+        self._open_batch_output_folder_if_needed(summary)
+
+        if summary.get('error', 0) == 0 and summary.get('skipped', 0) == 0:
+            wx.MessageBox(_("All tasks completed!"), _("Success"))
+            self._set_status(_("All tasks completed successfully."))
+            return
+
+        message = _(
+            "Batch completed.\n\nDone: {done}\nSkipped: {skipped}\nErrors: {error}"
+        ).format(
+            done=summary.get('done', 0),
+            skipped=summary.get('skipped', 0),
+            error=summary.get('error', 0),
+        )
+        icon = wx.ICON_WARNING if summary.get('error', 0) else wx.ICON_INFORMATION
+        wx.MessageBox(message, _("Done"), icon)
+        self._set_status(
+            _("Batch finished: {done} done / {skipped} skipped / {error} error").format(
+                done=summary.get('done', 0),
+                skipped=summary.get('skipped', 0),
+                error=summary.get('error', 0),
+            )
+        )
 
     def on_exit(self, e): self.Close()
+    def on_contact_support(self, e):
+        dlg = SupportContactDialog(self)
+        dlg.ShowModal()
+        dlg.Destroy()
+
     def on_about(self, e):
         message = f"{APP_NAME} {APP_VERSION}\n{_(APP_ABOUT_TAGLINE)}"
         wx.MessageBox(message, _("About"))

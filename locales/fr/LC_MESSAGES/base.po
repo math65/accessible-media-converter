@@ -53,6 +53,166 @@ msgstr "&Aide"
 msgid "&About"
 msgstr "À &propos"
 
+msgid "Contact &Support..."
+msgstr "Contacter le &support..."
+
+# --- SUPPORT --- 
+msgid "Contact Support"
+msgstr "Contacter le support"
+
+msgid "Describe your issue below. Your mail client will open with the message already prepared."
+msgstr "Décrivez votre problème ci-dessous. Votre client mail s'ouvrira avec le message déjà préparé."
+
+msgid "You will only need to review the email and send it."
+msgstr "Vous n'aurez plus qu'à vérifier le mail et l'envoyer."
+
+msgid "If the mail client did not open, copy the information below and send it manually."
+msgstr "Si le client mail ne s'est pas ouvert, copiez les informations ci-dessous et envoyez-les manuellement."
+
+msgid "Your message"
+msgstr "Votre message"
+
+msgid "Describe the problem you encountered."
+msgstr "Décrivez le problème rencontré."
+
+msgid "Mail details"
+msgstr "Détails du mail"
+
+msgid "Contact address"
+msgstr "Adresse de contact"
+
+msgid "Support email address to copy."
+msgstr "Adresse mail du support à copier."
+
+msgid "Copy address"
+msgstr "Copier l'adresse"
+
+msgid "Subject"
+msgstr "Sujet"
+
+msgid "Support email subject to copy."
+msgstr "Sujet du mail de support à copier."
+
+msgid "Copy subject"
+msgstr "Copier le sujet"
+
+msgid "Technical information"
+msgstr "Informations techniques"
+
+msgid "Technical information included in the support message."
+msgstr "Informations techniques incluses dans le message de support."
+
+msgid "Message preview"
+msgstr "Aperçu du message"
+
+msgid "Full support message that can be copied manually if needed."
+msgstr "Message complet de support pouvant être copié manuellement si nécessaire."
+
+msgid "Copy full message"
+msgstr "Copier le message complet"
+
+msgid "Open Debug Folder"
+msgstr "Ouvrir le dossier debug"
+
+msgid "Open the debug folder in File Explorer."
+msgstr "Ouvrir le dossier debug dans l'explorateur de fichiers."
+
+msgid "Open Mail Client"
+msgstr "Ouvrir le client mail"
+
+msgid "Open the default mail client with the prepared message."
+msgstr "Ouvrir le client mail par défaut avec le message préparé."
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Unable to copy to the clipboard."
+msgstr "Impossible de copier dans le presse-papiers."
+
+msgid "Support email address copied to clipboard."
+msgstr "Adresse mail du support copiée dans le presse-papiers."
+
+msgid "Support email subject copied to clipboard."
+msgstr "Sujet du mail de support copié dans le presse-papiers."
+
+msgid "Support message copied to clipboard."
+msgstr "Message de support copié dans le presse-papiers."
+
+msgid "Debug folder opened."
+msgstr "Dossier debug ouvert."
+
+msgid "Default mail client opened."
+msgstr "Client mail par défaut ouvert."
+
+msgid "Unable to open the default mail client. Copy the address, subject, and message below."
+msgstr "Impossible d'ouvrir le client mail par défaut. Copiez l'adresse, le sujet et le message ci-dessous."
+
+msgid "Support dialog closed."
+msgstr "Fenêtre de support fermée."
+
+msgid "Packaged"
+msgstr "Packagé"
+
+msgid "Source"
+msgstr "Source"
+
+msgid "Enabled"
+msgstr "Activé"
+
+msgid "Disabled"
+msgstr "Désactivé"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "{app_name} support request"
+msgstr "Demande de support {app_name}"
+
+msgid "App version: {value}"
+msgstr "Version de l'application : {value}"
+
+msgid "Execution mode: {value}"
+msgstr "Mode d'exécution : {value}"
+
+msgid "Operating system: {value}"
+msgstr "Système d'exploitation : {value}"
+
+msgid "Python version: {value}"
+msgstr "Version de Python : {value}"
+
+msgid "Language: {value}"
+msgstr "Langue : {value}"
+
+msgid "Current tab: {value}"
+msgstr "Onglet courant : {value}"
+
+msgid "Selected output format: {value}"
+msgstr "Format de sortie sélectionné : {value}"
+
+msgid "Debug mode: {value}"
+msgstr "Mode debug : {value}"
+
+msgid "Debug data present: {value}"
+msgstr "Données debug présentes : {value}"
+
+msgid "Debug folder: {value}"
+msgstr "Dossier debug : {value}"
+
+msgid "Please describe your issue here."
+msgstr "Veuillez décrire votre problème ici."
+
+msgid "Your message:"
+msgstr "Votre message :"
+
+msgid "Technical information:"
+msgstr "Informations techniques :"
+
+msgid "Not selected"
+msgstr "Non sélectionné"
+
 # --- INTERFACE PRINCIPALE ---
 msgid "Filename"
 msgstr "Nom du fichier"
@@ -746,6 +906,68 @@ msgstr "Sous-titres de transcription"
 
 msgid "Descriptions"
 msgstr "Descriptions"
+
+# --- BATCH PARALLELE ---
+msgid "Queued"
+msgstr "En file d'attente"
+
+msgid "Skipped"
+msgstr "Ignoré"
+
+msgid "Skipped (Exists)"
+msgstr "Ignoré (déjà présent)"
+
+msgid "Skipped (Batch stopped)"
+msgstr "Ignoré (batch interrompu)"
+
+msgid "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error"
+msgstr "{progress}% - {running} en cours / {queued} en attente / {done} terminés / {skipped} ignorés / {error} erreurs"
+
+msgid "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error / {stopped} stopped"
+msgstr "{progress}% - {running} en cours / {queued} en attente / {done} terminés / {skipped} ignorés / {error} erreurs / {stopped} arrêtés"
+
+msgid "Batch stopped by user."
+msgstr "Batch arrêté par l'utilisateur."
+
+msgid "Batch completed.\n\nDone: {done}\nSkipped: {skipped}\nErrors: {error}"
+msgstr "Batch terminé.\n\nTerminés : {done}\nIgnorés : {skipped}\nErreurs : {error}"
+
+msgid "Batch finished: {done} done / {skipped} skipped / {error} error"
+msgstr "Batch terminé : {done} terminés / {skipped} ignorés / {error} erreurs"
+
+# --- PREFERENCES V1.1 ---
+msgid "Output"
+msgstr "Sortie"
+
+msgid "Execution"
+msgstr "Exécution"
+
+msgid "Existing file policy"
+msgstr "Politique en cas de fichier existant"
+
+msgid "Rename automatically"
+msgstr "Renommer automatiquement"
+
+msgid "Overwrite existing file"
+msgstr "Écraser le fichier existant"
+
+msgid "Skip existing file"
+msgstr "Ignorer le fichier existant"
+
+msgid "Choose what to do if an output file already exists."
+msgstr "Choisissez quoi faire si un fichier de sortie existe déjà."
+
+msgid "Open output folder when done"
+msgstr "Ouvrir le dossier de sortie à la fin"
+
+msgid "Max concurrent conversions"
+msgstr "Nombre maximal de conversions simultanées"
+
+msgid "Set how many conversions can run at the same time."
+msgstr "Définissez combien de conversions peuvent s'exécuter en même temps."
+
+msgid "Continue batch after an error"
+msgstr "Continuer le batch après une erreur"
 
 msgid "Comment"
 msgstr "Commentaire"

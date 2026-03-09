@@ -9,8 +9,14 @@ try:
 except Exception:
     polib = None
 
+CURRENT_LANGUAGE_CODE = "en"
+CURRENT_LANGUAGE_SOURCE = "fallback"
+
 
 def install_language(preferred_lang='fr', prefer_po=True):
+    global CURRENT_LANGUAGE_CODE
+    global CURRENT_LANGUAGE_SOURCE
+
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
     else:
@@ -22,16 +28,30 @@ def install_language(preferred_lang='fr', prefer_po=True):
     # In development, load .po directly to avoid manual compile steps.
     if prefer_po and not getattr(sys, 'frozen', False):
         if _install_from_po(locales_dir, lang_code):
+            CURRENT_LANGUAGE_CODE = lang_code
+            CURRENT_LANGUAGE_SOURCE = 'po'
             return lang_code, 'po'
 
     try:
         lang = gettext.translation('base', localedir=locales_dir, languages=[lang_code])
         lang.install()
+        CURRENT_LANGUAGE_CODE = lang_code
+        CURRENT_LANGUAGE_SOURCE = 'mo'
         return lang_code, 'mo'
     except Exception:
         gettext.install('base', localedir=locales_dir)
         builtins.__dict__.setdefault('_', lambda s: s)
+        CURRENT_LANGUAGE_CODE = 'en'
+        CURRENT_LANGUAGE_SOURCE = 'fallback'
         return 'en', 'fallback'
+
+
+def get_current_language_code():
+    return CURRENT_LANGUAGE_CODE
+
+
+def get_current_language_source():
+    return CURRENT_LANGUAGE_SOURCE
 
 
 def _resolve_language(preferred_lang):

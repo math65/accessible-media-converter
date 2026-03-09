@@ -6,6 +6,10 @@ VIDEO_OUTPUT_FORMAT_KEYS = ("mp4", "mkv", *AUDIO_OUTPUT_FORMAT_KEYS)
 VIDEO_CONTAINER_FORMAT_KEYS = ("mp4", "mkv")
 LOSSLESS_AUDIO_FORMAT_KEYS = ("wav", "flac", "alac")
 VALID_OUTPUT_MODES = ("source", "custom", "ask")
+VALID_EXISTING_OUTPUT_POLICIES = ("rename", "overwrite", "skip")
+MIN_CONCURRENT_JOBS = 1
+MAX_CONCURRENT_JOBS = 4
+DEFAULT_CONCURRENT_JOBS = 2
 
 
 DEFAULT_FORMAT_SETTINGS = {
@@ -83,6 +87,10 @@ APP_DEFAULT_SETTINGS = {
     "last_format_video": "mp4",
     "output_mode": "source",
     "custom_output_path": "",
+    "existing_output_policy": "rename",
+    "open_output_folder_after_batch": False,
+    "max_concurrent_jobs": DEFAULT_CONCURRENT_JOBS,
+    "continue_on_error": True,
     "debug_enabled": False,
     "debug_restore_pending": False,
 }
@@ -159,8 +167,28 @@ def normalize_settings_store(settings_store):
         normalized["last_format_video"] = APP_DEFAULT_SETTINGS["last_format_video"]
     if normalized.get("output_mode") not in VALID_OUTPUT_MODES:
         normalized["output_mode"] = APP_DEFAULT_SETTINGS["output_mode"]
+    if normalized.get("existing_output_policy") not in VALID_EXISTING_OUTPUT_POLICIES:
+        normalized["existing_output_policy"] = APP_DEFAULT_SETTINGS["existing_output_policy"]
+
+    normalized["open_output_folder_after_batch"] = bool(
+        normalized.get("open_output_folder_after_batch", APP_DEFAULT_SETTINGS["open_output_folder_after_batch"])
+    )
+    normalized["continue_on_error"] = bool(
+        normalized.get("continue_on_error", APP_DEFAULT_SETTINGS["continue_on_error"])
+    )
+    normalized["max_concurrent_jobs"] = _normalize_concurrent_jobs(
+        normalized.get("max_concurrent_jobs", APP_DEFAULT_SETTINGS["max_concurrent_jobs"])
+    )
 
     return normalized
+
+
+def _normalize_concurrent_jobs(value):
+    try:
+        jobs = int(value)
+    except (TypeError, ValueError):
+        jobs = DEFAULT_CONCURRENT_JOBS
+    return min(max(jobs, MIN_CONCURRENT_JOBS), MAX_CONCURRENT_JOBS)
 
 
 def build_format_summary(format_key, settings):
