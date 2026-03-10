@@ -19,6 +19,8 @@ MP4_TEXT_SUBTITLE_CODECS = frozenset(
     }
 )
 
+STREAMING_LOUDNORM_FILTER = "loudnorm=I=-16:TP=-1:LRA=7"
+
 
 def get_output_extension(target_format):
     if target_format in ['alac', 'aac']:
@@ -153,6 +155,33 @@ class ConversionTask:
         ]
         disposition_value = "+".join(active_dispositions) if active_dispositions else "0"
         cmd.extend([f"-disposition:{stream_letter}:{output_index}", disposition_value])
+
+    def _is_streaming_normalization_enabled(self):
+        return bool(
+            self.settings.get("audio_normalize_streaming", False)
+            and self.settings.get("audio_mode", "convert") != "copy"
+        )
+
+    def _apply_audio_normalization_filters(self, cmd, mapped_container_tracks):
+        if not self._is_streaming_normalization_enabled():
+            return
+
+        if self.target_format in ['mp4', 'mkv', 'mov'] and mapped_container_tracks is not None:
+            audio_entries = mapped_container_tracks.get("audio", [])
+            if not audio_entries:
+                return
+
+            for output_index, _track_entry in enumerate(audio_entries):
+                cmd.extend([f"-filter:a:{output_index}", STREAMING_LOUDNORM_FILTER])
+
+            logging.info(
+                "Normalisation streaming appliquee sur %s piste(s) audio de sortie.",
+                len(audio_entries),
+            )
+            return
+
+        cmd.extend(["-filter:a", STREAMING_LOUDNORM_FILTER])
+        logging.info("Normalisation streaming appliquee sur la sortie audio.")
 
     def _filter_subtitle_entries_for_container(self, subtitle_entries):
         if self.target_format not in ['mp4', 'mov']:
@@ -293,6 +322,8 @@ class ConversionTask:
                 depth = self.settings.get('audio_bit_depth', 'original')
                 if depth == '16': cmd.extend(['-sample_fmt', 's16p'])
                 elif depth == '24': cmd.extend(['-sample_fmt', 's32p'])
+
+            self._apply_audio_normalization_filters(cmd, mapped_container_tracks)
 
         if self.target_format in ['mp4', 'mkv', 'mov']:
             video_mode = self.settings.get('video_mode', 'convert')

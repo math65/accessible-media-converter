@@ -26,6 +26,9 @@ msgstr "&Édition"
 msgid "&Paste Files"
 msgstr "C&oller des fichiers"
 
+msgid "Select &All"
+msgstr "&Tout sélectionner"
+
 msgid "&Debug"
 msgstr "&Debug"
 
@@ -226,8 +229,8 @@ msgstr "Détails (codec/débit)"
 msgid "Status"
 msgstr "Statut"
 
-msgid "No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here."
-msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter des fichiers\nou glissez-déposez-les ici."
+msgid "No files selected.\n\nPress Ctrl+O to add files,\npress Ctrl+V to paste copied files,\nor Drag & Drop them here."
+msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter des fichiers,\nappuyez sur Ctrl+V pour coller des fichiers copiés,\nou glissez-déposez-les ici."
 
 msgid "Use arrows to browse files. Press Delete to remove selected entries."
 msgstr "Utilisez les flèches pour parcourir les fichiers. Appuyez sur Suppr pour retirer les éléments sélectionnés."
@@ -486,6 +489,9 @@ msgstr "Aucun fichier média compatible trouvé dans le presse-papiers."
 msgid "{count} file(s) pasted from the clipboard."
 msgstr "{count} fichier(s) collé(s) depuis le presse-papiers."
 
+msgid "{count} file(s) selected."
+msgstr "{count} fichier(s) sélectionné(s)."
+
 msgid "Info"
 msgstr "Information"
 
@@ -513,6 +519,9 @@ msgstr "Copie"
 
 msgid "Lossless"
 msgstr "Sans perte"
+
+msgid "Normalized -16 LUFS"
+msgstr "Normalisé -16 LUFS"
 
 msgid "Stereo"
 msgstr "Stéréo"
@@ -688,6 +697,15 @@ msgstr "Compression"
 
 msgid "Compression level for FLAC."
 msgstr "Niveau de compression pour le FLAC."
+
+msgid "Normalize for streaming (-16 LUFS)"
+msgstr "Normaliser pour le streaming (-16 LUFS)"
+
+msgid "Normalize for streaming"
+msgstr "Normaliser pour le streaming"
+
+msgid "Apply streaming loudness normalization at -16 LUFS."
+msgstr "Appliquer une normalisation de loudness pour le streaming à -16 LUFS."
 
 msgid "Fast"
 msgstr "Rapide"

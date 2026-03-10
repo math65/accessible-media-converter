@@ -15,6 +15,7 @@ DEFAULT_CONCURRENT_JOBS = 2
 DEFAULT_FORMAT_SETTINGS = {
     "mp3": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
         "audio_qscale": 0,
@@ -23,6 +24,7 @@ DEFAULT_FORMAT_SETTINGS = {
     },
     "aac": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
         "audio_qscale": 3,
@@ -31,24 +33,28 @@ DEFAULT_FORMAT_SETTINGS = {
     },
     "ogg": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "audio_qscale": 6,
         "audio_sample_rate": "original",
         "audio_channels": "2",
     },
     "wma": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "audio_bitrate": "128k",
         "audio_sample_rate": "original",
         "audio_channels": "2",
     },
     "wav": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "audio_sample_rate": "original",
         "audio_bit_depth": "original",
         "audio_channels": "original",
     },
     "flac": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "audio_sample_rate": "original",
         "audio_bit_depth": "original",
         "flac_compression": 5,
@@ -56,6 +62,7 @@ DEFAULT_FORMAT_SETTINGS = {
     },
     "alac": {
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "audio_sample_rate": "original",
         "audio_bit_depth": "original",
         "audio_channels": "original",
@@ -64,6 +71,7 @@ DEFAULT_FORMAT_SETTINGS = {
         "video_mode": "convert",
         "video_crf": 23,
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
         "audio_qscale": 3,
@@ -74,6 +82,7 @@ DEFAULT_FORMAT_SETTINGS = {
         "video_mode": "convert",
         "video_crf": 23,
         "audio_mode": "convert",
+        "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
         "audio_qscale": 3,
@@ -146,6 +155,7 @@ def normalize_format_settings(format_key, settings):
     normalized = dict(DEFAULT_FORMAT_SETTINGS[format_key])
     if isinstance(settings, dict):
         normalized.update(settings)
+    normalized["audio_normalize_streaming"] = bool(normalized.get("audio_normalize_streaming", False))
     normalized["summary"] = build_format_summary(format_key, normalized)
     return normalized
 
@@ -209,10 +219,10 @@ def _build_video_summary(settings):
     if settings.get("audio_mode", "convert") == "copy":
         audio_summary = _translate("Audio: Copy")
     else:
-        audio_summary = _translatef(
-            "Audio: {summary}",
-            summary=_build_audio_mode_summary("mp4", settings),
-        )
+        audio_parts = [_build_audio_mode_summary("mp4", settings)]
+        if _should_include_audio_normalization(settings):
+            audio_parts.append(_translate("Normalized -16 LUFS"))
+        audio_summary = _translatef("Audio: {summary}", summary=" / ".join(audio_parts))
 
     return " / ".join([video_summary, audio_summary])
 
@@ -221,6 +231,8 @@ def _build_audio_summary(format_key, settings, include_channels):
     parts = [_build_audio_mode_summary(format_key, settings)]
     if include_channels and _should_include_audio_channels(format_key, settings):
         parts.append(_build_channel_summary(settings.get("audio_channels", "original")))
+    if _should_include_audio_normalization(settings):
+        parts.append(_translate("Normalized -16 LUFS"))
     return " / ".join(parts)
 
 
@@ -266,3 +278,10 @@ def _should_include_audio_channels(format_key, settings):
     if format_key in LOSSLESS_AUDIO_FORMAT_KEYS and channels_key == "original":
         return False
     return True
+
+
+def _should_include_audio_normalization(settings):
+    return bool(
+        settings.get("audio_normalize_streaming", False)
+        and settings.get("audio_mode", "convert") != "copy"
+    )

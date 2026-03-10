@@ -116,8 +116,16 @@ class SettingsDialog(wx.Dialog):
         
         grid_audio.Add(self.lbl_comp, 0, wx.ALIGN_CENTER_VERTICAL)
         grid_audio.Add(self.combo_comp, 0, wx.EXPAND)
-        
-        self.panel_audio_opts.SetSizer(grid_audio)
+
+        self.chk_normalize_streaming = wx.CheckBox(
+            self.panel_audio_opts,
+            label=_("Normalize for streaming (-16 LUFS)"),
+        )
+
+        audio_opts_sizer = wx.BoxSizer(wx.VERTICAL)
+        audio_opts_sizer.Add(grid_audio, 0, wx.EXPAND)
+        audio_opts_sizer.Add(self.chk_normalize_streaming, 0, wx.TOP, 12)
+        self.panel_audio_opts.SetSizer(audio_opts_sizer)
         audio_sizer.Add(self.panel_audio_opts, 1, wx.EXPAND | wx.ALL, 10)
         self.main_sizer.Add(audio_sizer, 0, wx.EXPAND | wx.ALL, 5)
         
@@ -171,6 +179,7 @@ class SettingsDialog(wx.Dialog):
         self.combo_quality.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_depth.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_comp.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
+        self.chk_normalize_streaming.Bind(wx.EVT_CHECKBOX, self.on_audio_option_change)
         if hasattr(self, 'combo_crf'):
             self.combo_crf.Bind(wx.EVT_CHOICE, self.on_video_option_change)
         
@@ -212,11 +221,13 @@ class SettingsDialog(wx.Dialog):
         
         d_map = {'original': 0, '16': 1, '24': 2, '32': 3}
         self.combo_depth.SetSelection(d_map.get(str(s.get('audio_bit_depth', 'original')), 0))
-        
+
         c = int(s.get('flac_compression', 5))
         if c > 12: c = 12
         self.combo_comp.SetSelection(c)
-        
+
+        self.chk_normalize_streaming.SetValue(bool(s.get('audio_normalize_streaming', False)))
+
         if hasattr(self, 'rb_v_convert'):
             if s.get('video_mode') == 'copy': self.rb_v_copy.SetValue(True)
             else: self.rb_v_convert.SetValue(True)
@@ -270,6 +281,7 @@ class SettingsDialog(wx.Dialog):
     def _update_visibility(self, preserve_focus=None):
         is_convert = self.rb_convert.GetValue()
         self.panel_audio_opts.Enable(is_convert)
+        self.chk_normalize_streaming.Enable(is_convert)
         self.lbl_copy_warn.Show(not is_convert)
         
         if is_convert:
@@ -345,6 +357,7 @@ class SettingsDialog(wx.Dialog):
         self.combo_quality.SetName(_("Quality"))
         self.combo_depth.SetName(_("Bit Depth"))
         self.combo_comp.SetName(_("Compression"))
+        self.chk_normalize_streaming.SetName(_("Normalize for streaming"))
 
         self.combo_sr.SetToolTip(_("Target sample rate."))
         self.combo_ch.SetToolTip(_("Target channel layout."))
@@ -353,6 +366,7 @@ class SettingsDialog(wx.Dialog):
         self.combo_quality.SetToolTip(_("Quality scale used in VBR mode."))
         self.combo_depth.SetToolTip(_("Bit depth for lossless formats."))
         self.combo_comp.SetToolTip(_("Compression level for FLAC."))
+        self.chk_normalize_streaming.SetToolTip(_("Apply streaming loudness normalization at -16 LUFS."))
 
         self.lbl_copy_warn.SetName(_("Copy mode warning"))
 
@@ -375,11 +389,12 @@ class SettingsDialog(wx.Dialog):
         self.combo_quality.SetName(_("Quality"))
         self.combo_depth.SetName(_("Bit Depth"))
         self.combo_comp.SetName(_("Compression"))
+        self.chk_normalize_streaming.SetName(_("Normalize for streaming"))
         if hasattr(self, 'combo_crf'):
             self.combo_crf.SetName(_("Video quality CRF"))
 
     def _focus_primary_audio_control(self):
-        for ctrl in [self.combo_sr, self.combo_ch, self.combo_rate_mode, self.combo_bitrate, self.combo_quality, self.combo_depth, self.combo_comp]:
+        for ctrl in [self.combo_sr, self.combo_ch, self.combo_rate_mode, self.combo_bitrate, self.combo_quality, self.combo_depth, self.combo_comp, self.chk_normalize_streaming]:
             if ctrl.IsShown() and ctrl.IsEnabled():
                 ctrl.SetFocus()
                 return
@@ -456,6 +471,7 @@ class SettingsDialog(wx.Dialog):
         s['audio_bit_depth'] = d_vals[self.combo_depth.GetSelection()]
         
         s['flac_compression'] = self.combo_comp.GetSelection()
+        s['audio_normalize_streaming'] = self.chk_normalize_streaming.GetValue()
 
         if hasattr(self, 'rb_v_convert'):
             s['video_mode'] = 'copy' if self.rb_v_copy.GetValue() else 'convert'

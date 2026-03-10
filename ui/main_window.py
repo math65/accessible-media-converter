@@ -142,6 +142,7 @@ class MainWindow(wx.Frame):
         
         edit_menu = wx.Menu()
         item_paste = edit_menu.Append(wx.ID_PASTE, _("&Paste Files") + "\tCtrl+V")
+        self.item_select_all = edit_menu.Append(wx.ID_ANY, _("Select &All") + "\tCtrl+A")
         edit_menu.AppendSeparator()
         self.item_clear = edit_menu.Append(wx.ID_ANY, _("&Clear List") + "\tAlt+C")
         self.item_remove = edit_menu.Append(wx.ID_ANY, _("Remove &Selected") + "\tDel")
@@ -165,6 +166,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_add_folder, item_add_folder)
         self.Bind(wx.EVT_MENU, self.on_exit, item_exit)
         self.Bind(wx.EVT_MENU, self.on_paste_files, item_paste)
+        self.Bind(wx.EVT_MENU, self.on_select_all, self.item_select_all)
         self.Bind(wx.EVT_MENU, self.on_clear_list, self.item_clear)
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
         self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs)
@@ -187,7 +189,9 @@ class MainWindow(wx.Frame):
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
         
         self.empty_panel = wx.Panel(self.panel)
-        self.empty_msg = _("No files selected.\n\nPress Ctrl+O to add files\nor Drag & Drop them here.")
+        self.empty_msg = _(
+            "No files selected.\n\nPress Ctrl+O to add files,\npress Ctrl+V to paste copied files,\nor Drag & Drop them here."
+        )
         empty_sizer = wx.BoxSizer(wx.VERTICAL)
         self.lbl_empty = wx.StaticText(self.empty_panel, label=self.empty_msg)
         self.lbl_empty.SetFont(wx.Font(14, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
@@ -484,7 +488,11 @@ class MainWindow(wx.Frame):
             self._set_status(_("No compatible media files found in the clipboard."))
             return
 
-        self._process_added_files(files_to_add)
+        result = self._process_added_files(files_to_add)
+        focus_target = result.get('first_added_target')
+        if focus_target:
+            tab_name, list_ctrl, index = focus_target
+            wx.CallAfter(self._focus_added_media_list_item, tab_name, list_ctrl, index)
         self._set_status(_("{count} file(s) pasted from the clipboard.").format(count=len(files_to_add)))
 
     def on_char_hook(self, event):
@@ -495,6 +503,13 @@ class MainWindow(wx.Frame):
                 event.Skip()
                 return
             self.on_paste_files(None)
+            return
+        if event.ControlDown() and not event.AltDown() and not event.ShiftDown() and key_code in (ord('A'), ord('a')):
+            focused = wx.Window.FindFocus()
+            if focused and isinstance(focused, wx.TextEntry):
+                event.Skip()
+                return
+            self.on_select_all(None)
             return
         event.Skip()
 
@@ -544,6 +559,28 @@ class MainWindow(wx.Frame):
 
     def _is_supported_media_file(self, path):
         return os.path.splitext(path)[1].lower() in SUPPORTED_MEDIA_EXTENSIONS
+
+    def _focus_added_media_list_item(self, tab_name, list_ctrl, index):
+        if tab_name not in ('audio', 'video'):
+            return
+        if index < 0 or index >= list_ctrl.GetItemCount():
+            return
+
+        if self.notebook.IsShown():
+            selection = 1 if tab_name == 'video' else 0
+            if hasattr(self.notebook, 'ChangeSelection'):
+                self.notebook.ChangeSelection(selection)
+            else:
+                self.notebook.SetSelection(selection)
+            self.current_tab = tab_name
+            self._update_formats_dropdown()
+
+        if not list_ctrl.IsShownOnScreen():
+            return
+
+        self._focus_single_list_item(list_ctrl, index)
+        list_ctrl.SetFocusFromKbd()
+        list_ctrl.SetFocus()
 
     def on_context_menu(self, event):
         if self.is_converting: return
@@ -742,6 +779,7 @@ class MainWindow(wx.Frame):
     def _update_ui_state(self):
         has_files = (len(self.audio_data) + len(self.video_data)) > 0
         if self.is_converting:
+            self.item_select_all.Enable(False)
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
             self._update_debug_menu_state()
@@ -751,6 +789,7 @@ class MainWindow(wx.Frame):
             self.empty_panel.Hide()
             self._update_layout_strategy()
             self.content_panel.Show()
+            self.item_select_all.Enable(True)
             self.item_clear.Enable(True)
             self.item_remove.Enable(True)
             self._set_status(
@@ -762,6 +801,7 @@ class MainWindow(wx.Frame):
         else:
             self.content_panel.Hide()
             self.empty_panel.Show()
+            self.item_select_all.Enable(False)
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
             wx.CallAfter(self.empty_panel.SetFocus)
@@ -780,15 +820,25 @@ class MainWindow(wx.Frame):
     def _process_added_files(self, paths):
         wx.BeginBusyCursor()
         added_count = 0
+        first_added_target = None
         for path in paths:
             meta = self.prober.analyze(path)
             meta.track_settings = None 
-            self._append_media_metadata(meta)
+            index = self._append_media_metadata(meta)
+            if first_added_target is None:
+                if meta.has_video:
+                    first_added_target = ('video', self.panel_video_list.list_ctrl, index)
+                else:
+                    first_added_target = ('audio', self.panel_audio_list.list_ctrl, index)
             added_count += 1
         wx.EndBusyCursor()
         self._update_ui_state()
         if added_count:
             self._set_status(_("{count} file(s) added.").format(count=added_count))
+        return {
+            'count': added_count,
+            'first_added_target': first_added_target,
+        }
 
     def on_clear_list(self, event):
         if self.is_converting: return
@@ -826,6 +876,29 @@ class MainWindow(wx.Frame):
         self._update_ui_state()
         if removed:
             self._set_status(_("{count} file(s) removed.").format(count=removed))
+
+    def on_select_all(self, event):
+        if self.is_converting:
+            return
+
+        list_ctrl, data = self._get_current_media_collection()
+        item_count = list_ctrl.GetItemCount()
+        if not data or item_count == 0 or not list_ctrl.IsShown():
+            return
+
+        for index in range(item_count):
+            list_ctrl.SetItemState(index, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+
+        first_index = 0
+        list_ctrl.SetItemState(
+            first_index,
+            wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
+            wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
+        )
+        list_ctrl.EnsureVisible(first_index)
+        list_ctrl.SetFocusFromKbd()
+        list_ctrl.SetFocus()
+        self._set_status(_("{count} file(s) selected.").format(count=item_count))
 
     def on_format_changed(self, event):
         idx = self.combo_format.GetSelection()
