@@ -7,6 +7,7 @@ from core.debug_session import get_debug_flags, load_raw_config
 # On importe notre nouveau logger
 from core.logger import setup_logger
 from core.i18n import install_language
+from core.updater import cleanup_update_artifacts
 
 # --- CONFIGURATION LANGUE (GETTEXT) ---
 def init_i18n():
@@ -27,6 +28,9 @@ def init_i18n():
 def main():
     debug_flags = get_debug_flags(load_raw_config())
     setup_logger(debug_enabled=debug_flags['debug_enabled'])
+    removed_update_artifacts = cleanup_update_artifacts()
+    if removed_update_artifacts:
+        logging.info("Updater cleanup removed %s artifact(s).", len(removed_update_artifacts))
     
     try:
         init_i18n()

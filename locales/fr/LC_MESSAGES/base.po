@@ -62,6 +62,112 @@ msgstr "À &propos"
 msgid "Contact &Support..."
 msgstr "Contacter le &support..."
 
+# --- UPDATER ---
+msgid "Check for &Updates..."
+msgstr "Vérifier les mises à &jour..."
+
+msgid "Update Available"
+msgstr "Mise à jour disponible"
+
+msgid "A new version of {app_name} is available."
+msgstr "Une nouvelle version de {app_name} est disponible."
+
+msgid "Current version:"
+msgstr "Version actuelle :"
+
+msgid "Available version:"
+msgstr "Version disponible :"
+
+msgid "Published:"
+msgstr "Publication :"
+
+msgid "Release Notes"
+msgstr "Notes de version"
+
+msgid "Release notes for the selected update."
+msgstr "Notes de version de la mise à jour sélectionnée."
+
+msgid "Download and Install"
+msgstr "Télécharger et installer"
+
+msgid "Download the installer and start the update."
+msgstr "Télécharger l'installateur et lancer la mise à jour."
+
+msgid "Open Release Page"
+msgstr "Ouvrir la page de la release"
+
+msgid "Open the GitHub release page in your browser."
+msgstr "Ouvrir la page GitHub de la release dans votre navigateur."
+
+msgid "Downloading update..."
+msgstr "Téléchargement de la mise à jour..."
+
+msgid "Downloading update... {percent}%"
+msgstr "Téléchargement de la mise à jour... {percent}%"
+
+msgid "Downloading the installer..."
+msgstr "Téléchargement de l'installateur..."
+
+msgid "Update downloaded successfully."
+msgstr "Mise à jour téléchargée avec succès."
+
+msgid "Version {version} has been downloaded.\n\nThe application will close and the installer will start.\nDo you want to continue?"
+msgstr "La version {version} a été téléchargée.\n\nL'application va se fermer et l'installateur va démarrer.\nVoulez-vous continuer ?"
+
+msgid "Install Update"
+msgstr "Installer la mise à jour"
+
+msgid "Update installation cancelled."
+msgstr "Installation de la mise à jour annulée."
+
+msgid "Unexpected error while downloading the update."
+msgstr "Erreur inattendue pendant le téléchargement de la mise à jour."
+
+msgid "Unable to open the release page."
+msgstr "Impossible d'ouvrir la page de la release."
+
+msgid "Please wait for the update download to finish."
+msgstr "Veuillez attendre la fin du téléchargement de la mise à jour."
+
+msgid "GitHub update check failed with HTTP status {code}."
+msgstr "La vérification GitHub des mises à jour a échoué avec le code HTTP {code}."
+
+msgid "Unable to contact GitHub to check for updates."
+msgstr "Impossible de contacter GitHub pour vérifier les mises à jour."
+
+msgid "The update check timed out."
+msgstr "La vérification des mises à jour a expiré."
+
+msgid "GitHub returned an invalid update response."
+msgstr "GitHub a renvoyé une réponse de mise à jour invalide."
+
+msgid "The GitHub release does not define a valid version tag."
+msgstr "La release GitHub ne définit pas de tag de version valide."
+
+msgid "No release notes provided."
+msgstr "Aucune note de version fournie."
+
+msgid "Unknown"
+msgstr "Inconnu"
+
+msgid "No installer asset was found in the GitHub release."
+msgstr "Aucun installateur n'a été trouvé dans la release GitHub."
+
+msgid "Invalid update information."
+msgstr "Informations de mise à jour invalides."
+
+msgid "The installer download failed with HTTP status {code}."
+msgstr "Le téléchargement de l'installateur a échoué avec le code HTTP {code}."
+
+msgid "Unable to download the installer from GitHub."
+msgstr "Impossible de télécharger l'installateur depuis GitHub."
+
+msgid "The installer download timed out."
+msgstr "Le téléchargement de l'installateur a expiré."
+
+msgid "Unable to save the downloaded installer."
+msgstr "Impossible d'enregistrer l'installateur téléchargé."
+
 # --- SUPPORT --- 
 msgid "Contact Support"
 msgstr "Contacter le support"
@@ -434,6 +540,24 @@ msgstr "Impossible d'ouvrir le dossier debug."
 
 msgid "Debug data cleared ({count} file(s))."
 msgstr "Données debug effacées ({count} fichier(s))."
+
+msgid "Stop the current conversion before installing an update."
+msgstr "Arrêtez la conversion en cours avant d'installer une mise à jour."
+
+msgid "Unable to start the update installer."
+msgstr "Impossible de démarrer l'installateur de mise à jour."
+
+msgid "Closing application to install update..."
+msgstr "Fermeture de l'application pour installer la mise à jour..."
+
+msgid "Checking for updates..."
+msgstr "Vérification des mises à jour..."
+
+msgid "Unable to check for updates."
+msgstr "Impossible de vérifier les mises à jour."
+
+msgid "You are up to date."
+msgstr "Vous êtes à jour."
 
 msgid "Debug folder opened: {path}"
 msgstr "Dossier debug ouvert : {path}"

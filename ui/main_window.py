@@ -35,10 +35,19 @@ from core.formatting import (
     build_format_label,
     normalize_settings_store,
 )
+from core.updater import (
+    UpdateCheckError,
+    clear_updater_state,
+    fetch_latest_release,
+    is_release_newer,
+    launch_installer_after_exit,
+    save_updater_state,
+)
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
 from ui.support_dialog import SupportContactDialog
 from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog
+from ui.update_dialog import UpdateDialog
 
 SUPPORTED_MEDIA_EXTENSIONS = {
     '.mp3',
@@ -78,6 +87,7 @@ class MainWindow(wx.Frame):
         self.is_converting = False
         self.stop_requested = False
         self._is_relaunching = False
+        self._is_installing_update = False
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         
@@ -157,6 +167,8 @@ class MainWindow(wx.Frame):
         self.item_debug_clear = self.debug_menu.Append(wx.ID_ANY, _("&Clear Debug Data"))
         
         help_menu = wx.Menu()
+        item_check_updates = help_menu.Append(wx.ID_ANY, _("Check for &Updates..."))
+        help_menu.AppendSeparator()
         item_contact_support = help_menu.Append(wx.ID_ANY, _("Contact &Support..."))
         help_menu.AppendSeparator()
         item_about = help_menu.Append(wx.ID_ABOUT, _("&About"))
@@ -174,6 +186,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_open_debug_folder, self.item_debug_open_folder)
         self.Bind(wx.EVT_MENU, self.on_disable_debug, self.item_debug_disable)
         self.Bind(wx.EVT_MENU, self.on_clear_debug_data, self.item_debug_clear)
+        self.Bind(wx.EVT_MENU, self.on_check_updates, item_check_updates)
         self.Bind(wx.EVT_MENU, self.on_contact_support, item_contact_support)
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
 
@@ -457,6 +470,38 @@ class MainWindow(wx.Frame):
         self._save_config()
         self._update_debug_menu_state()
         self._set_status(_("Debug data cleared ({count} file(s)).").format(count=len(removed)))
+
+    def begin_install_update(self, installer_path, version):
+        if self.is_converting:
+            wx.MessageBox(
+                _("Stop the current conversion before installing an update."),
+                _("Warning"),
+                wx.ICON_WARNING,
+            )
+            self._set_status(_("Stop the current conversion before installing an update."))
+            return False
+
+        state_saved = False
+        try:
+            save_updater_state(installer_path, version, cleanup_pending=True)
+            state_saved = True
+            launch_installer_after_exit(installer_path)
+        except Exception:
+            if state_saved:
+                clear_updater_state()
+            logging.exception("Unable to launch the downloaded update installer.")
+            wx.MessageBox(
+                _("Unable to start the update installer."),
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            self._set_status(_("Unable to start the update installer."))
+            return False
+
+        self._is_installing_update = True
+        self._set_status(_("Closing application to install update..."))
+        self.Close()
+        return True
 
     # --- CORRECTION A02 : AJOUT DE LA FONCTION ---
     def on_add_folder(self, event):
@@ -940,7 +985,7 @@ class MainWindow(wx.Frame):
         self._set_status(_("Stop requested."))
 
     def on_close_window(self, event):
-        if self._is_relaunching:
+        if self._is_relaunching or self._is_installing_update:
             event.Skip()
             return
         if self.is_converting:
@@ -1129,6 +1174,48 @@ class MainWindow(wx.Frame):
         )
 
     def on_exit(self, e): self.Close()
+    def on_check_updates(self, e):
+        if self.is_converting:
+            wx.MessageBox(
+                _("Stop the current conversion before installing an update."),
+                _("Warning"),
+                wx.ICON_WARNING,
+            )
+            self._set_status(_("Stop the current conversion before installing an update."))
+            return
+
+        busy_started = False
+        try:
+            wx.BeginBusyCursor()
+            busy_started = True
+            self._set_status(_("Checking for updates..."))
+            release_info = fetch_latest_release()
+        except UpdateCheckError as exc:
+            wx.MessageBox(str(exc), _("Error"), wx.ICON_ERROR)
+            self._set_status(_("Unable to check for updates."))
+            return
+        except Exception:
+            logging.exception("Unexpected error while checking for updates.")
+            wx.MessageBox(
+                _("Unable to check for updates."),
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            self._set_status(_("Unable to check for updates."))
+            return
+        finally:
+            if busy_started and wx.IsBusy():
+                wx.EndBusyCursor()
+
+        if not is_release_newer(release_info.version, APP_VERSION):
+            wx.MessageBox(_("You are up to date."), _("Info"), wx.ICON_INFORMATION)
+            self._set_status(_("You are up to date."))
+            return
+
+        dlg = UpdateDialog(self, release_info)
+        dlg.ShowModal()
+        dlg.Destroy()
+
     def on_contact_support(self, e):
         dlg = SupportContactDialog(self)
         dlg.ShowModal()
