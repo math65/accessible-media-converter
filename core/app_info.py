@@ -9,6 +9,7 @@ APP_PUBLISHER = "Accessible Media Converter"
 APP_ID = "{7E285383-842B-4F3B-8455-DF3F9F74F4F7}"
 APP_ABOUT_TAGLINE = "Powered by FFmpeg & wxPython"
 SUPPORT_EMAIL = "contact@mathieumartin.ovh"
+SUPPORT_REPORT_API_URL = "https://mathieumartin.ovh/api/support-report"
 APP_GITHUB_OWNER = "math65"
 APP_GITHUB_REPOSITORY = "accessible-media-converter"
 APP_GITHUB_RELEASES_API_LATEST = (

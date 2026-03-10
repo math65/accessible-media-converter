@@ -49,6 +49,7 @@ bin/ffprobe.exe
 # 3. Compiled Translations
 # We track the human-readable .po files, but ignore the compiled .mo binary files
 locales/**/*.mo
+server/support-report/storage/ratelimit/*.json
 
 # 4. Test Output / Media Files
 # Ignore media files you might use for testing to keep repo light

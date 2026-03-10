@@ -15,6 +15,7 @@ The project is designed with accessibility and keyboard-driven workflows in mind
 - Optional streaming normalization at `-16 LUFS`
 - Debug mode with session snapshot and user-facing debug folder
 - Built-in support contact flow
+- PHP support-report backend for direct email delivery
 - Installer-based Windows release pipeline
 
 ## Supported formats
@@ -101,6 +102,7 @@ Expected outputs:
 - [`main.py`](main.py): application entry point
 - [`core/`](core): probing, conversion, formatting, debug, support, batch logic
 - [`ui/`](ui): main window and dialogs
+- [`server/`](server): PHP support-report backend
 - [`installer/`](installer): Inno Setup installer
 - [`scripts/`](scripts): release build tooling
 

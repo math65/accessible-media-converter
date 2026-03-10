@@ -62,6 +62,144 @@ msgstr "À &propos"
 msgid "Contact &Support..."
 msgstr "Contacter le &support..."
 
+msgid "Your email"
+msgstr "Votre email"
+
+msgid "Enter the email address that support should reply to."
+msgstr "Saisissez l'adresse email à laquelle le support doit répondre."
+
+msgid "Issue type"
+msgstr "Type de problème"
+
+msgid "Choose the type of issue you want to report."
+msgstr "Choisissez le type de problème que vous souhaitez signaler."
+
+msgid "Describe your issue"
+msgstr "Décrivez votre problème"
+
+msgid "Describe your issue below. The report will be sent directly to support."
+msgstr "Décrivez votre problème ci-dessous. Le rapport sera envoyé directement au support."
+
+msgid "Describe the issue you want to report to support."
+msgstr "Décrivez le problème que vous souhaitez signaler au support."
+
+msgid "Show technical details"
+msgstr "Afficher les détails techniques"
+
+msgid "Hide technical details"
+msgstr "Masquer les détails techniques"
+
+msgid "Technical information that will be included in the report."
+msgstr "Informations techniques qui seront incluses dans le rapport."
+
+msgid "The report could not be sent automatically. You can copy the details below and send them manually."
+msgstr "Le rapport n'a pas pu être envoyé automatiquement. Vous pouvez copier les détails ci-dessous et les envoyer manuellement."
+
+msgid "Support details"
+msgstr "Détails du support"
+
+msgid "Report preview"
+msgstr "Aperçu du rapport"
+
+msgid "Full report text that can be copied manually if needed."
+msgstr "Texte complet du rapport pouvant être copié manuellement si nécessaire."
+
+msgid "Send report"
+msgstr "Envoyer le rapport"
+
+msgid "Send the support report directly to support."
+msgstr "Envoyer directement le rapport au support."
+
+msgid "Sending..."
+msgstr "Envoi en cours..."
+
+msgid "Your report has been sent successfully."
+msgstr "Votre rapport a été envoyé avec succès."
+
+msgid "Support subject copied to clipboard."
+msgstr "Sujet du rapport copié dans le presse-papiers."
+
+msgid "Support report copied to clipboard."
+msgstr "Rapport de support copié dans le presse-papiers."
+
+msgid "Please wait for the report to finish sending."
+msgstr "Veuillez attendre la fin de l'envoi du rapport."
+
+msgid "Please enter a valid email address."
+msgstr "Veuillez saisir une adresse email valide."
+
+msgid "Please choose an issue type."
+msgstr "Veuillez choisir un type de problème."
+
+msgid "Please describe your issue before sending the report."
+msgstr "Veuillez décrire votre problème avant d'envoyer le rapport."
+
+msgid "{app_name} - {issue} - v{version}"
+msgstr "{app_name} - {issue} - v{version}"
+
+msgid "Loaded audio files: {value}"
+msgstr "Fichiers audio chargés : {value}"
+
+msgid "Loaded video files: {value}"
+msgstr "Fichiers vidéo chargés : {value}"
+
+msgid "Automatic update checks: {value}"
+msgstr "Vérification automatique des mises à jour : {value}"
+
+msgid "Existing output policy: {value}"
+msgstr "Politique en cas de fichier existant : {value}"
+
+msgid "FFmpeg threads: {value}"
+msgstr "Threads FFmpeg : {value}"
+
+msgid "Issue type: {value}"
+msgstr "Type de problème : {value}"
+
+msgid "User email: {value}"
+msgstr "Email utilisateur : {value}"
+
+msgid "Unable to contact the support server right now."
+msgstr "Impossible de contacter le serveur de support pour le moment."
+
+msgid "The support request timed out."
+msgstr "L'envoi du rapport de support a expiré."
+
+msgid "The support server returned an invalid response."
+msgstr "Le serveur de support a renvoyé une réponse invalide."
+
+msgid "Please review the support form fields and try again."
+msgstr "Veuillez vérifier les champs du formulaire de support et réessayer."
+
+msgid "Too many reports have been sent recently. Please try again later."
+msgstr "Trop de rapports ont été envoyés récemment. Veuillez réessayer plus tard."
+
+msgid "Unable to send the support report right now."
+msgstr "Impossible d'envoyer le rapport de support pour le moment."
+
+msgid "Automatic"
+msgstr "Automatique"
+
+msgid "Conversion problem"
+msgstr "Problème de conversion"
+
+msgid "Application crash"
+msgstr "Crash de l'application"
+
+msgid "Update problem"
+msgstr "Problème de mise à jour"
+
+msgid "Accessibility issue"
+msgstr "Problème d'accessibilité"
+
+msgid "Installation problem"
+msgstr "Problème d'installation"
+
+msgid "Feature request"
+msgstr "Demande de fonctionnalité"
+
+msgid "Other"
+msgstr "Autre"
+
 # --- UPDATER ---
 msgid "Check for &Updates..."
 msgstr "Vérifier les mises à &jour..."

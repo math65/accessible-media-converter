@@ -1265,8 +1265,15 @@ class MainWindow(wx.Frame):
 
     def on_contact_support(self, e):
         dlg = SupportContactDialog(self)
-        dlg.ShowModal()
+        result = dlg.ShowModal()
         dlg.Destroy()
+        if result == wx.ID_OK:
+            wx.MessageBox(
+                _("Your report has been sent successfully."),
+                _("Contact Support"),
+                wx.OK | wx.ICON_INFORMATION,
+                self,
+            )
 
     def on_about(self, e):
         message = f"{APP_NAME} {APP_VERSION}\n{_(APP_ABOUT_TAGLINE)}"

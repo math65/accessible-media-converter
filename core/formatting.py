@@ -98,6 +98,7 @@ APP_DEFAULT_SETTINGS = {
     "last_format_video": "mp4",
     "output_mode": "source",
     "custom_output_path": "",
+    "support_user_email": "",
     "existing_output_policy": "rename",
     "open_output_folder_after_batch": False,
     "max_concurrent_jobs": DEFAULT_CONCURRENT_JOBS,
