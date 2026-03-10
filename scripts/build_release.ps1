@@ -73,7 +73,7 @@ try {
         throw "Required build dependencies are missing. Install PyInstaller and polib in the virtual environment."
     }
 
-    $metadataJson = & $PythonExe -c "import json; from core.app_info import APP_EXE_NAME, APP_EXECUTABLE_FILENAME, APP_ID, APP_INSTALLER_BASENAME, APP_INSTALL_DIRNAME, APP_NAME, APP_PUBLISHER, APP_VERSION, APP_VERSION_WIN; print(json.dumps({'APP_EXE_NAME': APP_EXE_NAME, 'APP_EXECUTABLE_FILENAME': APP_EXECUTABLE_FILENAME, 'APP_ID': APP_ID, 'APP_INSTALLER_BASENAME': APP_INSTALLER_BASENAME, 'APP_INSTALL_DIRNAME': APP_INSTALL_DIRNAME, 'APP_NAME': APP_NAME, 'APP_PUBLISHER': APP_PUBLISHER, 'APP_VERSION': APP_VERSION, 'APP_VERSION_WIN': APP_VERSION_WIN}))"
+    $metadataJson = & $PythonExe -c "import json; from core.app_info import APP_EXE_NAME, APP_EXECUTABLE_FILENAME, APP_ID, APP_INSTALLER_BASENAME, APP_INSTALLER_FILENAME, APP_INSTALL_DIRNAME, APP_NAME, APP_PUBLISHER, APP_VERSION, APP_VERSION_WIN; print(json.dumps({'APP_EXE_NAME': APP_EXE_NAME, 'APP_EXECUTABLE_FILENAME': APP_EXECUTABLE_FILENAME, 'APP_ID': APP_ID, 'APP_INSTALLER_BASENAME': APP_INSTALLER_BASENAME, 'APP_INSTALLER_FILENAME': APP_INSTALLER_FILENAME, 'APP_INSTALL_DIRNAME': APP_INSTALL_DIRNAME, 'APP_NAME': APP_NAME, 'APP_PUBLISHER': APP_PUBLISHER, 'APP_VERSION': APP_VERSION, 'APP_VERSION_WIN': APP_VERSION_WIN}))"
     if ($LASTEXITCODE -ne 0) {
         throw "Unable to load application metadata from core.app_info."
     }
@@ -192,7 +192,7 @@ print(output_path)
         "/DAppDistDirName=$($metadata.APP_EXE_NAME)" `
         "/DAppVersion=$($metadata.APP_VERSION)" `
         "/DAppExeName=$($metadata.APP_EXECUTABLE_FILENAME)" `
-        "/DAppOutputBaseFilename=$($metadata.APP_INSTALLER_BASENAME)-$($metadata.APP_VERSION)" `
+        "/DAppOutputBaseFilename=$($metadata.APP_INSTALLER_BASENAME)" `
         "/DAppId=$innoAppId" `
         "/DAppInstallDirName=$($metadata.APP_INSTALL_DIRNAME)" `
         "/DAppPublisher=$($metadata.APP_PUBLISHER)" `
@@ -201,7 +201,7 @@ print(output_path)
         throw "Inno Setup build failed."
     }
 
-    $installerPath = Join-Path $DistDir "$($metadata.APP_INSTALLER_BASENAME)-$($metadata.APP_VERSION).exe"
+    $installerPath = Join-Path $DistDir $metadata.APP_INSTALLER_FILENAME
     Assert-FileExists -Path $installerPath -Label "Built installer"
     Write-Host "Installer built: $installerPath"
 }

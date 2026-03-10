@@ -95,7 +95,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_release.ps1
 Expected outputs:
 
 - `dist\AccessibleMediaConverter\AccessibleMediaConverter.exe`
-- `dist\AccessibleMediaConverter-Setup-<version>.exe`
+- `dist\AccessibleMediaConverter-Setup.exe`
 
 ## Project layout
 

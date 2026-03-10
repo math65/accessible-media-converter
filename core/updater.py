@@ -13,6 +13,7 @@ from core.app_info import (
     APP_GITHUB_RELEASES_API,
     APP_GITHUB_RELEASES_PAGE,
     APP_INSTALLER_BASENAME,
+    APP_INSTALLER_FILENAME,
     APP_VERSION,
 )
 
@@ -225,7 +226,18 @@ def find_setup_asset(assets):
     if not isinstance(assets, list):
         raise UpdateCheckError(_translate("No installer asset was found in the GitHub release."))
 
+    exact_name = APP_INSTALLER_FILENAME.lower()
     prefix = f"{APP_INSTALLER_BASENAME}-"
+    for asset in assets:
+        if not isinstance(asset, dict):
+            continue
+        name = str(asset.get("name") or "").strip()
+        lowered_name = name.lower()
+        if lowered_name == exact_name:
+            download_url = str(asset.get("browser_download_url") or "").strip()
+            if download_url:
+                return name, download_url
+
     for asset in assets:
         if not isinstance(asset, dict):
             continue
@@ -341,9 +353,13 @@ def cleanup_update_artifacts():
             removed_paths.append(str(pending_path))
 
     if updates_dir.exists():
-        pattern = f"{APP_INSTALLER_BASENAME}-*.exe"
-        for stale_path in updates_dir.glob(pattern):
-            normalized_pending = os.path.normcase(pending_installer) if pending_installer else ""
+        normalized_pending = os.path.normcase(pending_installer) if pending_installer else ""
+        stale_candidates = list(updates_dir.glob(f"{APP_INSTALLER_BASENAME}-*.exe"))
+        exact_installer_path = updates_dir / APP_INSTALLER_FILENAME
+        if exact_installer_path.exists():
+            stale_candidates.append(exact_installer_path)
+
+        for stale_path in stale_candidates:
             if normalized_pending and os.path.normcase(str(stale_path)) == normalized_pending:
                 continue
             try:
