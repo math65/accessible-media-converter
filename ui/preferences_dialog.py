@@ -12,7 +12,7 @@ from core.formatting import (
 
 class PreferencesDialog(wx.Dialog):
     def __init__(self, parent, current_settings):
-        super().__init__(parent, title=_("Preferences"), size=(560, 460))
+        super().__init__(parent, title=_("Preferences"), size=(560, 500))
         self.SetName(_("Preferences dialog"))
 
         self.settings = current_settings
@@ -25,6 +25,7 @@ class PreferencesDialog(wx.Dialog):
         self.max_concurrent_jobs = self.settings.get('max_concurrent_jobs', DEFAULT_CONCURRENT_JOBS)
         self.ffmpeg_threads = self.settings.get('ffmpeg_threads', DEFAULT_FFMPEG_THREADS)
         self.continue_on_error = bool(self.settings.get('continue_on_error', True))
+        self.check_updates_on_startup = bool(self.settings.get('check_updates_on_startup', True))
         self.detected_cpu_threads = get_detected_cpu_threads()
         self.ffmpeg_thread_values = (DEFAULT_FFMPEG_THREADS, *get_ffmpeg_thread_values())
 
@@ -121,6 +122,16 @@ class PreferencesDialog(wx.Dialog):
         self.chk_continue_on_error.SetName(_("Continue batch after an error"))
         execution_sizer.Add(self.chk_continue_on_error, 0, wx.ALL, 5)
 
+        self.chk_check_updates_on_startup = wx.CheckBox(
+            panel,
+            label=_("Check for updates automatically at startup"),
+        )
+        self.chk_check_updates_on_startup.SetName(_("Check for updates automatically at startup"))
+        self.chk_check_updates_on_startup.SetToolTip(
+            _("Check GitHub for a new version when the application starts.")
+        )
+        execution_sizer.Add(self.chk_check_updates_on_startup, 0, wx.ALL, 5)
+
         vbox.Add(output_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
         vbox.Add(execution_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
 
@@ -153,6 +164,7 @@ class PreferencesDialog(wx.Dialog):
         self._init_existing_output_policy()
         self.chk_open_output_folder.SetValue(self.open_output_folder_after_batch)
         self.chk_continue_on_error.SetValue(self.continue_on_error)
+        self.chk_check_updates_on_startup.SetValue(self.check_updates_on_startup)
         self._update_controls()
 
     def _init_existing_output_policy(self):
@@ -220,4 +232,5 @@ class PreferencesDialog(wx.Dialog):
             'max_concurrent_jobs': self.choice_max_jobs.GetSelection() + MIN_CONCURRENT_JOBS,
             'ffmpeg_threads': self.ffmpeg_thread_values[self.choice_ffmpeg_threads.GetSelection()],
             'continue_on_error': self.chk_continue_on_error.GetValue(),
+            'check_updates_on_startup': self.chk_check_updates_on_startup.GetValue(),
         }

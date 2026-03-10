@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 
 import wx
 
@@ -88,6 +89,8 @@ class MainWindow(wx.Frame):
         self.stop_requested = False
         self._is_relaunching = False
         self._is_installing_update = False
+        self._update_check_in_progress = False
+        self._startup_update_check_scheduled = False
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         
@@ -502,6 +505,89 @@ class MainWindow(wx.Frame):
         self._set_status(_("Closing application to install update..."))
         self.Close()
         return True
+
+    def schedule_startup_update_check(self):
+        if self._startup_update_check_scheduled:
+            return
+        if not self.settings_store.get('check_updates_on_startup', False):
+            return
+
+        self._startup_update_check_scheduled = True
+        wx.CallLater(1200, lambda: self._start_update_check(interactive=False))
+
+    def _start_update_check(self, interactive):
+        if self._update_check_in_progress:
+            return
+        if self.is_converting:
+            if interactive:
+                wx.MessageBox(
+                    _("Stop the current conversion before installing an update."),
+                    _("Warning"),
+                    wx.ICON_WARNING,
+                )
+                self._set_status(_("Stop the current conversion before installing an update."))
+            return
+
+        self._update_check_in_progress = True
+        if interactive:
+            self._set_status(_("Checking for updates..."))
+
+        worker = threading.Thread(
+            target=self._update_check_worker,
+            args=(interactive,),
+            daemon=True,
+        )
+        worker.start()
+
+    def _update_check_worker(self, interactive):
+        release_info = None
+        error_message = None
+        try:
+            release_info = fetch_latest_release()
+        except UpdateCheckError as exc:
+            error_message = str(exc)
+        except Exception:
+            logging.exception("Unexpected error while checking for updates.")
+            error_message = _("Unable to check for updates.")
+
+        wx.CallAfter(self._finish_update_check, interactive, release_info, error_message)
+
+    def _finish_update_check(self, interactive, release_info, error_message):
+        self._update_check_in_progress = False
+
+        if error_message:
+            if interactive:
+                wx.MessageBox(error_message, _("Error"), wx.ICON_ERROR)
+                self._set_status(_("Unable to check for updates."))
+            else:
+                logging.info("Automatic update check skipped: %s", error_message)
+            return
+
+        if not release_info:
+            if interactive:
+                wx.MessageBox(_("Unable to check for updates."), _("Error"), wx.ICON_ERROR)
+                self._set_status(_("Unable to check for updates."))
+            return
+
+        if not is_release_newer(release_info.version, APP_VERSION):
+            if interactive:
+                wx.MessageBox(_("You are up to date."), _("Info"), wx.ICON_INFORMATION)
+                self._set_status(_("You are up to date."))
+            else:
+                logging.info("Automatic update check: no newer version available.")
+            return
+
+        if not interactive and self.is_converting:
+            logging.info(
+                "Automatic update check found version %s, but conversion is active. Skipping prompt.",
+                release_info.version,
+            )
+            return
+
+        self._set_status(_("Update available: {version}").format(version=release_info.version))
+        dlg = UpdateDialog(self, release_info)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     # --- CORRECTION A02 : AJOUT DE LA FONCTION ---
     def on_add_folder(self, event):
@@ -1175,46 +1261,7 @@ class MainWindow(wx.Frame):
 
     def on_exit(self, e): self.Close()
     def on_check_updates(self, e):
-        if self.is_converting:
-            wx.MessageBox(
-                _("Stop the current conversion before installing an update."),
-                _("Warning"),
-                wx.ICON_WARNING,
-            )
-            self._set_status(_("Stop the current conversion before installing an update."))
-            return
-
-        busy_started = False
-        try:
-            wx.BeginBusyCursor()
-            busy_started = True
-            self._set_status(_("Checking for updates..."))
-            release_info = fetch_latest_release()
-        except UpdateCheckError as exc:
-            wx.MessageBox(str(exc), _("Error"), wx.ICON_ERROR)
-            self._set_status(_("Unable to check for updates."))
-            return
-        except Exception:
-            logging.exception("Unexpected error while checking for updates.")
-            wx.MessageBox(
-                _("Unable to check for updates."),
-                _("Error"),
-                wx.ICON_ERROR,
-            )
-            self._set_status(_("Unable to check for updates."))
-            return
-        finally:
-            if busy_started and wx.IsBusy():
-                wx.EndBusyCursor()
-
-        if not is_release_newer(release_info.version, APP_VERSION):
-            wx.MessageBox(_("You are up to date."), _("Info"), wx.ICON_INFORMATION)
-            self._set_status(_("You are up to date."))
-            return
-
-        dlg = UpdateDialog(self, release_info)
-        dlg.ShowModal()
-        dlg.Destroy()
+        self._start_update_check(interactive=True)
 
     def on_contact_support(self, e):
         dlg = SupportContactDialog(self)

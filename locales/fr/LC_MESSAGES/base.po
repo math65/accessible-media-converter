@@ -559,6 +559,15 @@ msgstr "Impossible de vérifier les mises à jour."
 msgid "You are up to date."
 msgstr "Vous êtes à jour."
 
+msgid "Check for updates automatically at startup"
+msgstr "Vérifier automatiquement les mises à jour au démarrage"
+
+msgid "Check GitHub for a new version when the application starts."
+msgstr "Vérifier sur GitHub si une nouvelle version est disponible au démarrage de l'application."
+
+msgid "Update available: {version}"
+msgstr "Mise à jour disponible : {version}"
+
 msgid "Debug folder opened: {path}"
 msgstr "Dossier debug ouvert : {path}"
 

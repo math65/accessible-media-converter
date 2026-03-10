@@ -46,6 +46,7 @@ def main():
         if debug_flags['debug_restore_pending']:
             frame.restore_debug_session_if_needed()
         frame.Show()
+        frame.schedule_startup_update_check()
         
         logging.info("Entrée dans la boucle principale (MainLoop)...")
         app.MainLoop()

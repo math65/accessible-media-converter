@@ -103,6 +103,7 @@ APP_DEFAULT_SETTINGS = {
     "max_concurrent_jobs": DEFAULT_CONCURRENT_JOBS,
     "ffmpeg_threads": DEFAULT_FFMPEG_THREADS,
     "continue_on_error": True,
+    "check_updates_on_startup": True,
     "debug_enabled": False,
     "debug_restore_pending": False,
 }
@@ -188,6 +189,9 @@ def normalize_settings_store(settings_store):
     )
     normalized["continue_on_error"] = bool(
         normalized.get("continue_on_error", APP_DEFAULT_SETTINGS["continue_on_error"])
+    )
+    normalized["check_updates_on_startup"] = bool(
+        normalized.get("check_updates_on_startup", APP_DEFAULT_SETTINGS["check_updates_on_startup"])
     )
     normalized["max_concurrent_jobs"] = _normalize_concurrent_jobs(
         normalized.get("max_concurrent_jobs", APP_DEFAULT_SETTINGS["max_concurrent_jobs"])
