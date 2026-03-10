@@ -1,4 +1,5 @@
 import builtins
+import os
 
 
 AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "wav", "flac", "alac", "ogg", "wma")
@@ -10,6 +11,7 @@ VALID_EXISTING_OUTPUT_POLICIES = ("rename", "overwrite", "skip")
 MIN_CONCURRENT_JOBS = 1
 MAX_CONCURRENT_JOBS = 4
 DEFAULT_CONCURRENT_JOBS = 2
+DEFAULT_FFMPEG_THREADS = "auto"
 
 
 DEFAULT_FORMAT_SETTINGS = {
@@ -99,6 +101,7 @@ APP_DEFAULT_SETTINGS = {
     "existing_output_policy": "rename",
     "open_output_folder_after_batch": False,
     "max_concurrent_jobs": DEFAULT_CONCURRENT_JOBS,
+    "ffmpeg_threads": DEFAULT_FFMPEG_THREADS,
     "continue_on_error": True,
     "debug_enabled": False,
     "debug_restore_pending": False,
@@ -189,6 +192,9 @@ def normalize_settings_store(settings_store):
     normalized["max_concurrent_jobs"] = _normalize_concurrent_jobs(
         normalized.get("max_concurrent_jobs", APP_DEFAULT_SETTINGS["max_concurrent_jobs"])
     )
+    normalized["ffmpeg_threads"] = _normalize_ffmpeg_threads(
+        normalized.get("ffmpeg_threads", APP_DEFAULT_SETTINGS["ffmpeg_threads"])
+    )
 
     return normalized
 
@@ -199,6 +205,30 @@ def _normalize_concurrent_jobs(value):
     except (TypeError, ValueError):
         jobs = DEFAULT_CONCURRENT_JOBS
     return min(max(jobs, MIN_CONCURRENT_JOBS), MAX_CONCURRENT_JOBS)
+
+
+def get_detected_cpu_threads():
+    try:
+        detected = int(os.cpu_count() or 1)
+    except (TypeError, ValueError):
+        detected = 1
+    return max(1, detected)
+
+
+def get_ffmpeg_thread_values():
+    return tuple(range(1, get_detected_cpu_threads() + 1))
+
+
+def _normalize_ffmpeg_threads(value):
+    if isinstance(value, str) and value.lower() == DEFAULT_FFMPEG_THREADS:
+        return DEFAULT_FFMPEG_THREADS
+
+    try:
+        threads = int(value)
+    except (TypeError, ValueError):
+        return DEFAULT_FFMPEG_THREADS
+
+    return min(max(threads, 1), get_detected_cpu_threads())
 
 
 def build_format_summary(format_key, settings):

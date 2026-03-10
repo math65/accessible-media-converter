@@ -972,7 +972,8 @@ class MainWindow(wx.Frame):
         idx = self.combo_format.GetSelection()
         if idx == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx]
-        settings = self.settings_store.get(fmt_key, {})
+        settings = dict(self.settings_store.get(fmt_key, {}))
+        settings['ffmpeg_threads'] = self.settings_store.get('ffmpeg_threads', 'auto')
         
         output_mode = self.settings_store.get('output_mode', 'source')
         custom_out = None

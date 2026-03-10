@@ -183,6 +183,18 @@ class ConversionTask:
         cmd.extend(["-filter:a", STREAMING_LOUDNORM_FILTER])
         logging.info("Normalisation streaming appliquee sur la sortie audio.")
 
+    def _get_ffmpeg_threads_value(self):
+        value = self.settings.get("ffmpeg_threads", "auto")
+        if isinstance(value, str) and value.lower() == "auto":
+            return None
+
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return None
+
+        return max(1, parsed)
+
     def _filter_subtitle_entries_for_container(self, subtitle_entries):
         if self.target_format not in ['mp4', 'mov']:
             return subtitle_entries
@@ -340,6 +352,10 @@ class ConversionTask:
                     cmd.extend(['-c:s', 'copy'])
         else:
             cmd.append('-vn')
+
+        thread_count = self._get_ffmpeg_threads_value()
+        if thread_count is not None:
+            cmd.extend(['-threads', str(thread_count)])
 
         cmd.append(output_path)
 

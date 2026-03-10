@@ -990,11 +990,38 @@ msgstr "Choisissez quoi faire si un fichier de sortie existe déjà."
 msgid "Open output folder when done"
 msgstr "Ouvrir le dossier de sortie à la fin"
 
+msgid "1 conversion"
+msgstr "1 conversion"
+
+msgid "2 conversions"
+msgstr "2 conversions"
+
+msgid "3 conversions"
+msgstr "3 conversions"
+
+msgid "4 conversions"
+msgstr "4 conversions"
+
 msgid "Max concurrent conversions"
 msgstr "Nombre maximal de conversions simultanées"
 
 msgid "Set how many conversions can run at the same time."
 msgstr "Définissez combien de conversions peuvent s'exécuter en même temps."
+
+msgid "FFmpeg threads per conversion"
+msgstr "Threads FFmpeg par conversion"
+
+msgid "Set how many FFmpeg threads each conversion can use."
+msgstr "Définissez combien de threads FFmpeg chaque conversion peut utiliser."
+
+msgid "Automatic ({count} detected)"
+msgstr "Automatique ({count} détectés)"
+
+msgid "{count} thread(s)"
+msgstr "{count} thread(s)"
+
+msgid "Selected destination folder path."
+msgstr "Chemin du dossier de destination sélectionné."
 
 msgid "Continue batch after an error"
 msgstr "Continuer le batch après une erreur"

@@ -1,6 +1,13 @@
 import wx
 
-from core.formatting import DEFAULT_CONCURRENT_JOBS, MAX_CONCURRENT_JOBS, MIN_CONCURRENT_JOBS
+from core.formatting import (
+    DEFAULT_CONCURRENT_JOBS,
+    DEFAULT_FFMPEG_THREADS,
+    MAX_CONCURRENT_JOBS,
+    MIN_CONCURRENT_JOBS,
+    get_detected_cpu_threads,
+    get_ffmpeg_thread_values,
+)
 
 
 class PreferencesDialog(wx.Dialog):
@@ -16,7 +23,10 @@ class PreferencesDialog(wx.Dialog):
             self.settings.get('open_output_folder_after_batch', False)
         )
         self.max_concurrent_jobs = self.settings.get('max_concurrent_jobs', DEFAULT_CONCURRENT_JOBS)
+        self.ffmpeg_threads = self.settings.get('ffmpeg_threads', DEFAULT_FFMPEG_THREADS)
         self.continue_on_error = bool(self.settings.get('continue_on_error', True))
+        self.detected_cpu_threads = get_detected_cpu_threads()
+        self.ffmpeg_thread_values = (DEFAULT_FFMPEG_THREADS, *get_ffmpeg_thread_values())
 
         self._init_ui()
         self.Centre()
@@ -37,11 +47,11 @@ class PreferencesDialog(wx.Dialog):
         output_sizer.Add(self.rb_custom, 0, wx.TOP | wx.LEFT, 5)
 
         hbox_custom = wx.BoxSizer(wx.HORIZONTAL)
-        self.txt_path = wx.TextCtrl(panel, value=self.custom_path)
+        self.txt_path = wx.TextCtrl(panel, value=self.custom_path, style=wx.TE_READONLY)
         self.btn_browse = wx.Button(panel, label=_("Browse..."))
         self.txt_path.SetName(_("Custom output folder path"))
         self.btn_browse.SetName(_("Browse output folder"))
-        self.txt_path.SetToolTip(_("Type or paste the destination folder path."))
+        self.txt_path.SetToolTip(_("Selected destination folder path."))
         hbox_custom.Add(self.txt_path, 1, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         hbox_custom.Add(self.btn_browse, 0, wx.ALIGN_CENTER_VERTICAL)
         output_sizer.Add(hbox_custom, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
@@ -77,18 +87,35 @@ class PreferencesDialog(wx.Dialog):
 
         jobs_row = wx.BoxSizer(wx.HORIZONTAL)
         lbl_jobs = wx.StaticText(panel, label=_("Max concurrent conversions"))
-        self.spin_max_jobs = wx.SpinCtrl(
+        self.choice_max_jobs = wx.Choice(
             panel,
-            min=MIN_CONCURRENT_JOBS,
-            max=MAX_CONCURRENT_JOBS,
-            initial=DEFAULT_CONCURRENT_JOBS,
+            choices=[
+                _("1 conversion"),
+                _("2 conversions"),
+                _("3 conversions"),
+                _("4 conversions"),
+            ],
         )
-        self.spin_max_jobs.SetValue(max(MIN_CONCURRENT_JOBS, min(int(self.max_concurrent_jobs), MAX_CONCURRENT_JOBS)))
-        self.spin_max_jobs.SetName(_("Max concurrent conversions"))
-        self.spin_max_jobs.SetToolTip(_("Set how many conversions can run at the same time."))
+        current_max_jobs = max(MIN_CONCURRENT_JOBS, min(int(self.max_concurrent_jobs), MAX_CONCURRENT_JOBS))
+        self.choice_max_jobs.SetSelection(current_max_jobs - MIN_CONCURRENT_JOBS)
+        self.choice_max_jobs.SetName(_("Max concurrent conversions"))
+        self.choice_max_jobs.SetToolTip(_("Set how many conversions can run at the same time."))
         jobs_row.Add(lbl_jobs, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        jobs_row.Add(self.spin_max_jobs, 0, wx.ALIGN_CENTER_VERTICAL)
+        jobs_row.Add(self.choice_max_jobs, 0, wx.ALIGN_CENTER_VERTICAL)
         execution_sizer.Add(jobs_row, 0, wx.ALL, 5)
+
+        threads_row = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_threads = wx.StaticText(panel, label=_("FFmpeg threads per conversion"))
+        self.choice_ffmpeg_threads = wx.Choice(
+            panel,
+            choices=self._build_ffmpeg_thread_choice_labels(),
+        )
+        self.choice_ffmpeg_threads.SetName(_("FFmpeg threads per conversion"))
+        self.choice_ffmpeg_threads.SetToolTip(_("Set how many FFmpeg threads each conversion can use."))
+        self.choice_ffmpeg_threads.SetSelection(self._get_ffmpeg_threads_selection())
+        threads_row.Add(lbl_threads, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        threads_row.Add(self.choice_ffmpeg_threads, 0, wx.ALIGN_CENTER_VERTICAL)
+        execution_sizer.Add(threads_row, 0, wx.ALL, 5)
 
         self.chk_continue_on_error = wx.CheckBox(panel, label=_("Continue batch after an error"))
         self.chk_continue_on_error.SetName(_("Continue batch after an error"))
@@ -136,6 +163,25 @@ class PreferencesDialog(wx.Dialog):
         }
         self.choice_existing_output_policy.SetSelection(policy_to_index.get(self.existing_output_policy, 0))
 
+    def _build_ffmpeg_thread_choice_labels(self):
+        labels = [_("Automatic ({count} detected)").format(count=self.detected_cpu_threads)]
+        for value in self.ffmpeg_thread_values[1:]:
+            labels.append(_("{count} thread(s)").format(count=value))
+        return labels
+
+    def _get_ffmpeg_threads_selection(self):
+        if isinstance(self.ffmpeg_threads, str) and self.ffmpeg_threads.lower() == DEFAULT_FFMPEG_THREADS:
+            return 0
+
+        try:
+            parsed = int(self.ffmpeg_threads)
+        except (TypeError, ValueError):
+            return 0
+
+        if parsed in self.ffmpeg_thread_values[1:]:
+            return self.ffmpeg_thread_values.index(parsed)
+        return 0
+
     def _update_controls(self):
         is_custom = self.rb_custom.GetValue()
         self.txt_path.Enable(is_custom)
@@ -144,8 +190,8 @@ class PreferencesDialog(wx.Dialog):
     def on_radio_change(self, event):
         self._update_controls()
         if self.rb_custom.GetValue():
-            self.txt_path.SetFocus()
-            wx.CallAfter(self.txt_path.SetFocus)
+            self.btn_browse.SetFocus()
+            wx.CallAfter(self.btn_browse.SetFocus)
 
     def on_browse(self, event):
         with wx.DirDialog(self, _("Select Output Folder"), style=wx.DD_DEFAULT_STYLE) as dlg:
@@ -171,6 +217,7 @@ class PreferencesDialog(wx.Dialog):
             'custom_output_path': self.txt_path.GetValue(),
             'existing_output_policy': index_to_policy.get(self.choice_existing_output_policy.GetSelection(), 'rename'),
             'open_output_folder_after_batch': self.chk_open_output_folder.GetValue(),
-            'max_concurrent_jobs': self.spin_max_jobs.GetValue(),
+            'max_concurrent_jobs': self.choice_max_jobs.GetSelection() + MIN_CONCURRENT_JOBS,
+            'ffmpeg_threads': self.ffmpeg_thread_values[self.choice_ffmpeg_threads.GetSelection()],
             'continue_on_error': self.chk_continue_on_error.GetValue(),
         }
