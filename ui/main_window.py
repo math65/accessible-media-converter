@@ -66,6 +66,10 @@ SUPPORTED_MEDIA_EXTENSIONS = {
     '.webm',
 }
 
+SUPPORTED_MEDIA_WILDCARD = ";".join(
+    f"*{extension}" for extension in sorted(SUPPORTED_MEDIA_EXTENSIONS)
+)
+
 
 class FileListPanel(wx.Panel):
     def __init__(self, parent, list_name):
@@ -943,7 +947,7 @@ class MainWindow(wx.Frame):
 
     def on_add_files(self, event):
         if self.is_converting: return
-        wildcard = _("Media Files") + "|*.*"
+        wildcard = _("Media Files") + f"|{SUPPORTED_MEDIA_WILDCARD}"
         with wx.FileDialog(self, _("Open Media"), wildcard=wildcard, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE) as dlg:
             if dlg.ShowModal() == wx.ID_CANCEL: return
             self._process_added_files(dlg.GetPaths())
@@ -953,6 +957,9 @@ class MainWindow(wx.Frame):
         added_count = 0
         first_added_target = None
         for path in paths:
+            if not self._is_supported_media_file(path):
+                logging.info("Unsupported file skipped during import: %s", path)
+                continue
             meta = self.prober.analyze(path)
             meta.track_settings = None 
             index = self._append_media_metadata(meta)
