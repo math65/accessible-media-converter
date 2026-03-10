@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usage avancé - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Usage avancé</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Manuel utilisateur</p>
+      <h1>Usage avancé</h1>
+      <p>
+        Cette page regroupe les fonctions plus poussées : réglages fins vidéo, codecs audio
+        de sortie, gestion des pistes, lots parallèles, debug et support.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Dans cette page</h2>
+      <ul>
+        <li><a href="#video">Réglages vidéo avancés</a></li>
+        <li><a href="#audio">Réglages audio avancés</a></li>
+        <li><a href="#tracks">Gestion des pistes</a></li>
+        <li><a href="#batch">Batch et performances</a></li>
+        <li><a href="#debug">Debug, support et mises à jour</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="video">
+      <h2>Réglages vidéo avancés</h2>
+      <p>
+        Pour les sorties <strong>MP4</strong> et <strong>MKV</strong>, la vidéo peut être
+        copiée ou réencodée. En mode réencodage, vous disposez d’un preset principal,
+        puis de réglages avancés.
+      </p>
+      <p>
+        Le <strong>Preset vidéo</strong> est un raccourci global. Il applique ensemble plusieurs valeurs
+        cohérentes, notamment le <strong>CRF</strong>, le <strong>Encoder Preset</strong>, le profil H.264
+        et le pixel format. Le <strong>Encoder Preset</strong>, lui, ne règle qu'un seul point :
+        l'arbitrage entre vitesse d'encodage et efficacité de compression.
+      </p>
+      <ul>
+        <li><strong>CRF</strong> pour piloter la qualité cible ;</li>
+        <li><strong>x264 preset</strong> pour arbitrer vitesse contre compression ;</li>
+        <li><strong>profil H.264</strong> pour la compatibilité ;</li>
+        <li><strong>pixel format</strong> pour le rendu et la lecture.</li>
+      </ul>
+      <div class="callout">
+        Si vous changez manuellement le <strong>Encoder Preset</strong> ou un autre réglage avancé,
+        vous êtes en train de personnaliser le preset vidéo choisi au départ.
+      </div>
+    </section>
+
+    <section class="section" id="audio">
+      <h2>Réglages audio avancés</h2>
+      <p>
+        Dans une sortie vidéo, les réglages audio restent séparés des réglages vidéo.
+        Vous pouvez choisir un codec compatible avec le conteneur, puis ajuster bitrate,
+        qualité, canaux, fréquence et normalisation selon le codec choisi.
+      </p>
+      <ul>
+        <li><strong>MP4</strong> : AAC ou MP3</li>
+        <li><strong>MKV</strong> : AAC, MP3, Opus ou FLAC</li>
+      </ul>
+    </section>
+
+    <section class="section" id="tracks">
+      <h2>Gestion des pistes</h2>
+      <p>
+        Le gestionnaire de pistes permet de choisir quelles pistes vidéo, audio et sous-titres
+        garder, de modifier leur ordre, puis d’ajuster certaines métadonnées et dispositions.
+      </p>
+      <p>
+        Dans la pratique, ces actions s'ouvrent par clic droit sur un fichier vidéo dans la liste.
+        <strong>Manage Tracks...</strong> est proposé pour une sortie <strong>MP4</strong> ou <strong>MKV</strong>,
+        tandis que <strong>Choose Audio Track...</strong> apparaît pour une extraction audio avec plusieurs pistes.
+      </p>
+      <div class="callout">
+        Pour une conversion vidéo vers audio, l’application n’extrait qu’une seule piste audio.
+      </div>
+    </section>
+
+    <section class="section" id="batch">
+      <h2>Batch et performances</h2>
+      <p>
+        L’application peut lancer plusieurs conversions en parallèle. Les préférences permettent
+        de définir :
+      </p>
+      <ul>
+        <li>le nombre maximal de conversions simultanées ;</li>
+        <li>la politique de conflit sur les fichiers de sortie ;</li>
+        <li>le nombre de threads FFmpeg par conversion.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="debug">
+      <h2>Debug, support et mises à jour</h2>
+      <p>
+        Si un problème doit être signalé, vous pouvez activer le debug, reproduire le bug,
+        puis ouvrir le dialogue de support intégré. Le formulaire transmet un rapport propre,
+        sans exposer les chemins locaux complets.
+      </p>
+      <p>
+        Le dialogue de support peut aussi afficher les détails techniques inclus et proposer
+        une copie manuelle du rapport si l'envoi automatique échoue.
+      </p>
+      <p>
+        Les mises à jour peuvent aussi être vérifiées manuellement depuis le menu Aide,
+        ou automatiquement au lancement si l’option est activée.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p><a href="../index.html">Retour à l'accueil</a></p>
+    </footer>
+  </div>
+</body>
+</html>

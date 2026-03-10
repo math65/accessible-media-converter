@@ -14,6 +14,7 @@ DEBUG_LOG_FILENAME = "debug.log"
 SESSION_STATE_SCHEMA_VERSION = 2
 
 DEBUG_ENABLED_KEY = "debug_enabled"
+SESSION_RESTORE_PENDING_KEY = "session_restore_pending"
 DEBUG_RESTORE_PENDING_KEY = "debug_restore_pending"
 
 
@@ -79,9 +80,14 @@ def save_raw_config(config_data):
 
 def get_debug_flags(config_data=None):
     data = config_data if isinstance(config_data, dict) else load_raw_config()
+    restore_pending = bool(
+        data.get(SESSION_RESTORE_PENDING_KEY, data.get(DEBUG_RESTORE_PENDING_KEY, False))
+    )
     return {
         DEBUG_ENABLED_KEY: bool(data.get(DEBUG_ENABLED_KEY, False)),
-        DEBUG_RESTORE_PENDING_KEY: bool(data.get(DEBUG_RESTORE_PENDING_KEY, False)),
+        "restore_pending": restore_pending,
+        SESSION_RESTORE_PENDING_KEY: restore_pending,
+        DEBUG_RESTORE_PENDING_KEY: restore_pending,
     }
 
 
@@ -90,6 +96,7 @@ def update_debug_flags(config_data, enabled=None, restore_pending=None):
     if enabled is not None:
         updated[DEBUG_ENABLED_KEY] = bool(enabled)
     if restore_pending is not None:
+        updated[SESSION_RESTORE_PENDING_KEY] = bool(restore_pending)
         updated[DEBUG_RESTORE_PENDING_KEY] = bool(restore_pending)
     return updated
 

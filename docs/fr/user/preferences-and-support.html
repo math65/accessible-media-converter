@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Préférences, support et mises à jour - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Préférences, support et mises à jour</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Manuel utilisateur</p>
+      <h1>Préférences, support et mises à jour</h1>
+      <p>
+        Cette page regroupe ce qui n'appartient pas à une conversion précise : préférences
+        globales, mode debug, envoi de rapports et mise à jour de l'application.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Dans cette page</h2>
+      <ul>
+        <li><a href="#preferences">Préférences générales</a></li>
+        <li><a href="#debug">Mode debug</a></li>
+        <li><a href="#support">Contacter le support</a></li>
+        <li><a href="#updates">Mises à jour</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="preferences">
+      <h2>Préférences générales</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Dossier de sortie</strong>
+          Choisissez le dossier source, un dossier spécifique, ou demandez un dossier à chaque batch.
+        </li>
+        <li>
+          <strong>Politique de conflit</strong>
+          Définissez le comportement quand un fichier cible existe déjà.
+        </li>
+        <li>
+          <strong>Ouvrir le dossier final</strong>
+          Permet d'ouvrir automatiquement le dossier de sortie à la fin d'un batch réussi ou partiellement réussi.
+        </li>
+        <li>
+          <strong>Conversions parallèles</strong>
+          Réglez combien de tâches peuvent tourner en même temps.
+        </li>
+        <li>
+          <strong>Threads FFmpeg</strong>
+          Fixez le nombre de threads utilisés par conversion, ou laissez en automatique.
+        </li>
+        <li>
+          <strong>Continuer après erreur</strong>
+          Permet de laisser le batch poursuivre les autres tâches si une conversion échoue.
+        </li>
+        <li>
+          <strong>Mises à jour automatiques</strong>
+          Activez ou désactivez la vérification au lancement.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="debug">
+      <h2>Mode debug</h2>
+      <p>
+        Le menu <strong>Debug</strong> active une journalisation plus détaillée et permet
+        d'ouvrir ou d'effacer le dossier de diagnostic.
+      </p>
+      <p>
+        L'activation ou la désactivation du debug relance l'application pour appliquer le changement.
+        Ce basculement n'est pas possible pendant une conversion en cours.
+      </p>
+      <div class="callout">
+        Activez le debug avant de reproduire un problème si vous devez ensuite envoyer
+        un rapport plus précis au support.
+      </div>
+    </section>
+
+    <section class="section" id="support">
+      <h2>Contacter le support</h2>
+      <p>
+        Le dialogue <strong>Contacter le support</strong> envoie un rapport directement
+        au backend support. L'utilisateur remplit une adresse email, choisit un type de
+        problème, puis décrit la situation.
+      </p>
+      <p>
+        Un bouton permet aussi d'afficher les détails techniques inclus dans le rapport,
+        pour vérifier ce qui sera envoyé.
+      </p>
+      <p>
+        Le rapport technique reste volontairement limité : pas de chemins locaux complets,
+        pas de noms de fichiers détaillés, pas de contenu du dossier debug envoyé automatiquement.
+      </p>
+      <div class="callout">
+        Si l'envoi automatique échoue, le dialogue propose un mode de repli avec copie de
+        l'adresse, du sujet et du rapport complet pour un envoi manuel.
+      </div>
+    </section>
+
+    <section class="section" id="updates">
+      <h2>Mises à jour</h2>
+      <p>
+        L'application sait vérifier les releases GitHub et afficher les notes des versions
+        plus récentes que celle installée.
+      </p>
+      <ul>
+        <li>vérification manuelle depuis le menu Aide ;</li>
+        <li>vérification automatique au lancement si l'option est activée ;</li>
+        <li>installation via le setup officiel téléchargé localement.</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <p><a href="../index.html">Retour à l'accueil</a></p>
+    </footer>
+  </div>
+</body>
+</html>

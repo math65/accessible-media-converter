@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Getting started - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../../fr/assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span>Getting started</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">User guide</p>
+      <h1>Getting started with Accessible Media Converter</h1>
+      <p>
+        Use this page if you are discovering the application. It covers launching,
+        adding media, supported formats, and the general logic of the two tabs.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#quickstart">Quick start</a></li>
+        <li><a href="#add">Add files or a folder</a></li>
+        <li><a href="#formats">Supported formats</a></li>
+        <li><a href="#interface">Understand the interface</a></li>
+        <li><a href="#advanced">Where to find advanced actions</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="quickstart">
+      <h2>Quick start</h2>
+      <ol>
+        <li>Open the application.</li>
+        <li>Add one or more media files.</li>
+        <li>Choose the output format in the list for the active tab.</li>
+        <li>Open the settings if you want to adjust quality.</li>
+        <li>Start the conversion with <strong>Start Conversion</strong>.</li>
+      </ol>
+      <div class="callout">
+        The active tab decides the conversion type: audio to audio in the Audio tab,
+        video to video or video to audio in the Video tab.
+      </div>
+    </section>
+
+    <section class="section" id="add">
+      <h2>Add files or a folder</h2>
+      <p>Three main methods are available:</p>
+      <ul>
+        <li><strong>Ctrl+O</strong> or <strong>File &gt; Add Files...</strong></li>
+        <li><strong>Ctrl+V</strong> to paste files copied from Windows Explorer</li>
+        <li><strong>File &gt; Add Folder...</strong> to import a whole folder</li>
+      </ul>
+      <p>
+        Paste and folder import use the same filtering as the standard open dialog.
+        Non-media files are ignored.
+      </p>
+      <div class="callout">
+        At this stage, the application does not provide drag and drop. Use file open,
+        folder import, or <strong>Ctrl+V</strong> paste instead.
+      </div>
+    </section>
+
+    <section class="section" id="formats">
+      <h2>Supported formats</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Main extensions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Audio</td>
+            <td><code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.aac</code>, <code>.ogg</code>, <code>.wma</code>, <code>.m4a</code></td>
+          </tr>
+          <tr>
+            <td>Video</td>
+            <td><code>.mp4</code>, <code>.mkv</code>, <code>.avi</code>, <code>.mov</code>, <code>.wmv</code>, <code>.webm</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="warning callout">
+        A text file, office document, or any other format not listed here should not
+        be imported as media.
+      </div>
+    </section>
+
+    <section class="section" id="interface">
+      <h2>Understand the interface</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Audio tab</strong>
+          Use it to convert an audio file to another audio format.
+        </li>
+        <li>
+          <strong>Video tab</strong>
+          Use it to convert a video to MP4 or MKV, or to extract its audio.
+        </li>
+        <li>
+          <strong>Main list</strong>
+          Each row shows the file name, a few details, and the processing status.
+        </li>
+        <li>
+          <strong>Status bar and progress</strong>
+          They show the overall state of the current batch.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="advanced">
+      <h2>Where to find advanced actions</h2>
+      <p>
+        Some actions do not appear as large buttons in the main window. For a video file,
+        right-click the file row to open the context menu.
+      </p>
+      <ul>
+        <li><strong>Manage Tracks...</strong> appears for an <strong>MP4</strong> or <strong>MKV</strong> video output.</li>
+        <li><strong>Choose Audio Track...</strong> appears for audio extraction from a video that contains several audio tracks.</li>
+      </ul>
+      <p>
+        Global settings such as the output folder, parallelism, or update checks are
+        available in <strong>Edit &gt; Preferences</strong>.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Read next:
+        <a href="audio-conversion.html">Audio conversion</a> or
+        <a href="video-conversion.html">Video conversion</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

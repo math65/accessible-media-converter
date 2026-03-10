@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prendre en main l'application - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Prendre en main l'application</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Manuel utilisateur</p>
+      <h1>Prendre en main Accessible Media Converter</h1>
+      <p>
+        Utilisez cette page si vous découvrez l'application. Elle couvre l'ouverture,
+        l'ajout de médias, les formats acceptés et la logique générale des deux onglets.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Dans cette page</h2>
+      <ul>
+        <li><a href="#demarrage">Démarrage rapide</a></li>
+        <li><a href="#ajout">Ajouter des fichiers ou un dossier</a></li>
+        <li><a href="#formats">Formats pris en charge</a></li>
+        <li><a href="#interface">Comprendre l'interface</a></li>
+        <li><a href="#avance">Où trouver les actions avancées</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="demarrage">
+      <h2>Démarrage rapide</h2>
+      <ol>
+        <li>Ouvrez l'application.</li>
+        <li>Ajoutez un ou plusieurs fichiers médias.</li>
+        <li>Choisissez le format de sortie dans la liste de l'onglet actif.</li>
+        <li>Ouvrez les réglages si vous voulez ajuster la qualité.</li>
+        <li>Lancez la conversion avec <strong>Démarrer la conversion</strong>.</li>
+      </ol>
+      <div class="callout">
+        L'onglet actif décide du type de conversion : audio vers audio dans l'onglet Audio,
+        vidéo vers vidéo ou vidéo vers audio dans l'onglet Vidéo.
+      </div>
+    </section>
+
+    <section class="section" id="ajout">
+      <h2>Ajouter des fichiers ou un dossier</h2>
+      <p>Trois méthodes principales existent :</p>
+      <ul>
+        <li><strong>Ctrl+O</strong> ou <strong>Fichier &gt; Ajouter des fichiers...</strong></li>
+        <li><strong>Ctrl+V</strong> pour coller des fichiers copiés depuis l'explorateur Windows</li>
+        <li><strong>Fichier &gt; Ajouter un dossier...</strong> pour importer un dossier entier</li>
+      </ul>
+      <p>
+        Le collage et l'import de dossier appliquent le même filtrage que l'ouverture
+        classique. Les fichiers non média sont ignorés.
+      </p>
+      <div class="callout">
+        À ce stade, l'application ne propose pas de glisser-déposer. Utilisez l'ouverture,
+        l'import de dossier ou le collage <strong>Ctrl+V</strong>.
+      </div>
+    </section>
+
+    <section class="section" id="formats">
+      <h2>Formats pris en charge</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Extensions principales</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Audio</td>
+            <td><code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.aac</code>, <code>.ogg</code>, <code>.wma</code>, <code>.m4a</code></td>
+          </tr>
+          <tr>
+            <td>Vidéo</td>
+            <td><code>.mp4</code>, <code>.mkv</code>, <code>.avi</code>, <code>.mov</code>, <code>.wmv</code>, <code>.webm</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="warning callout">
+        Un fichier texte, un document bureautique ou tout autre format non listé ne doit
+        pas être importé comme média.
+      </div>
+    </section>
+
+    <section class="section" id="interface">
+      <h2>Comprendre l'interface</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Onglet Audio</strong>
+          Utilisez-le pour convertir un fichier audio vers un autre format audio.
+        </li>
+        <li>
+          <strong>Onglet Vidéo</strong>
+          Utilisez-le pour convertir une vidéo vers MP4 ou MKV, ou pour extraire son audio.
+        </li>
+        <li>
+          <strong>Liste centrale</strong>
+          Chaque ligne affiche le nom du fichier, quelques détails et le statut de traitement.
+        </li>
+        <li>
+          <strong>Barre de statut et progression</strong>
+          Elles montrent l'état global du batch en cours.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="avance">
+      <h2>Où trouver les actions avancées</h2>
+      <p>
+        Certaines actions n'apparaissent pas comme de gros boutons dans la fenêtre principale.
+        Pour un fichier vidéo, faites un clic droit sur la ligne du fichier pour ouvrir le menu contextuel.
+      </p>
+      <ul>
+        <li><strong>Manage Tracks...</strong> apparaît pour une sortie vidéo <strong>MP4</strong> ou <strong>MKV</strong>.</li>
+        <li><strong>Choose Audio Track...</strong> apparaît pour une extraction audio depuis une vidéo qui contient plusieurs pistes audio.</li>
+      </ul>
+      <p>
+        Les réglages globaux comme le dossier de sortie, le parallélisme ou les mises à jour
+        se trouvent dans <strong>Édition &gt; Préférences</strong>.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Lire ensuite :
+        <a href="audio-conversion.html">Conversions audio</a> ou
+        <a href="video-conversion.html">Conversions vidéo</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

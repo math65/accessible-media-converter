@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convert videos - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../../fr/assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span>Convert videos</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">User guide</p>
+      <h1>Convert videos</h1>
+      <p>
+        For video outputs, the application clearly separates the container, video settings,
+        audio settings, and track management. Keep that structure in mind while working.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#containers">Choose a container</a></li>
+        <li><a href="#video">Adjust video settings</a></li>
+        <li><a href="#audio">Adjust audio settings</a></li>
+        <li><a href="#tracks">Manage tracks</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="containers">
+      <h2>Choose a container</h2>
+      <p>
+        The main video container outputs are <strong>MP4</strong> and <strong>MKV</strong>.
+        You can also convert a video to an audio-only format.
+      </p>
+      <ul class="summary-list">
+        <li>
+          <strong>MP4</strong>
+          A widely compatible format. Useful audio codec choices are intentionally limited to AAC and MP3.
+        </li>
+        <li>
+          <strong>MKV</strong>
+          A more flexible format. Useful audio codec choices include AAC, MP3, Opus, and FLAC.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="video">
+      <h2>Adjust video settings</h2>
+      <p>
+        The video section first offers a preset, then advanced settings if you want more control.
+      </p>
+      <div class="callout">
+        <strong>Video Preset</strong> and <strong>Encoder Preset</strong> do not mean the same thing.
+        The <strong>Video Preset</strong> is a global profile that sets quality, encoder preset,
+        H.264 profile, and pixel format together. The <strong>Encoder Preset</strong> only affects
+        encoding speed and compression efficiency for the <code>x264</code> engine.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Preset</th>
+            <th>Typical use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Compatible</td>
+            <td>Safe choice for simple and robust playback.</td>
+          </tr>
+          <tr>
+            <td>Balanced</td>
+            <td>Balance between quality, speed, and file size.</td>
+          </tr>
+          <tr>
+            <td>High Quality</td>
+            <td>Higher quality, slower encoding.</td>
+          </tr>
+          <tr>
+            <td>Small File</td>
+            <td>Pushes file size lower.</td>
+          </tr>
+          <tr>
+            <td>Fast Encode</td>
+            <td>Reduces processing time.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Advanced video settings include:</p>
+      <ul>
+        <li>CRF</li>
+        <li>x264 preset</li>
+        <li>H.264 profile</li>
+        <li>pixel format</li>
+      </ul>
+      <p>
+        In practice, if you want a simple setup, start with a <strong>Video Preset</strong>.
+        If you then change the <strong>Encoder Preset</strong>, <strong>CRF</strong>, profile,
+        or pixel format, you move away from the global preset and into a more customized setup.
+      </p>
+    </section>
+
+    <section class="section" id="audio">
+      <h2>Adjust audio in a video output</h2>
+      <p>
+        The audio section stays separate from the video section. Choose the audio codec first,
+        then set bitrate, quality, channels, and normalization if needed.
+      </p>
+      <div class="callout">
+        For a video output, the logic is always: <strong>container first</strong>,
+        then <strong>video settings</strong>, then <strong>audio settings</strong>.
+      </div>
+    </section>
+
+    <section class="section" id="tracks">
+      <h2>Manage tracks</h2>
+      <p>
+        To open track actions, right-click a video file in the list. The menu depends on
+        the output format that is currently selected.
+      </p>
+      <ul class="summary-list">
+        <li>
+          <strong>Manage Tracks...</strong>
+          Available for an <strong>MP4</strong> or <strong>MKV</strong> output.
+        </li>
+        <li>
+          <strong>Choose Audio Track...</strong>
+          Available for audio extraction from a video with several audio tracks.
+        </li>
+      </ul>
+      <p>The track manager then allows you to:</p>
+      <ul>
+        <li>keep or remove video, audio, and subtitle tracks;</li>
+        <li>reorder tracks;</li>
+        <li>change the title and language;</li>
+        <li>adjust some dispositions such as <code>default</code> or <code>forced</code>.</li>
+      </ul>
+      <p>
+        For video-to-audio conversion, the application uses only one audio track.
+        If several tracks exist, a dedicated selector lets you choose which one to extract.
+      </p>
+      <div class="callout">
+        If no track action appears on right-click, check the selected output format first
+        and confirm that the selected file is actually a video file.
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Read next:
+        <a href="preferences-and-support.html">Preferences, support, and updates</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

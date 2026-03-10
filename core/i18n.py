@@ -9,11 +9,19 @@ try:
 except Exception:
     polib = None
 
-CURRENT_LANGUAGE_CODE = "en"
-CURRENT_LANGUAGE_SOURCE = "fallback"
+AUTO_LANGUAGE_CODE = "auto"
+FALLBACK_LANGUAGE_CODE = "en"
+SUPPORTED_LANGUAGE_CODES = ("fr", "en")
+LANGUAGE_NAME_MSGIDS = {
+    "fr": "French",
+    "en": "English",
+}
+
+CURRENT_LANGUAGE_CODE = FALLBACK_LANGUAGE_CODE
+CURRENT_LANGUAGE_SOURCE = "source"
 
 
-def install_language(preferred_lang='fr', prefer_po=True):
+def install_language(preferred_lang=AUTO_LANGUAGE_CODE, prefer_po=True):
     global CURRENT_LANGUAGE_CODE
     global CURRENT_LANGUAGE_SOURCE
 
@@ -23,7 +31,13 @@ def install_language(preferred_lang='fr', prefer_po=True):
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
     locales_dir = os.path.join(base_path, 'locales')
-    lang_code = _resolve_language(preferred_lang)
+    lang_code = resolve_language(preferred_lang)
+
+    if lang_code == FALLBACK_LANGUAGE_CODE:
+        _install_identity_translation()
+        CURRENT_LANGUAGE_CODE = FALLBACK_LANGUAGE_CODE
+        CURRENT_LANGUAGE_SOURCE = 'source'
+        return FALLBACK_LANGUAGE_CODE, 'source'
 
     # In development, load .po directly to avoid manual compile steps.
     if prefer_po and not getattr(sys, 'frozen', False):
@@ -39,11 +53,10 @@ def install_language(preferred_lang='fr', prefer_po=True):
         CURRENT_LANGUAGE_SOURCE = 'mo'
         return lang_code, 'mo'
     except Exception:
-        gettext.install('base', localedir=locales_dir)
-        builtins.__dict__.setdefault('_', lambda s: s)
-        CURRENT_LANGUAGE_CODE = 'en'
-        CURRENT_LANGUAGE_SOURCE = 'fallback'
-        return 'en', 'fallback'
+        _install_identity_translation()
+        CURRENT_LANGUAGE_CODE = FALLBACK_LANGUAGE_CODE
+        CURRENT_LANGUAGE_SOURCE = 'source'
+        return FALLBACK_LANGUAGE_CODE, 'source'
 
 
 def get_current_language_code():
@@ -54,14 +67,50 @@ def get_current_language_source():
     return CURRENT_LANGUAGE_SOURCE
 
 
-def _resolve_language(preferred_lang):
-    if preferred_lang:
-        return preferred_lang
+def get_supported_language_codes():
+    return SUPPORTED_LANGUAGE_CODES
+
+
+def get_language_name_msgid(language_code):
+    return LANGUAGE_NAME_MSGIDS.get(str(language_code or "").strip().lower())
+
+
+def get_language_display_name(language_code):
+    msgid = get_language_name_msgid(language_code)
+    if msgid:
+        return builtins.__dict__.get("_", lambda s: s)(msgid)
+    return str(language_code or "").strip().lower() or FALLBACK_LANGUAGE_CODE
+
+
+def normalize_ui_language(preferred_lang):
+    normalized = str(preferred_lang or AUTO_LANGUAGE_CODE).strip().lower()
+    if normalized == AUTO_LANGUAGE_CODE:
+        return AUTO_LANGUAGE_CODE
+    if normalized in SUPPORTED_LANGUAGE_CODES:
+        return normalized
+    return AUTO_LANGUAGE_CODE
+
+
+def get_system_language_code():
     try:
         sys_lang = locale.getlocale()[0] or locale.getdefaultlocale()[0]
-        return 'fr' if sys_lang and sys_lang.lower().startswith('fr') else 'en'
     except Exception:
-        return 'en'
+        sys_lang = None
+
+    if sys_lang and sys_lang.lower().startswith('fr'):
+        return 'fr'
+    return FALLBACK_LANGUAGE_CODE
+
+
+def resolve_language(preferred_lang):
+    normalized = normalize_ui_language(preferred_lang)
+    if normalized == AUTO_LANGUAGE_CODE:
+        return get_system_language_code()
+    return normalized
+
+
+def _install_identity_translation():
+    builtins.__dict__['_'] = lambda s: s
 
 
 def _install_from_po(locales_dir, lang_code):

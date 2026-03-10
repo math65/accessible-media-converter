@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced usage - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../../fr/assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span>Advanced usage</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">User guide</p>
+      <h1>Advanced usage</h1>
+      <p>
+        This page groups more advanced features: detailed video settings, output audio codecs,
+        track management, parallel batches, debug mode, and support.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#video">Advanced video settings</a></li>
+        <li><a href="#audio">Advanced audio settings</a></li>
+        <li><a href="#tracks">Track management</a></li>
+        <li><a href="#batch">Batch and performance</a></li>
+        <li><a href="#debug">Debug, support, and updates</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="video">
+      <h2>Advanced video settings</h2>
+      <p>
+        For <strong>MP4</strong> and <strong>MKV</strong> outputs, video can be copied or re-encoded.
+        In re-encode mode, you get a main preset and then advanced settings.
+      </p>
+      <p>
+        The <strong>Video Preset</strong> is a global shortcut. It applies several consistent values
+        together, including <strong>CRF</strong>, the <strong>Encoder Preset</strong>, the H.264 profile,
+        and the pixel format. The <strong>Encoder Preset</strong> itself only controls one trade-off:
+        encoding speed versus compression efficiency.
+      </p>
+      <ul>
+        <li><strong>CRF</strong> to control target quality;</li>
+        <li><strong>x264 preset</strong> to trade speed against compression;</li>
+        <li><strong>H.264 profile</strong> for compatibility;</li>
+        <li><strong>pixel format</strong> for rendering and playback.</li>
+      </ul>
+      <div class="callout">
+        If you manually change the <strong>Encoder Preset</strong> or another advanced setting,
+        you are customizing the video preset that was selected first.
+      </div>
+    </section>
+
+    <section class="section" id="audio">
+      <h2>Advanced audio settings</h2>
+      <p>
+        In a video output, audio settings stay separate from video settings.
+        You can choose a codec compatible with the container, then adjust bitrate,
+        quality, channels, sample rate, and normalization depending on the codec.
+      </p>
+      <ul>
+        <li><strong>MP4</strong>: AAC or MP3</li>
+        <li><strong>MKV</strong>: AAC, MP3, Opus, or FLAC</li>
+      </ul>
+    </section>
+
+    <section class="section" id="tracks">
+      <h2>Track management</h2>
+      <p>
+        The track manager lets you choose which video, audio, and subtitle tracks to keep,
+        change their order, and adjust some metadata and dispositions.
+      </p>
+      <p>
+        In practice, these actions open from a right-click on a video file in the list.
+        <strong>Manage Tracks...</strong> is offered for an <strong>MP4</strong> or <strong>MKV</strong> output,
+        while <strong>Choose Audio Track...</strong> appears for audio extraction when several tracks exist.
+      </p>
+      <div class="callout">
+        For video-to-audio conversion, the application extracts only one audio track.
+      </div>
+    </section>
+
+    <section class="section" id="batch">
+      <h2>Batch and performance</h2>
+      <p>
+        The application can run several conversions in parallel. The preferences let you define:
+      </p>
+      <ul>
+        <li>the maximum number of simultaneous conversions;</li>
+        <li>the conflict policy for output files;</li>
+        <li>the number of FFmpeg threads per conversion.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="debug">
+      <h2>Debug, support, and updates</h2>
+      <p>
+        If a problem must be reported, you can enable debug mode, reproduce the issue,
+        and then open the integrated support dialog. The form sends a clean report
+        without exposing full local paths.
+      </p>
+      <p>
+        The support dialog can also show the included technical details and provide
+        a manual copy fallback if automatic sending fails.
+      </p>
+      <p>
+        Updates can also be checked manually from the Help menu, or automatically at startup
+        if the option is enabled.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p><a href="../index.html">Back to home</a></p>
+    </footer>
+  </div>
+</body>
+</html>

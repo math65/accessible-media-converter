@@ -1,5 +1,11 @@
 import wx
 
+from core.i18n import (
+    AUTO_LANGUAGE_CODE,
+    get_language_display_name,
+    get_system_language_code,
+    normalize_ui_language,
+)
 from core.formatting import (
     DEFAULT_CONCURRENT_JOBS,
     DEFAULT_FFMPEG_THREADS,
@@ -12,10 +18,11 @@ from core.formatting import (
 
 class PreferencesDialog(wx.Dialog):
     def __init__(self, parent, current_settings):
-        super().__init__(parent, title=_("Preferences"), size=(560, 500))
+        super().__init__(parent, title=_("Preferences"), size=(560, 580))
         self.SetName(_("Preferences dialog"))
 
         self.settings = current_settings
+        self.ui_language = normalize_ui_language(self.settings.get('ui_language', AUTO_LANGUAGE_CODE))
         self.mode = self.settings.get('output_mode', 'source')
         self.custom_path = self.settings.get('custom_output_path', '')
         self.existing_output_policy = self.settings.get('existing_output_policy', 'rename')
@@ -35,6 +42,25 @@ class PreferencesDialog(wx.Dialog):
     def _init_ui(self):
         panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
+
+        language_box = wx.StaticBox(panel, label=_("Language"))
+        language_sizer = wx.StaticBoxSizer(language_box, wx.VERTICAL)
+
+        language_row = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_language = wx.StaticText(panel, label=_("Application language"))
+        self.language_values = (AUTO_LANGUAGE_CODE, "fr", "en")
+        self.choice_ui_language = wx.Choice(
+            panel,
+            choices=self._build_ui_language_choice_labels(),
+        )
+        self.choice_ui_language.SetSelection(self._get_ui_language_selection())
+        self.choice_ui_language.SetName(_("Application language"))
+        self.choice_ui_language.SetToolTip(
+            _("Choose the language used by the application interface.")
+        )
+        language_row.Add(lbl_language, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        language_row.Add(self.choice_ui_language, 0, wx.ALIGN_CENTER_VERTICAL)
+        language_sizer.Add(language_row, 0, wx.ALL, 5)
 
         output_box = wx.StaticBox(panel, label=_("Output"))
         output_sizer = wx.StaticBoxSizer(output_box, wx.VERTICAL)
@@ -132,6 +158,7 @@ class PreferencesDialog(wx.Dialog):
         )
         execution_sizer.Add(self.chk_check_updates_on_startup, 0, wx.ALL, 5)
 
+        vbox.Add(language_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
         vbox.Add(output_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
         vbox.Add(execution_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
 
@@ -181,6 +208,20 @@ class PreferencesDialog(wx.Dialog):
             labels.append(_("{count} thread(s)").format(count=value))
         return labels
 
+    def _build_ui_language_choice_labels(self):
+        detected_language = get_language_display_name(get_system_language_code())
+        return [
+            _("Automatic (detected: {language})").format(language=detected_language),
+            get_language_display_name("fr"),
+            get_language_display_name("en"),
+        ]
+
+    def _get_ui_language_selection(self):
+        try:
+            return self.language_values.index(self.ui_language)
+        except ValueError:
+            return 0
+
     def _get_ffmpeg_threads_selection(self):
         if isinstance(self.ffmpeg_threads, str) and self.ffmpeg_threads.lower() == DEFAULT_FFMPEG_THREADS:
             return 0
@@ -225,6 +266,7 @@ class PreferencesDialog(wx.Dialog):
         }
 
         return {
+            'ui_language': self.language_values[self.choice_ui_language.GetSelection()],
             'output_mode': mode,
             'custom_output_path': self.txt_path.GetValue(),
             'existing_output_policy': index_to_policy.get(self.choice_existing_output_policy.GetSelection(), 'rename'),

@@ -8,6 +8,10 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $PythonExe = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $SpecPath = Join-Path $ProjectRoot "UniversalTranscoder.spec"
 $InstallerScript = Join-Path $ProjectRoot "installer\UniversalTranscoder.iss"
+$DocumentationIndexes = @(
+    (Join-Path $ProjectRoot "docs\fr\index.html"),
+    (Join-Path $ProjectRoot "docs\en\index.html")
+)
 $BuildDir = Join-Path $ProjectRoot "build"
 $DistDir = Join-Path $ProjectRoot "dist"
 $VersionInfoPath = Join-Path $BuildDir "windows_version_info.txt"
@@ -63,6 +67,9 @@ function Get-IsccPath {
 Assert-FileExists -Path $PythonExe -Label "Python executable"
 Assert-FileExists -Path $SpecPath -Label "PyInstaller spec"
 Assert-FileExists -Path $InstallerScript -Label "Inno Setup script"
+foreach ($documentationIndex in $DocumentationIndexes) {
+    Assert-FileExists -Path $documentationIndex -Label "Documentation index"
+}
 Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffmpeg.exe") -Label "FFmpeg binary"
 Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffprobe.exe") -Label "FFprobe binary"
 

@@ -10,7 +10,7 @@ a = Analysis(
     ['main.py'],
     pathex=[project_root],
     binaries=[('bin\\ffmpeg.exe', 'bin'), ('bin\\ffprobe.exe', 'bin')],
-    datas=[('locales', 'locales')],
+    datas=[('locales', 'locales'), ('docs', 'docs')],
     hiddenimports=['wx.richtext', 'wx._richtext', 'wx.xml', 'wx._xml'],
     hookspath=[],
     hooksconfig={},

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preferences, support, and updates - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../../fr/assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span>Preferences, support, and updates</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">User guide</p>
+      <h1>Preferences, support, and updates</h1>
+      <p>
+        This page groups everything that does not belong to a single conversion:
+        global preferences, debug mode, support reports, and application updates.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#preferences">General preferences</a></li>
+        <li><a href="#debug">Debug mode</a></li>
+        <li><a href="#support">Contact support</a></li>
+        <li><a href="#updates">Updates</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="preferences">
+      <h2>General preferences</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Application language</strong>
+          Choose automatic detection, French, or English. Changing the language requires a restart.
+        </li>
+        <li>
+          <strong>Output folder</strong>
+          Choose the source folder, a specific folder, or ask for a folder at each batch.
+        </li>
+        <li>
+          <strong>Conflict policy</strong>
+          Define what happens when an output file already exists.
+        </li>
+        <li>
+          <strong>Open output folder</strong>
+          Automatically opens the output folder at the end of a successful or partially successful batch.
+        </li>
+        <li>
+          <strong>Parallel conversions</strong>
+          Set how many tasks may run at the same time.
+        </li>
+        <li>
+          <strong>FFmpeg threads</strong>
+          Set the number of threads used per conversion, or keep automatic mode.
+        </li>
+        <li>
+          <strong>Continue after error</strong>
+          Lets the batch continue with other tasks if one conversion fails.
+        </li>
+        <li>
+          <strong>Automatic update checks</strong>
+          Enable or disable update checks at startup.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="debug">
+      <h2>Debug mode</h2>
+      <p>
+        The <strong>Debug</strong> menu enables more detailed logging and lets you
+        open or clear the diagnostic folder.
+      </p>
+      <p>
+        Enabling or disabling debug mode restarts the application to apply the change.
+        This switch is not available during an active conversion.
+      </p>
+      <div class="callout">
+        Enable debug mode before reproducing a problem if you may later need to send
+        a more precise report to support.
+      </div>
+    </section>
+
+    <section class="section" id="support">
+      <h2>Contact support</h2>
+      <p>
+        The <strong>Contact Support</strong> dialog sends a report directly through the
+        support backend. The user enters an email address, chooses a problem type,
+        and describes the situation.
+      </p>
+      <p>
+        A button can also display the technical details included in the report,
+        so you can review what will be sent.
+      </p>
+      <p>
+        The technical report remains intentionally limited: no full local paths,
+        no detailed file names, and no automatic upload of the debug folder contents.
+      </p>
+      <div class="callout">
+        If automatic sending fails, the dialog provides a fallback with the support
+        address, the subject, and the full report ready to copy for manual sending.
+      </div>
+    </section>
+
+    <section class="section" id="updates">
+      <h2>Updates</h2>
+      <p>
+        The application can check GitHub releases and display notes for versions that
+        are newer than the installed one.
+      </p>
+      <ul>
+        <li>manual check from the Help menu;</li>
+        <li>automatic check at startup if enabled;</li>
+        <li>installation through the official setup downloaded locally.</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <p><a href="../index.html">Back to home</a></p>
+    </footer>
+  </div>
+</body>
+</html>

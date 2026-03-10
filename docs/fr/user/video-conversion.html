@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convertir des vidéos - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Convertir des vidéos</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Manuel utilisateur</p>
+      <h1>Convertir des vidéos</h1>
+      <p>
+        Pour les sorties vidéo, l'application sépare clairement le conteneur, les réglages
+        vidéo, les réglages audio et la gestion des pistes. C'est la logique à garder en tête.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Dans cette page</h2>
+      <ul>
+        <li><a href="#conteneurs">Choisir un conteneur</a></li>
+        <li><a href="#video">Régler la vidéo</a></li>
+        <li><a href="#audio">Régler l'audio</a></li>
+        <li><a href="#pistes">Gérer les pistes</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="conteneurs">
+      <h2>Choisir un conteneur</h2>
+      <p>
+        Les sorties conteneur vidéo principales sont <strong>MP4</strong> et <strong>MKV</strong>.
+        Vous pouvez également convertir une vidéo vers un format audio.
+      </p>
+      <ul class="summary-list">
+        <li>
+          <strong>MP4</strong>
+          Format largement compatible. Les codecs audio utiles sont volontairement limités à AAC et MP3.
+        </li>
+        <li>
+          <strong>MKV</strong>
+          Format plus souple. Les codecs audio utiles incluent AAC, MP3, Opus et FLAC.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="video">
+      <h2>Régler la vidéo</h2>
+      <p>
+        La section vidéo propose d'abord un preset, puis des réglages avancés si vous voulez
+        reprendre la main.
+      </p>
+      <div class="callout">
+        <strong>Preset vidéo</strong> et <strong>Encoder Preset</strong> ne désignent pas la même chose.
+        Le <strong>Preset vidéo</strong> est un profil global qui règle d'un coup la qualité, le preset
+        d'encodage, le profil H.264 et le pixel format. Le <strong>Encoder Preset</strong> agit seulement
+        sur la vitesse d'encodage et l'efficacité de compression du moteur <code>x264</code>.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Preset</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Compatible</td>
+            <td>Choix sûr pour une lecture simple et robuste.</td>
+          </tr>
+          <tr>
+            <td>Balanced</td>
+            <td>Compromis entre qualité, vitesse et taille.</td>
+          </tr>
+          <tr>
+            <td>High Quality</td>
+            <td>Plus de qualité, encodage plus lent.</td>
+          </tr>
+          <tr>
+            <td>Small File</td>
+            <td>Réduit davantage la taille du fichier.</td>
+          </tr>
+          <tr>
+            <td>Fast Encode</td>
+            <td>Réduit le temps de traitement.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Les réglages avancés vidéo portent sur :</p>
+      <ul>
+        <li>CRF</li>
+        <li>x264 preset</li>
+        <li>profil H.264</li>
+        <li>pixel format</li>
+      </ul>
+      <p>
+        En pratique, si vous voulez un réglage simple, choisissez d'abord un <strong>Preset vidéo</strong>.
+        Si vous modifiez ensuite le <strong>Encoder Preset</strong>, le <strong>CRF</strong>, le profil ou le
+        pixel format, vous sortez du preset global et passez sur un réglage plus personnalisé.
+      </p>
+    </section>
+
+    <section class="section" id="audio">
+      <h2>Régler l'audio dans une sortie vidéo</h2>
+      <p>
+        La section audio reste distincte de la section vidéo. Vous choisissez le codec audio,
+        puis les réglages de bitrate, qualité, canaux et normalisation si nécessaire.
+      </p>
+      <div class="callout">
+        Pour une sortie vidéo, la logique est toujours : <strong>conteneur d'abord</strong>,
+        puis <strong>réglages vidéo</strong>, puis <strong>réglages audio</strong>.
+      </div>
+    </section>
+
+    <section class="section" id="pistes">
+      <h2>Gérer les pistes</h2>
+      <p>
+        Pour ouvrir les actions de pistes, faites un clic droit sur un fichier vidéo dans la liste.
+        Le menu proposé dépend du format de sortie actuellement sélectionné.
+      </p>
+      <ul class="summary-list">
+        <li>
+          <strong>Manage Tracks...</strong>
+          Disponible pour une sortie vidéo <strong>MP4</strong> ou <strong>MKV</strong>.
+        </li>
+        <li>
+          <strong>Choose Audio Track...</strong>
+          Disponible pour une extraction audio depuis une vidéo avec plusieurs pistes audio.
+        </li>
+      </ul>
+      <p>Le gestionnaire de pistes permet ensuite notamment de :</p>
+      <ul>
+        <li>conserver ou retirer des pistes vidéo, audio et sous-titres ;</li>
+        <li>réordonner les pistes ;</li>
+        <li>modifier le titre et la langue ;</li>
+        <li>ajuster certaines dispositions comme <code>default</code> ou <code>forced</code>.</li>
+      </ul>
+      <p>
+        Pour une conversion vidéo vers audio, l'application n'utilise qu'une seule piste audio.
+        Si plusieurs pistes existent, un sélecteur dédié permet de choisir laquelle extraire.
+      </p>
+      <div class="callout">
+        Si aucune action de piste n'apparaît au clic droit, vérifiez d'abord le format de sortie
+        choisi et le type réel du fichier sélectionné.
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Lire ensuite :
+        <a href="preferences-and-support.html">Préférences, support et mises à jour</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

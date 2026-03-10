@@ -18,6 +18,7 @@ from core.batch_manager import (
 )
 from core import FileProber
 from core.debug_session import (
+    SESSION_RESTORE_PENDING_KEY,
     clear_debug_artifacts,
     get_config_path,
     load_raw_config,
@@ -28,6 +29,7 @@ from core.debug_session import (
     save_session_snapshot,
     update_debug_flags,
 )
+from core.documentation import open_documentation
 from core.formatting import (
     AUDIO_OUTPUT_FORMAT_KEYS,
     VIDEO_CONTAINER_FORMAT_KEYS,
@@ -36,6 +38,7 @@ from core.formatting import (
     build_format_label,
     normalize_settings_store,
 )
+from core.i18n import AUTO_LANGUAGE_CODE, normalize_ui_language
 from core.updater import (
     UpdateCheckError,
     clear_updater_state,
@@ -95,6 +98,7 @@ class MainWindow(wx.Frame):
         self._is_installing_update = False
         self._update_check_in_progress = False
         self._startup_update_check_scheduled = False
+        self._pending_close_after_stop = False
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         
@@ -174,6 +178,8 @@ class MainWindow(wx.Frame):
         self.item_debug_clear = self.debug_menu.Append(wx.ID_ANY, _("&Clear Debug Data"))
         
         help_menu = wx.Menu()
+        item_documentation = help_menu.Append(wx.ID_ANY, _("&Documentation..."))
+        help_menu.AppendSeparator()
         item_check_updates = help_menu.Append(wx.ID_ANY, _("Check for &Updates..."))
         help_menu.AppendSeparator()
         item_contact_support = help_menu.Append(wx.ID_ANY, _("Contact &Support..."))
@@ -193,6 +199,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_open_debug_folder, self.item_debug_open_folder)
         self.Bind(wx.EVT_MENU, self.on_disable_debug, self.item_debug_disable)
         self.Bind(wx.EVT_MENU, self.on_clear_debug_data, self.item_debug_clear)
+        self.Bind(wx.EVT_MENU, self.on_open_documentation, item_documentation)
         self.Bind(wx.EVT_MENU, self.on_check_updates, item_check_updates)
         self.Bind(wx.EVT_MENU, self.on_contact_support, item_contact_support)
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
@@ -210,7 +217,7 @@ class MainWindow(wx.Frame):
         
         self.empty_panel = wx.Panel(self.panel)
         self.empty_msg = _(
-            "No files selected.\n\nPress Ctrl+O to add files,\npress Ctrl+V to paste copied files,\nor Drag & Drop them here."
+            "No files selected.\n\nPress Ctrl+O to add files,\npress Ctrl+V to paste copied files,\nor use File > Add Folder."
         )
         empty_sizer = wx.BoxSizer(wx.VERTICAL)
         self.lbl_empty = wx.StaticText(self.empty_panel, label=self.empty_msg)
@@ -368,14 +375,19 @@ class MainWindow(wx.Frame):
         meta.audio_extract_track = entry.get('audio_extract_track')
         self._append_media_metadata(meta)
 
-    def restore_debug_session_if_needed(self):
-        if not self.settings_store.get('debug_restore_pending', False):
+    def restore_session_if_needed(self):
+        if not (
+            self.settings_store.get(SESSION_RESTORE_PENDING_KEY, False)
+            or self.settings_store.get('debug_restore_pending', False)
+        ):
             return
 
         snapshot = load_session_snapshot()
         current_debug_enabled = bool(self.settings_store.get('debug_enabled', False))
+        current_ui_language = self.settings_store.get('ui_language', AUTO_LANGUAGE_CODE)
         if not snapshot:
-            logging.warning("Debug restore requested but no session snapshot was found.")
+            logging.warning("Session restore requested but no session snapshot was found.")
+            self.settings_store[SESSION_RESTORE_PENDING_KEY] = False
             self.settings_store['debug_restore_pending'] = False
             self._save_config()
             self._update_debug_menu_state()
@@ -383,6 +395,8 @@ class MainWindow(wx.Frame):
 
         restored_settings = normalize_settings_store(snapshot.get('settings_store', {}))
         restored_settings['debug_enabled'] = current_debug_enabled
+        restored_settings['ui_language'] = normalize_ui_language(current_ui_language)
+        restored_settings[SESSION_RESTORE_PENDING_KEY] = False
         restored_settings['debug_restore_pending'] = False
         self.settings_store = restored_settings
 
@@ -410,6 +424,39 @@ class MainWindow(wx.Frame):
         self._save_config()
         self._update_debug_menu_state()
 
+    def restore_debug_session_if_needed(self):
+        self.restore_session_if_needed()
+
+    def _restart_application_with_session_restore(self, next_settings, error_message, rollback_on_failure):
+        previous_settings = dict(self.settings_store)
+        prepared_settings = normalize_settings_store(dict(next_settings))
+
+        try:
+            self.settings_store = prepared_settings
+            save_session_snapshot(self)
+            self.settings_store[SESSION_RESTORE_PENDING_KEY] = True
+            self._save_config()
+            restart_application()
+            self._is_relaunching = True
+            self.Close()
+            return True
+        except Exception:
+            if rollback_on_failure:
+                self.settings_store = previous_settings
+            else:
+                prepared_settings[SESSION_RESTORE_PENDING_KEY] = False
+                prepared_settings['debug_restore_pending'] = False
+                self.settings_store = prepared_settings
+            self._save_config()
+            logging.exception("Failed to restart the application.")
+            wx.MessageBox(
+                error_message,
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            self._set_status(error_message)
+            return False
+
     def _restart_with_debug_mode(self, enable_debug):
         if self.is_converting:
             wx.MessageBox(
@@ -420,28 +467,16 @@ class MainWindow(wx.Frame):
             self._set_status(_("Debug mode cannot be changed during an active conversion."))
             return
 
-        previous_settings = dict(self.settings_store)
-        try:
-            save_session_snapshot(self)
-            self.settings_store = update_debug_flags(
-                self.settings_store,
-                enabled=enable_debug,
-                restore_pending=True,
-            )
-            self._save_config()
-            restart_application()
-            self._is_relaunching = True
-            self.Close()
-        except Exception:
-            self.settings_store = previous_settings
-            self._save_config()
-            logging.exception("Failed to toggle debug mode.")
-            wx.MessageBox(
-                _("Unable to restart the application in debug mode."),
-                _("Error"),
-                wx.ICON_ERROR,
-            )
-            self._set_status(_("Unable to restart the application in debug mode."))
+        updated_settings = update_debug_flags(
+            self.settings_store,
+            enabled=enable_debug,
+            restore_pending=True,
+        )
+        self._restart_application_with_session_restore(
+            updated_settings,
+            _("Unable to restart the application in debug mode."),
+            rollback_on_failure=True,
+        )
 
     def on_enable_debug(self, event):
         self._restart_with_debug_mode(True)
@@ -840,8 +875,50 @@ class MainWindow(wx.Frame):
         dlg = PreferencesDialog(self, self.settings_store)
         if dlg.ShowModal() == wx.ID_OK:
             new_prefs = dlg.get_settings()
-            self.settings_store.update(new_prefs)
+            previous_language = normalize_ui_language(
+                self.settings_store.get('ui_language', AUTO_LANGUAGE_CODE)
+            )
+            next_language = normalize_ui_language(new_prefs.get('ui_language', AUTO_LANGUAGE_CODE))
+
+            updated_settings = dict(self.settings_store)
+            updated_settings.update(new_prefs)
+            self.settings_store = normalize_settings_store(updated_settings)
             self._save_config()
+
+            if next_language != previous_language:
+                if self.is_converting:
+                    wx.MessageBox(
+                        _(
+                            "The new language will be applied the next time the application starts because a conversion is currently running."
+                        ),
+                        _("Application Language"),
+                        wx.OK | wx.ICON_INFORMATION,
+                        self,
+                    )
+                    self._set_status(_("Language change saved. It will be applied on next launch."))
+                else:
+                    restart_message = _(
+                        "The application language has changed.\n\nRestart now to apply the new language?"
+                    )
+                    restart_dialog = wx.MessageDialog(
+                        self,
+                        restart_message,
+                        _("Restart Required"),
+                        wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION,
+                    )
+                    try:
+                        should_restart = restart_dialog.ShowModal() == wx.ID_YES
+                    finally:
+                        restart_dialog.Destroy()
+
+                    if should_restart:
+                        self._restart_application_with_session_restore(
+                            self.settings_store,
+                            _("Unable to restart the application after changing language."),
+                            rollback_on_failure=False,
+                        )
+                    else:
+                        self._set_status(_("Language change saved. It will be applied on next launch."))
         dlg.Destroy()
 
     def _update_layout_strategy(self):
@@ -1088,10 +1165,11 @@ class MainWindow(wx.Frame):
                                    wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
             
             if dlg.ShowModal() == wx.ID_YES:
+                self._pending_close_after_stop = True
                 self.stop_requested = True
                 if self.batch_manager:
                     self.batch_manager.stop()
-                self.Destroy()
+                event.Veto()
             else:
                 event.Veto()
         else:
@@ -1224,7 +1302,88 @@ class MainWindow(wx.Frame):
         except Exception:
             logging.exception("Unable to open output folder: %s", output_dir)
 
+    def _format_partial_output_preview(self, paths, max_items=5):
+        preview_paths = list(paths[:max_items])
+        preview = "\n".join(preview_paths)
+        remaining_count = len(paths) - len(preview_paths)
+        if remaining_count > 0:
+            preview = _("{paths}\n...and {count} more file(s).").format(
+                paths=preview,
+                count=remaining_count,
+            )
+        return preview
+
+    def _get_existing_stopped_output_paths(self, summary):
+        existing_paths = []
+        seen_paths = set()
+
+        for raw_path in summary.get("stopped_output_paths", []):
+            if not raw_path:
+                continue
+            absolute_path = os.path.abspath(raw_path)
+            path_key = os.path.normcase(absolute_path)
+            if path_key in seen_paths:
+                continue
+            seen_paths.add(path_key)
+            if os.path.isfile(absolute_path):
+                existing_paths.append(absolute_path)
+
+        return existing_paths
+
+    def _maybe_prompt_delete_partial_outputs(self, summary):
+        partial_paths = self._get_existing_stopped_output_paths(summary)
+        if not partial_paths:
+            return
+
+        if len(partial_paths) == 1:
+            message = _(
+                "Conversion stopped.\n\nA partially generated file was found:\n{path}\n\nDo you want to delete it?"
+            ).format(path=partial_paths[0])
+        else:
+            message = _(
+                "Conversion stopped.\n\n{count} partially generated files were found:\n{paths}\n\nDo you want to delete them?"
+            ).format(
+                count=len(partial_paths),
+                paths=self._format_partial_output_preview(partial_paths),
+            )
+
+        dlg = wx.MessageDialog(
+            self,
+            message,
+            _("Delete Partial Files"),
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION,
+        )
+        try:
+            should_delete = dlg.ShowModal() == wx.ID_YES
+        finally:
+            dlg.Destroy()
+
+        if not should_delete:
+            return
+
+        failed_paths = []
+        for path in partial_paths:
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                continue
+            except Exception:
+                logging.exception("Unable to delete partial output file: %s", path)
+                failed_paths.append(path)
+
+        if failed_paths:
+            wx.MessageBox(
+                _(
+                    "Some partially generated files could not be deleted.\n\n{paths}"
+                ).format(paths=self._format_partial_output_preview(failed_paths)),
+                _("Delete Partial Files"),
+                wx.OK | wx.ICON_WARNING,
+                self,
+            )
+
     def _on_batch_complete(self, summary):
+        should_close_after_stop = self._pending_close_after_stop
+        self._pending_close_after_stop = False
         self.is_converting = False
         self.stop_requested = False
         self.batch_manager = None
@@ -1239,7 +1398,10 @@ class MainWindow(wx.Frame):
         self._update_ui_state()
 
         if summary.get('user_stopped'):
+            self._maybe_prompt_delete_partial_outputs(summary)
             self._set_status(_("Batch stopped by user."))
+            if should_close_after_stop:
+                self.Destroy()
             return
 
         self._open_batch_output_folder_if_needed(summary)
@@ -1267,6 +1429,22 @@ class MainWindow(wx.Frame):
         )
 
     def on_exit(self, e): self.Close()
+    def on_open_documentation(self, e):
+        opened, doc_path, error_code = open_documentation()
+        if opened:
+            return
+
+        if error_code == "missing":
+            message = _(
+                "The local documentation files were not found.\n\nExpected file:\n{path}"
+            ).format(path=doc_path)
+        else:
+            message = _(
+                "The local documentation could not be opened.\n\nFile:\n{path}"
+            ).format(path=doc_path)
+
+        wx.MessageBox(message, _("Documentation"), wx.OK | wx.ICON_ERROR, self)
+
     def on_check_updates(self, e):
         self._start_update_check(interactive=True)
 

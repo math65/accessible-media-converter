@@ -1,1497 +1,2134 @@
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: Accessible Media Converter 2.3\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: Accessible Media Converter\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# --- MENUS ---
-msgid "Accessible Media Converter"
-msgstr "Accessible Media Converter"
-
+#: ui/main_window.py:207
 msgid "&File"
 msgstr "&Fichier"
 
+#: ui/main_window.py:158
 msgid "&Add Files..."
 msgstr "&Ajouter des fichiers..."
 
+#: ui/main_window.py:160
 msgid "Add &Folder..."
 msgstr "Ajouter un &dossier..."
 
+#: ui/main_window.py:162
 msgid "E&xit"
 msgstr "&Quitter"
 
+#: ui/main_window.py:208
 msgid "&Edit"
 msgstr "&Édition"
 
+#: ui/main_window.py:165
 msgid "&Paste Files"
 msgstr "C&oller des fichiers"
 
+#: ui/main_window.py:166
 msgid "Select &All"
 msgstr "&Tout sélectionner"
 
+#: ui/main_window.py:209
 msgid "&Debug"
 msgstr "&Debug"
 
+#: ui/main_window.py:168
 msgid "&Clear List"
 msgstr "&Vider la liste"
 
+#: ui/main_window.py:169
 msgid "Remove &Selected"
 msgstr "&Supprimer la sélection"
 
+#: ui/main_window.py:171 ui/preferences_dialog.py:16
 msgid "Preferences"
 msgstr "Préférences"
 
+#: ui/main_window.py:174
 msgid "Enable &Debug"
 msgstr "Activer le &debug"
 
+#: ui/main_window.py:175
 msgid "Show Debug &Folder"
 msgstr "Afficher le &dossier debug"
 
+#: ui/main_window.py:176
 msgid "&Disable Debug"
 msgstr "&Désactiver le debug"
 
+#: ui/main_window.py:178
 msgid "&Clear Debug Data"
 msgstr "&Effacer les données debug"
 
+#: ui/main_window.py:210
 msgid "&Help"
 msgstr "&Aide"
 
+#: ui/main_window.py:187
 msgid "&About"
 msgstr "À &propos"
 
+#: ui/main_window.py:185
 msgid "Contact &Support..."
 msgstr "Contacter le &support..."
 
+#: ui/support_dialog.py:57 ui/support_dialog.py:59
 msgid "Your email"
 msgstr "Votre email"
 
+#: ui/support_dialog.py:60
 msgid "Enter the email address that support should reply to."
 msgstr "Saisissez l'adresse email à laquelle le support doit répondre."
 
+#: ui/support_dialog.py:62 ui/support_dialog.py:67
 msgid "Issue type"
 msgstr "Type de problème"
 
+#: ui/support_dialog.py:68
 msgid "Choose the type of issue you want to report."
 msgstr "Choisissez le type de problème que vous souhaitez signaler."
 
+#: ui/support_dialog.py:77 ui/support_dialog.py:80
 msgid "Describe your issue"
 msgstr "Décrivez votre problème"
 
-msgid "Describe your issue below. The report will be sent directly to support."
-msgstr "Décrivez votre problème ci-dessous. Le rapport sera envoyé directement au support."
+#: ui/support_dialog.py:42
+msgid ""
+"Describe your issue below. The report will be sent directly to support."
+msgstr ""
+"Décrivez votre problème ci-dessous. Le rapport sera envoyé directement au "
+"support."
 
+#: ui/support_dialog.py:81
 msgid "Describe the issue you want to report to support."
 msgstr "Décrivez le problème que vous souhaitez signaler au support."
 
+#: ui/support_dialog.py:266 ui/support_dialog.py:86 ui/support_dialog.py:87
 msgid "Show technical details"
 msgstr "Afficher les détails techniques"
 
+#: ui/support_dialog.py:266
 msgid "Hide technical details"
 msgstr "Masquer les détails techniques"
 
+#: ui/support_dialog.py:100
 msgid "Technical information that will be included in the report."
 msgstr "Informations techniques qui seront incluses dans le rapport."
 
-msgid "The report could not be sent automatically. You can copy the details below and send them manually."
-msgstr "Le rapport n'a pas pu être envoyé automatiquement. Vous pouvez copier les détails ci-dessous et les envoyer manuellement."
+#: ui/support_dialog.py:111
+msgid ""
+"The report could not be sent automatically. You can copy the details below "
+"and send them manually."
+msgstr ""
+"Le rapport n'a pas pu être envoyé automatiquement. Vous pouvez copier les "
+"détails ci-dessous et les envoyer manuellement."
 
+#: ui/support_dialog.py:118
 msgid "Support details"
 msgstr "Détails du support"
 
+#: ui/support_dialog.py:145 ui/support_dialog.py:151
 msgid "Report preview"
 msgstr "Aperçu du rapport"
 
+#: ui/support_dialog.py:152
 msgid "Full report text that can be copied manually if needed."
-msgstr "Texte complet du rapport pouvant être copié manuellement si nécessaire."
+msgstr ""
+"Texte complet du rapport pouvant être copié manuellement si nécessaire."
 
+#: ui/support_dialog.py:171 ui/support_dialog.py:172
 msgid "Send report"
 msgstr "Envoyer le rapport"
 
+#: ui/support_dialog.py:173
 msgid "Send the support report directly to support."
 msgstr "Envoyer directement le rapport au support."
 
+#: ui/support_dialog.py:244
 msgid "Sending..."
 msgstr "Envoi en cours..."
 
+#: ui/main_window.py:1457 ui/support_dialog.py:302
 msgid "Your report has been sent successfully."
 msgstr "Votre rapport a été envoyé avec succès."
 
+#: ui/support_dialog.py:334
 msgid "Support subject copied to clipboard."
 msgstr "Sujet du rapport copié dans le presse-papiers."
 
+#: ui/support_dialog.py:337
 msgid "Support report copied to clipboard."
 msgstr "Rapport de support copié dans le presse-papiers."
 
+#: ui/support_dialog.py:376
 msgid "Please wait for the report to finish sending."
 msgstr "Veuillez attendre la fin de l'envoi du rapport."
 
+#: core/support.py:87
 msgid "Please enter a valid email address."
 msgstr "Veuillez saisir une adresse email valide."
 
+#: core/support.py:89
 msgid "Please choose an issue type."
 msgstr "Veuillez choisir un type de problème."
 
+#: core/support.py:91
 msgid "Please describe your issue before sending the report."
 msgstr "Veuillez décrire votre problème avant d'envoyer le rapport."
 
+#: core/support.py:99
 msgid "{app_name} - {issue} - v{version}"
 msgstr "{app_name} - {issue} - v{version}"
 
+#: core/support.py:128
 msgid "Loaded audio files: {value}"
 msgstr "Fichiers audio chargés : {value}"
 
+#: core/support.py:131
 msgid "Loaded video files: {value}"
 msgstr "Fichiers vidéo chargés : {value}"
 
+#: core/support.py:134
 msgid "Automatic update checks: {value}"
 msgstr "Vérification automatique des mises à jour : {value}"
 
+#: core/support.py:137
 msgid "Existing output policy: {value}"
 msgstr "Politique en cas de fichier existant : {value}"
 
+#: core/support.py:145
 msgid "FFmpeg threads: {value}"
 msgstr "Threads FFmpeg : {value}"
 
+#: core/support.py:156
 msgid "Issue type: {value}"
 msgstr "Type de problème : {value}"
 
+#: core/support.py:157
 msgid "User email: {value}"
 msgstr "Email utilisateur : {value}"
 
+#: core/support.py:196
 msgid "Unable to contact the support server right now."
 msgstr "Impossible de contacter le serveur de support pour le moment."
 
+#: core/support.py:201
 msgid "The support request timed out."
 msgstr "L'envoi du rapport de support a expiré."
 
+#: core/support.py:206 core/support.py:212
 msgid "The support server returned an invalid response."
 msgstr "Le serveur de support a renvoyé une réponse invalide."
 
+#: core/support.py:251
 msgid "Please review the support form fields and try again."
 msgstr "Veuillez vérifier les champs du formulaire de support et réessayer."
 
+#: core/support.py:252
 msgid "Too many reports have been sent recently. Please try again later."
-msgstr "Trop de rapports ont été envoyés récemment. Veuillez réessayer plus tard."
+msgstr ""
+"Trop de rapports ont été envoyés récemment. Veuillez réessayer plus tard."
 
+#: core/support.py:228 core/support.py:253 ui/support_dialog.py:308
 msgid "Unable to send the support report right now."
 msgstr "Impossible d'envoyer le rapport de support pour le moment."
 
+#: core/support.py:281 ui/preferences_dialog.py:208
 msgid "Automatic"
 msgstr "Automatique"
 
-msgid "Conversion problem"
-msgstr "Problème de conversion"
-
-msgid "Application crash"
-msgstr "Crash de l'application"
-
-msgid "Update problem"
-msgstr "Problème de mise à jour"
-
-msgid "Accessibility issue"
-msgstr "Problème d'accessibilité"
-
-msgid "Installation problem"
-msgstr "Problème d'installation"
-
-msgid "Feature request"
-msgstr "Demande de fonctionnalité"
-
+#: core/support.py:49
 msgid "Other"
 msgstr "Autre"
 
 # --- UPDATER ---
+#: ui/main_window.py:183
 msgid "Check for &Updates..."
 msgstr "Vérifier les mises à &jour..."
 
+#: ui/update_dialog.py:18 ui/update_dialog.py:19
 msgid "Update Available"
 msgstr "Mise à jour disponible"
 
+#: ui/update_dialog.py:34
 msgid "A new version of {app_name} is available."
 msgstr "Une nouvelle version de {app_name} est disponible."
 
+#: ui/update_dialog.py:42
 msgid "Current version:"
 msgstr "Version actuelle :"
 
+#: core/updater.py:192
 msgid "Version"
 msgstr "Version"
 
+#: ui/update_dialog.py:44
 msgid "Available version:"
 msgstr "Version disponible :"
 
+#: core/updater.py:193 ui/update_dialog.py:46
 msgid "Published:"
 msgstr "Publication :"
 
+#: ui/update_dialog.py:57 ui/update_dialog.py:63
 msgid "Release Notes"
 msgstr "Notes de version"
 
+#: ui/update_dialog.py:64
 msgid "Release notes for the selected update."
 msgstr "Notes de version de la mise à jour sélectionnée."
 
+#: ui/update_dialog.py:82 ui/update_dialog.py:83
 msgid "Download and Install"
 msgstr "Télécharger et installer"
 
+#: ui/update_dialog.py:84
 msgid "Download the installer and start the update."
 msgstr "Télécharger l'installateur et lancer la mise à jour."
 
+#: ui/update_dialog.py:87 ui/update_dialog.py:88
 msgid "Open Release Page"
 msgstr "Ouvrir la page de la release"
 
+#: ui/update_dialog.py:89
 msgid "Open the GitHub release page in your browser."
 msgstr "Ouvrir la page GitHub de la release dans votre navigateur."
 
+#: ui/update_dialog.py:165 ui/update_dialog.py:179
 msgid "Downloading update..."
 msgstr "Téléchargement de la mise à jour..."
 
+#: ui/update_dialog.py:176
 msgid "Downloading update... {percent}%"
 msgstr "Téléchargement de la mise à jour... {percent}%"
 
+#: ui/update_dialog.py:243
 msgid "Downloading the installer..."
 msgstr "Téléchargement de l'installateur..."
 
+#: ui/update_dialog.py:187
 msgid "Update downloaded successfully."
 msgstr "Mise à jour téléchargée avec succès."
 
-msgid "Version {version} has been downloaded.\n\nThe application will close and the installer will start.\nDo you want to continue?"
-msgstr "La version {version} a été téléchargée.\n\nL'application va se fermer et l'installateur va démarrer.\nVoulez-vous continuer ?"
+#: ui/update_dialog.py:189
+msgid ""
+"Version {version} has been downloaded.\n"
+"\n"
+"The application will close and the installer will start.\n"
+"Do you want to continue?"
+msgstr ""
+"La version {version} a été téléchargée.\n"
+"\n"
+"L'application va se fermer et l'installateur va démarrer.\n"
+"Voulez-vous continuer ?"
 
+#: ui/update_dialog.py:195
 msgid "Install Update"
 msgstr "Installer la mise à jour"
 
+#: ui/update_dialog.py:210
 msgid "Update installation cancelled."
 msgstr "Installation de la mise à jour annulée."
 
+#: ui/update_dialog.py:234
 msgid "Unexpected error while downloading the update."
 msgstr "Erreur inattendue pendant le téléchargement de la mise à jour."
 
+#: ui/update_dialog.py:254
 msgid "Unable to open the release page."
 msgstr "Impossible d'ouvrir la page de la release."
 
+#: ui/update_dialog.py:268
 msgid "Please wait for the update download to finish."
 msgstr "Veuillez attendre la fin du téléchargement de la mise à jour."
 
+#: core/updater.py:127
 msgid "GitHub update check failed with HTTP status {code}."
-msgstr "La vérification GitHub des mises à jour a échoué avec le code HTTP {code}."
+msgstr ""
+"La vérification GitHub des mises à jour a échoué avec le code HTTP {code}."
 
+#: core/updater.py:130
 msgid "Unable to contact GitHub to check for updates."
 msgstr "Impossible de contacter GitHub pour vérifier les mises à jour."
 
+#: core/updater.py:132
 msgid "The update check timed out."
 msgstr "La vérification des mises à jour a expiré."
 
+#: core/updater.py:134 core/updater.py:142
 msgid "GitHub returned an invalid update response."
 msgstr "GitHub a renvoyé une réponse de mise à jour invalide."
 
+#: core/updater.py:153
 msgid "The GitHub release does not define a valid version tag."
 msgstr "La release GitHub ne définit pas de tag de version valide."
 
+#: core/updater.py:211
 msgid "No release notes provided."
 msgstr "Aucune note de version fournie."
 
+#: core/support.py:113 core/support.py:115 core/updater.py:216
 msgid "Unknown"
 msgstr "Inconnu"
 
+#: core/updater.py:227 core/updater.py:252
 msgid "No installer asset was found in the GitHub release."
 msgstr "Aucun installateur n'a été trouvé dans la release GitHub."
 
+#: core/updater.py:257
 msgid "Invalid update information."
 msgstr "Informations de mise à jour invalides."
 
+#: core/updater.py:289
 msgid "The installer download failed with HTTP status {code}."
-msgstr "Le téléchargement de l'installateur a échoué avec le code HTTP {code}."
+msgstr ""
+"Le téléchargement de l'installateur a échoué avec le code HTTP {code}."
 
+#: core/updater.py:292
 msgid "Unable to download the installer from GitHub."
 msgstr "Impossible de télécharger l'installateur depuis GitHub."
 
+#: core/updater.py:294
 msgid "The installer download timed out."
 msgstr "Le téléchargement de l'installateur a expiré."
 
+#: core/updater.py:296
 msgid "Unable to save the downloaded installer."
 msgstr "Impossible d'enregistrer l'installateur téléchargé."
 
-# --- SUPPORT --- 
+# --- SUPPORT ---
+#: ui/main_window.py:1458 ui/support_dialog.py:21 ui/support_dialog.py:22
+#: ui/support_dialog.py:354
 msgid "Contact Support"
 msgstr "Contacter le support"
 
-msgid "Describe your issue below. Your mail client will open with the message already prepared."
-msgstr "Décrivez votre problème ci-dessous. Votre client mail s'ouvrira avec le message déjà préparé."
-
-msgid "You will only need to review the email and send it."
-msgstr "Vous n'aurez plus qu'à vérifier le mail et l'envoyer."
-
-msgid "If the mail client did not open, copy the information below and send it manually."
-msgstr "Si le client mail ne s'est pas ouvert, copiez les informations ci-dessous et envoyez-les manuellement."
-
-msgid "Your message"
-msgstr "Votre message"
-
-msgid "Describe the problem you encountered."
-msgstr "Décrivez le problème rencontré."
-
-msgid "Mail details"
-msgstr "Détails du mail"
-
+#: ui/support_dialog.py:122 ui/support_dialog.py:128
 msgid "Contact address"
 msgstr "Adresse de contact"
 
-msgid "Support email address to copy."
-msgstr "Adresse mail du support à copier."
-
+#: ui/support_dialog.py:129
 msgid "Copy address"
 msgstr "Copier l'adresse"
 
+#: ui/support_dialog.py:131 ui/support_dialog.py:133
 msgid "Subject"
 msgstr "Sujet"
 
-msgid "Support email subject to copy."
-msgstr "Sujet du mail de support à copier."
-
+#: ui/support_dialog.py:134
 msgid "Copy subject"
 msgstr "Copier le sujet"
 
+#: ui/support_dialog.py:93 ui/support_dialog.py:99
 msgid "Technical information"
 msgstr "Informations techniques"
 
-msgid "Technical information included in the support message."
-msgstr "Informations techniques incluses dans le message de support."
-
-msgid "Message preview"
-msgstr "Aperçu du message"
-
-msgid "Full support message that can be copied manually if needed."
-msgstr "Message complet de support pouvant être copié manuellement si nécessaire."
-
-msgid "Copy full message"
-msgstr "Copier le message complet"
-
+#: ui/support_dialog.py:157
 msgid "Copy report"
 msgstr "Copier le rapport"
 
-msgid "Open Debug Folder"
-msgstr "Ouvrir le dossier debug"
-
-msgid "Open the debug folder in File Explorer."
-msgstr "Ouvrir le dossier debug dans l'explorateur de fichiers."
-
-msgid "Open Mail Client"
-msgstr "Ouvrir le client mail"
-
-msgid "Open the default mail client with the prepared message."
-msgstr "Ouvrir le client mail par défaut avec le message préparé."
-
+#: ui/update_dialog.py:91 ui/update_dialog.py:92
 msgid "Close"
 msgstr "Fermer"
 
+#: ui/support_dialog.py:273
 msgid "Unable to copy to the clipboard."
 msgstr "Impossible de copier dans le presse-papiers."
 
+#: ui/support_dialog.py:331
 msgid "Support email address copied to clipboard."
 msgstr "Adresse mail du support copiée dans le presse-papiers."
 
-msgid "Support email subject copied to clipboard."
-msgstr "Sujet du mail de support copié dans le presse-papiers."
-
-msgid "Support message copied to clipboard."
-msgstr "Message de support copié dans le presse-papiers."
-
-msgid "Debug folder opened."
-msgstr "Dossier debug ouvert."
-
-msgid "Default mail client opened."
-msgstr "Client mail par défaut ouvert."
-
-msgid "Unable to open the default mail client. Copy the address, subject, and message below."
-msgstr "Impossible d'ouvrir le client mail par défaut. Copiez l'adresse, le sujet et le message ci-dessous."
-
-msgid "Support dialog closed."
-msgstr "Fenêtre de support fermée."
-
+#: core/support.py:259
 msgid "Packaged"
 msgstr "Packagé"
 
+#: core/support.py:259
 msgid "Source"
 msgstr "Source"
 
-msgid "Enabled"
-msgstr "Activé"
-
-msgid "Disabled"
-msgstr "Désactivé"
-
+#: core/support.py:267
 msgid "Yes"
 msgstr "Oui"
 
+#: core/support.py:267
 msgid "No"
 msgstr "Non"
 
-msgid "{app_name} support request"
-msgstr "Demande de support {app_name}"
-
+#: core/support.py:108
 msgid "App version: {value}"
 msgstr "Version de l'application : {value}"
 
+#: core/support.py:109
 msgid "Execution mode: {value}"
 msgstr "Mode d'exécution : {value}"
 
+#: core/support.py:112
 msgid "Operating system: {value}"
 msgstr "Système d'exploitation : {value}"
 
-msgid "Python version: {value}"
-msgstr "Version de Python : {value}"
-
+#: core/support.py:115
 msgid "Language: {value}"
 msgstr "Langue : {value}"
 
+#: core/support.py:116
 msgid "Current tab: {value}"
 msgstr "Onglet courant : {value}"
 
+#: core/support.py:119
 msgid "Selected output format: {value}"
 msgstr "Format de sortie sélectionné : {value}"
 
+#: core/support.py:122
 msgid "Debug mode: {value}"
 msgstr "Mode debug : {value}"
 
+#: core/support.py:125
 msgid "Debug data present: {value}"
 msgstr "Données debug présentes : {value}"
 
-msgid "Debug folder: {value}"
-msgstr "Dossier debug : {value}"
-
+#: core/support.py:153
 msgid "Please describe your issue here."
 msgstr "Veuillez décrire votre problème ici."
 
+#: core/support.py:159
 msgid "Your message:"
 msgstr "Votre message :"
 
+#: core/support.py:162
 msgid "Technical information:"
 msgstr "Informations techniques :"
 
+#: core/support.py:120
 msgid "Not selected"
 msgstr "Non sélectionné"
 
 # --- INTERFACE PRINCIPALE ---
+#: ui/main_window.py:83
 msgid "Filename"
 msgstr "Nom du fichier"
 
+#: ui/main_window.py:84
 msgid "Details (Codec/Bitrate)"
 msgstr "Détails (codec/débit)"
 
+#: ui/main_window.py:85
 msgid "Status"
 msgstr "Statut"
 
-msgid "No files selected.\n\nPress Ctrl+O to add files,\npress Ctrl+V to paste copied files,\nor Drag & Drop them here."
-msgstr "Aucun fichier sélectionné.\n\nAppuyez sur Ctrl+O pour ajouter des fichiers,\nappuyez sur Ctrl+V pour coller des fichiers copiés,\nou glissez-déposez-les ici."
+#: ui/main_window.py:219
+msgid ""
+"No files selected.\n"
+"\n"
+"Press Ctrl+O to add files,\n"
+"press Ctrl+V to paste copied files,\n"
+"or use File > Add Folder."
+msgstr ""
+"Aucun fichier sélectionné.\n"
+"\n"
+"Appuyez sur Ctrl+O pour ajouter des fichiers,\n"
+"appuyez sur Ctrl+V pour coller des fichiers copiés,\n"
+"ou utilisez Fichier > Ajouter un dossier."
 
+#: ui/main_window.py:87
 msgid "Use arrows to browse files. Press Delete to remove selected entries."
-msgstr "Utilisez les flèches pour parcourir les fichiers. Appuyez sur Suppr pour retirer les éléments sélectionnés."
+msgstr ""
+"Utilisez les flèches pour parcourir les fichiers. Appuyez sur Suppr pour "
+"retirer les éléments sélectionnés."
 
+#: ui/main_window.py:124
 msgid "Ready. Add files to begin."
 msgstr "Prêt. Ajoutez des fichiers pour commencer."
 
+#: ui/main_window.py:236
 msgid "Audio files list"
 msgstr "Liste des fichiers audio"
 
+#: ui/main_window.py:237
 msgid "Video files list"
 msgstr "Liste des fichiers vidéo"
 
+#: ui/main_window.py:286
 msgid "Main panel"
 msgstr "Panneau principal"
 
+#: ui/main_window.py:287
 msgid "File categories"
 msgstr "Catégories de fichiers"
 
+#: ui/main_window.py:288
 msgid "Empty file list panel"
 msgstr "Panneau de liste vide"
 
+#: ui/main_window.py:289
 msgid "No files selected information"
 msgstr "Information : aucun fichier sélectionné"
 
 # --- ONGLETS ---
+#: core/support.py:263 ui/main_window.py:937
 msgid "Audio"
 msgstr "Audio"
 
+#: core/support.py:263 ui/main_window.py:938
 msgid "Video"
 msgstr "Vidéo"
 
+#: ui/main_window.py:986
 msgid "Audio tab selected."
 msgstr "Onglet audio sélectionné."
 
+#: ui/main_window.py:988
 msgid "Video tab selected."
 msgstr "Onglet vidéo sélectionné."
 
 # --- FORMATS ET CONVERSION ---
+#: ui/main_window.py:244
 msgid "Conversion Settings"
 msgstr "Réglages de conversion"
 
+#: ui/main_window.py:247
 msgid "Convert to:"
 msgstr "Convertir en :"
 
+#: ui/main_window.py:291 ui/main_window.py:292 ui/main_window.py:306
 msgid "Convert to"
 msgstr "Convertir en"
 
+#: ui/main_window.py:293
 msgid "Select the target output format."
 msgstr "Sélectionnez le format de sortie."
 
+#: ui/main_window.py:294
 msgid "Settings and quality"
 msgstr "Réglages et qualité"
 
+#: ui/main_window.py:295
 msgid "Open format-specific settings."
 msgstr "Ouvrir les réglages du format sélectionné."
 
+#: ui/main_window.py:250
 msgid "&Settings / Quality..."
 msgstr "&Réglages / Qualité..."
 
+#: ui/main_window.py:266
 msgid "&Start Conversion"
 msgstr "&Lancer la conversion"
 
+#: ui/main_window.py:301
 msgid "Start conversion"
 msgstr "Lancer la conversion"
 
+#: ui/main_window.py:1214 ui/main_window.py:269
 msgid "Stop"
 msgstr "Arrêter"
 
+#: ui/main_window.py:302
 msgid "Stop conversion"
 msgstr "Arrêter la conversion"
 
+#: ui/main_window.py:1027
 msgid "Media Files"
 msgstr "Fichiers média"
 
+#: core/formatting.py:192
 msgid "MP3 - Audio"
 msgstr "MP3 - Audio"
 
+#: core/formatting.py:181
 msgid "MP3 - Audio (Extract)"
 msgstr "MP3 - Audio (extraction)"
 
+#: core/formatting.py:182
 msgid "AAC - Audio (Extract)"
 msgstr "AAC - Audio (extraction)"
 
+#: core/formatting.py:193
 msgid "AAC - Audio (M4A)"
 msgstr "AAC - Audio (M4A)"
 
+#: core/formatting.py:194
 msgid "WAV - Audio (Lossless)"
 msgstr "WAV - Audio (sans perte)"
 
+#: core/formatting.py:183
 msgid "WAV - Audio (Extract)"
 msgstr "WAV - Audio (extraction)"
 
+#: core/formatting.py:195
 msgid "FLAC - Audio (Lossless)"
 msgstr "FLAC - Audio (sans perte)"
 
+#: core/formatting.py:184
 msgid "FLAC - Audio (Extract)"
 msgstr "FLAC - Audio (extraction)"
 
+#: core/formatting.py:196
 msgid "ALAC - Audio (Apple Lossless)"
 msgstr "ALAC - Audio (sans perte Apple)"
 
+#: core/formatting.py:185
 msgid "ALAC - Audio (Extract)"
 msgstr "ALAC - Audio (extraction)"
 
+#: core/formatting.py:197
 msgid "OGG - Audio (Vorbis)"
 msgstr "OGG - Audio (Vorbis)"
 
+#: core/formatting.py:186
 msgid "OGG - Audio (Extract)"
 msgstr "OGG - Audio (extraction)"
 
+#: core/formatting.py:198
 msgid "WMA - Audio (Legacy)"
 msgstr "WMA - Audio (ancien)"
 
+#: core/formatting.py:187
 msgid "WMA - Audio (Extract)"
 msgstr "WMA - Audio (extraction)"
 
+#: core/formatting.py:199
 msgid "MP4 - Video (H.264)"
 msgstr "MP4 - Vidéo (H.264)"
 
+#: core/formatting.py:200
 msgid "MKV - Video"
 msgstr "MKV - Vidéo"
 
+#: ui/main_window.py:1126
 msgid "Output format selected: {format}"
 msgstr "Format de sortie sélectionné : {format}"
 
+#: ui/main_window.py:1146
 msgid "Settings updated for format: {format}"
 msgstr "Réglages mis à jour pour le format : {format}"
 
+#: ui/main_window.py:1257 ui/main_window.py:336
 msgid "Ready"
 msgstr "Prêt"
 
+#: ui/main_window.py:333
 msgid "Ready (+Tracks)"
 msgstr "Prêt (+pistes)"
 
+#: ui/main_window.py:335
 msgid "Ready (+Audio Track)"
 msgstr "Prêt (+piste audio)"
 
+#: ui/main_window.py:297
 msgid "Conversion progress percentage"
 msgstr "Pourcentage d'avancement de la conversion"
 
+#: ui/main_window.py:298
 msgid "Shows conversion progress from 0 to 100 percent."
 msgstr "Affiche la progression de la conversion de 0 à 100 %."
 
+#: ui/main_window.py:299
 msgid "Conversion progress details"
 msgstr "Détails d'avancement de la conversion"
 
+#: ui/main_window.py:1218
 msgid "Preparing conversion..."
 msgstr "Préparation de la conversion..."
 
+#: ui/main_window.py:1221
 msgid "Conversion started."
 msgstr "Conversion démarrée."
 
+#: ui/main_window.py:1242
 msgid "Converting..."
 msgstr "Conversion en cours..."
 
+#: ui/main_window.py:1246 ui/main_window.py:1422
 msgid "Done"
 msgstr "Terminé"
 
+#: ui/main_window.py:1151
 msgid "Stopping..."
 msgstr "Arrêt en cours..."
 
+#: ui/main_window.py:1155
 msgid "Stop requested."
 msgstr "Arrêt demandé."
 
+#: ui/main_window.py:1250
 msgid "Stopped by user"
 msgstr "Arrêté par l'utilisateur"
 
-msgid "Conversion stopped by user."
-msgstr "Conversion arrêtée par l'utilisateur."
-
-msgid "File converted successfully."
-msgstr "Fichier converti avec succès."
-
+#: ui/main_window.py:1410
 msgid "All tasks completed!"
 msgstr "Toutes les tâches sont terminées !"
 
+#: ui/main_window.py:1411
 msgid "All tasks completed successfully."
 msgstr "Toutes les tâches sont terminées avec succès."
 
-msgid "All tasks completed!\n\n{count} error(s)"
-msgstr "Toutes les tâches sont terminées !\n\n{count} erreur(s)"
-
-msgid "{count} error(s) during conversion."
-msgstr "{count} erreur(s) pendant la conversion."
-
-msgid "An error occurred during conversion."
-msgstr "Une erreur est survenue pendant la conversion."
-
+#: ui/main_window.py:463 ui/main_window.py:467
 msgid "Debug mode cannot be changed during an active conversion."
-msgstr "Le mode debug ne peut pas être modifié pendant une conversion en cours."
+msgstr ""
+"Le mode debug ne peut pas être modifié pendant une conversion en cours."
 
+#: ui/main_window.py:503 ui/main_window.py:507
 msgid "Disable debug mode before clearing debug data."
 msgstr "Désactivez le mode debug avant d'effacer les données debug."
 
+#: ui/main_window.py:477
 msgid "Unable to restart the application in debug mode."
 msgstr "Impossible de redémarrer l'application en mode debug."
 
+#: ui/main_window.py:494 ui/main_window.py:498
 msgid "Unable to open the debug folder."
 msgstr "Impossible d'ouvrir le dossier debug."
 
+#: ui/main_window.py:514
 msgid "Debug data cleared ({count} file(s))."
 msgstr "Données debug effacées ({count} fichier(s))."
 
+#: ui/main_window.py:519 ui/main_window.py:523 ui/main_window.py:563
+#: ui/main_window.py:567
 msgid "Stop the current conversion before installing an update."
 msgstr "Arrêtez la conversion en cours avant d'installer une mise à jour."
 
+#: ui/main_window.py:536 ui/main_window.py:540
 msgid "Unable to start the update installer."
 msgstr "Impossible de démarrer l'installateur de mise à jour."
 
+#: ui/main_window.py:544
 msgid "Closing application to install update..."
 msgstr "Fermeture de l'application pour installer la mise à jour..."
 
+#: ui/main_window.py:572
 msgid "Checking for updates..."
 msgstr "Vérification des mises à jour..."
 
+#: ui/main_window.py:590 ui/main_window.py:600 ui/main_window.py:607
+#: ui/main_window.py:608
 msgid "Unable to check for updates."
 msgstr "Impossible de vérifier les mises à jour."
 
+#: ui/main_window.py:613 ui/main_window.py:614
 msgid "You are up to date."
 msgstr "Vous êtes à jour."
 
+#: ui/preferences_dialog.py:148 ui/preferences_dialog.py:150
 msgid "Check for updates automatically at startup"
 msgstr "Vérifier automatiquement les mises à jour au démarrage"
 
+#: ui/preferences_dialog.py:152
 msgid "Check GitHub for a new version when the application starts."
-msgstr "Vérifier sur GitHub si une nouvelle version est disponible au démarrage de l'application."
+msgstr ""
+"Vérifier sur GitHub si une nouvelle version est disponible au démarrage de "
+"l'application."
 
+#: ui/main_window.py:626
 msgid "Update available: {version}"
 msgstr "Mise à jour disponible : {version}"
 
+#: ui/main_window.py:490
 msgid "Debug folder opened: {path}"
 msgstr "Dossier debug ouvert : {path}"
 
+#: ui/main_window.py:1008
 msgid "{audio_count} audio file(s), {video_count} video file(s) loaded."
-msgstr "{audio_count} fichier(s) audio, {video_count} fichier(s) vidéo chargés."
+msgstr ""
+"{audio_count} fichier(s) audio, {video_count} fichier(s) vidéo chargés."
 
+#: ui/main_window.py:1052
 msgid "{count} file(s) added."
 msgstr "{count} fichier(s) ajouté(s)."
 
+#: ui/main_window.py:1093
 msgid "{count} file(s) removed."
 msgstr "{count} fichier(s) supprimé(s)."
 
+#: ui/main_window.py:641
 msgid "{count} file(s) added from folder."
 msgstr "{count} fichier(s) ajouté(s) depuis le dossier."
 
+#: ui/main_window.py:1020
 msgid "No files loaded."
 msgstr "Aucun fichier chargé."
 
+#: ui/main_window.py:1186
 msgid "No files to convert."
 msgstr "Aucun fichier à convertir."
 
+#: ui/main_window.py:1065
 msgid "List cleared."
 msgstr "Liste vidée."
 
+#: ui/main_window.py:1028
 msgid "Open Media"
 msgstr "Ouvrir un média"
 
+#: ui/main_window.py:1410
 msgid "Success"
 msgstr "Succès"
 
+#: ui/main_window.py:1248 ui/main_window.py:454 ui/main_window.py:495
+#: ui/main_window.py:537 ui/main_window.py:599 ui/main_window.py:607
 msgid "Error"
 msgstr "Erreur"
 
+#: ui/main_window.py:1200 ui/main_window.py:464 ui/main_window.py:504
+#: ui/main_window.py:520 ui/main_window.py:564 ui/track_manager.py:435
 msgid "Warning"
 msgstr "Attention"
 
+#: ui/main_window.py:1200
 msgid "Custom folder not found. Using source folder."
 msgstr "Dossier personnalisé introuvable. Utilisation du dossier source."
 
+#: ui/main_window.py:634
 msgid "Select a folder to add"
 msgstr "Sélectionner un dossier à ajouter"
 
+#: ui/main_window.py:643 ui/main_window.py:644
 msgid "No compatible media files found in this folder."
 msgstr "Aucun fichier média compatible trouvé dans ce dossier."
 
+#: ui/main_window.py:652
 msgid "Clipboard does not contain files or folders."
 msgstr "Le presse-papiers ne contient ni fichier ni dossier."
 
+#: ui/main_window.py:657 ui/main_window.py:658
 msgid "No compatible media files found in the clipboard."
 msgstr "Aucun fichier média compatible trouvé dans le presse-papiers."
 
+#: ui/main_window.py:666
 msgid "{count} file(s) pasted from the clipboard."
 msgstr "{count} fichier(s) collé(s) depuis le presse-papiers."
 
+#: ui/main_window.py:1116
 msgid "{count} file(s) selected."
 msgstr "{count} fichier(s) sélectionné(s)."
 
+#: ui/main_window.py:613 ui/main_window.py:643 ui/main_window.py:657
 msgid "Info"
 msgstr "Information"
 
-msgid "A conversion is currently running.\nDo you really want to stop it and exit?"
-msgstr "Une conversion est en cours.\nVoulez-vous vraiment l'arrêter et quitter ?"
+#: ui/main_window.py:1163
+msgid ""
+"A conversion is currently running.\n"
+"Do you really want to stop it and exit?"
+msgstr ""
+"Une conversion est en cours.\n"
+"Voulez-vous vraiment l'arrêter et quitter ?"
 
+#: ui/main_window.py:1164
 msgid "Confirm Exit"
 msgstr "Confirmer la fermeture"
 
+#: ui/main_window.py:1465
 msgid "About"
 msgstr "À propos"
 
-msgid "Powered by FFmpeg & wxPython"
-msgstr "Propulsé par FFmpeg et wxPython"
-
 # --- RÉSUMÉS DE FORMATS ---
+#: core/formatting.py:465
 msgid "CBR {bitrate}"
 msgstr "CBR {bitrate}"
 
+#: core/formatting.py:457
 msgid "VBR Q{quality}"
 msgstr "VBR Q{quality}"
 
+#: core/formatting.py:437
 msgid "Copy"
 msgstr "Copie"
 
+#: core/formatting.py:441 core/formatting.py:442
 msgid "Lossless"
 msgstr "Sans perte"
 
+#: core/formatting.py:418 core/formatting.py:429
 msgid "Normalized -16 LUFS"
 msgstr "Normalisé -16 LUFS"
 
+#: core/formatting.py:475
 msgid "Stereo"
 msgstr "Stéréo"
 
+#: core/formatting.py:406
 msgid "Video: Copy"
 msgstr "Vidéo : copie"
 
+#: core/formatting.py:408
 msgid "H.264 CRF {crf}"
 msgstr "H.264 CRF {crf}"
 
+#: core/formatting.py:414
 msgid "Audio: Copy"
 msgstr "Audio : copie"
 
+#: core/formatting.py:419
 msgid "Audio: {summary}"
 msgstr "Audio : {summary}"
 
+#: core/probe.py:95
 msgid "{count}x Audio"
 msgstr "{count}x audio"
 
+#: core/probe.py:100
 msgid "{count}x Subtitles"
 msgstr "{count}x sous-titres"
 
 # --- FENÊTRE DE RÉGLAGES ---
+#: ui/settings_dialog.py:58
 msgid "Configure settings for: "
 msgstr "Configurer les réglages de : "
 
+#: ui/settings_dialog.py:502
 msgid "Format settings dialog"
 msgstr "Boîte de dialogue des réglages du format"
 
+#: ui/settings_dialog.py:83
 msgid "Audio Settings"
 msgstr "Réglages audio"
 
+#: ui/settings_dialog.py:503
 msgid "Audio settings panel"
 msgstr "Panneau des réglages audio"
 
+#: ui/settings_dialog.py:504
 msgid "Use Tab to navigate audio options."
 msgstr "Utilisez Tab pour parcourir les options audio."
 
+#: ui/settings_dialog.py:187 ui/settings_dialog.py:87
 msgid "Re-encode (Recommended)"
 msgstr "Réencoder (recommandé)"
 
+#: ui/settings_dialog.py:188 ui/settings_dialog.py:88
 msgid "Copy Stream (Advanced)"
 msgstr "Copie du flux (avancé)"
 
+#: ui/settings_dialog.py:506
 msgid "Audio mode re-encode"
 msgstr "Mode audio réencodage"
 
+#: ui/settings_dialog.py:507
 msgid "Audio mode copy stream"
 msgstr "Mode audio copie du flux"
 
+#: ui/settings_dialog.py:508
 msgid "Re-encode audio with detailed settings."
 msgstr "Réencoder l'audio avec des réglages détaillés."
 
+#: ui/settings_dialog.py:509
 msgid "Copy source audio without re-encoding."
 msgstr "Copier l'audio source sans le réencoder."
 
-msgid "Keep original quality and speed up conversion.\nWarning: The output format must support the source codec."
-msgstr "Conserve la qualité d'origine et accélère la conversion.\nAttention : le format de sortie doit prendre en charge le codec source."
+#: ui/settings_dialog.py:95
+msgid ""
+"Keep original quality and speed up conversion.\n"
+"Warning: The output format must support the source codec."
+msgstr ""
+"Conserve la qualité d'origine et accélère la conversion.\n"
+"Attention : le format de sortie doit prendre en charge le codec source."
 
+#: ui/settings_dialog.py:533
 msgid "Copy mode warning"
 msgstr "Avertissement du mode copie"
 
+#: ui/settings_dialog.py:117
 msgid "Sample Rate:"
 msgstr "Fréquence d'échantillonnage :"
 
+#: ui/settings_dialog.py:515 ui/settings_dialog.py:554
 msgid "Sample Rate"
 msgstr "Fréquence d'échantillonnage"
 
+#: ui/settings_dialog.py:524
 msgid "Target sample rate."
 msgstr "Fréquence d'échantillonnage cible."
 
+#: ui/settings_dialog.py:123
 msgid "Channels:"
 msgstr "Canaux :"
 
+#: ui/settings_dialog.py:516 ui/settings_dialog.py:555
 msgid "Channels"
 msgstr "Canaux"
 
+#: ui/settings_dialog.py:525
 msgid "Target channel layout."
 msgstr "Disposition des canaux cible."
 
+#: ui/settings_dialog.py:122
 msgid "Stereo (Downmix)"
 msgstr "Stéréo (mixage réduit)"
 
+#: core/formatting.py:477 ui/settings_dialog.py:122
 msgid "Mono"
 msgstr "Mono"
 
+#: core/formatting.py:478 ui/settings_dialog.py:122
 msgid "Original Channels"
 msgstr "Canaux d'origine"
 
+#: ui/settings_dialog.py:116 ui/settings_dialog.py:148
 msgid "Original"
 msgstr "D'origine"
 
+#: ui/settings_dialog.py:128
 msgid "Rate Mode:"
 msgstr "Mode de débit :"
 
+#: ui/settings_dialog.py:517 ui/settings_dialog.py:556
 msgid "Rate Mode"
 msgstr "Mode de débit"
 
+#: ui/settings_dialog.py:526
 msgid "Choose CBR or VBR mode."
 msgstr "Choisir un mode CBR ou VBR."
 
+#: ui/settings_dialog.py:129
 msgid "Constant Bitrate (CBR)"
 msgstr "Débit constant (CBR)"
 
+#: ui/settings_dialog.py:129
 msgid "Variable Bitrate (VBR)"
 msgstr "Débit variable (VBR)"
 
+#: ui/settings_dialog.py:134
 msgid "Bitrate:"
 msgstr "Débit :"
 
+#: ui/settings_dialog.py:518 ui/settings_dialog.py:557
 msgid "Bitrate"
 msgstr "Débit"
 
+#: core/formatting.py:448
 msgid "Bitrate {bitrate}"
 msgstr "Débit {bitrate}"
 
+#: ui/settings_dialog.py:527
 msgid "Bitrate used in CBR mode."
 msgstr "Débit utilisé en mode CBR."
 
+#: ui/settings_dialog.py:140 ui/settings_dialog.py:456
 msgid "Quality (VBR):"
 msgstr "Qualité (VBR) :"
 
+#: ui/settings_dialog.py:463
 msgid "Quality (OGG):"
 msgstr "Qualité (OGG) :"
 
+#: ui/settings_dialog.py:519 ui/settings_dialog.py:558
 msgid "Quality"
 msgstr "Qualité"
 
+#: ui/settings_dialog.py:528
 msgid "Quality scale used in VBR mode."
 msgstr "Échelle de qualité utilisée en mode VBR."
 
+#: ui/settings_dialog.py:321
 msgid "Best Quality"
 msgstr "Qualité maximale"
 
+#: ui/settings_dialog.py:323
 msgid "High Quality"
 msgstr "Haute qualité"
 
+#: ui/settings_dialog.py:325
 msgid "Medium"
 msgstr "Moyenne"
 
+#: ui/settings_dialog.py:327
 msgid "Smallest Size"
 msgstr "Taille minimale"
 
+#: ui/settings_dialog.py:343
 msgid "Audiophile"
 msgstr "Audiophile"
 
+#: ui/settings_dialog.py:333
 msgid "Low"
 msgstr "Faible"
 
+#: ui/settings_dialog.py:337
 msgid "High"
 msgstr "Élevée"
 
+#: ui/settings_dialog.py:145
 msgid "Bit Depth:"
 msgstr "Profondeur en bits :"
 
+#: ui/settings_dialog.py:520 ui/settings_dialog.py:559
 msgid "Bit Depth"
 msgstr "Profondeur en bits"
 
+#: ui/settings_dialog.py:529
 msgid "Bit depth for lossless formats."
 msgstr "Profondeur en bits pour les formats sans perte."
 
+#: ui/settings_dialog.py:148
 msgid "16-bit (CD Quality)"
 msgstr "16 bits (qualité CD)"
 
+#: ui/settings_dialog.py:148
 msgid "24-bit (Studio Quality)"
 msgstr "24 bits (qualité studio)"
 
+#: ui/settings_dialog.py:148
 msgid "32-bit Float (Pro)"
 msgstr "32 bits flottants (pro)"
 
+#: ui/settings_dialog.py:153
 msgid "Compression Level:"
 msgstr "Niveau de compression :"
 
+#: ui/settings_dialog.py:521 ui/settings_dialog.py:560
 msgid "Compression"
 msgstr "Compression"
 
+#: ui/settings_dialog.py:530
 msgid "Compression level for FLAC."
 msgstr "Niveau de compression pour le FLAC."
 
+#: ui/settings_dialog.py:172
 msgid "Normalize for streaming (-16 LUFS)"
 msgstr "Normaliser pour le streaming (-16 LUFS)"
 
+#: ui/settings_dialog.py:522 ui/settings_dialog.py:561
 msgid "Normalize for streaming"
 msgstr "Normaliser pour le streaming"
 
+#: ui/settings_dialog.py:531
 msgid "Apply streaming loudness normalization at -16 LUFS."
 msgstr "Appliquer une normalisation de loudness pour le streaming à -16 LUFS."
 
+#: ui/settings_dialog.py:158
 msgid "Fast"
 msgstr "Rapide"
 
+#: ui/settings_dialog.py:160 ui/settings_dialog.py:335
 msgid "Standard"
 msgstr "Standard"
 
+#: ui/settings_dialog.py:162
 msgid "Max"
 msgstr "Maximum"
 
+#: ui/settings_dialog.py:164
 msgid "Ultra Slow"
 msgstr "Très lent"
 
+#: ui/settings_dialog.py:183
 msgid "Video Settings"
 msgstr "Réglages vidéo"
 
+#: ui/settings_dialog.py:536
 msgid "Video settings panel"
 msgstr "Panneau des réglages vidéo"
 
+#: ui/settings_dialog.py:108
 msgid "Audio Codec:"
 msgstr "Codec audio :"
 
+#: ui/settings_dialog.py:512 ui/settings_dialog.py:553
 msgid "Audio Codec"
 msgstr "Codec audio"
 
+#: ui/settings_dialog.py:513
 msgid "Choose the audio codec used for the container output."
 msgstr "Choisissez le codec audio utilisé pour la sortie conteneur."
 
+#: ui/settings_dialog.py:537
 msgid "Video mode re-encode"
 msgstr "Mode vidéo réencodage"
 
+#: ui/settings_dialog.py:538
 msgid "Video mode copy stream"
 msgstr "Mode vidéo copie du flux"
 
+#: ui/settings_dialog.py:197
 msgid "Video Preset:"
 msgstr "Preset vidéo :"
 
+#: ui/settings_dialog.py:539 ui/settings_dialog.py:563
 msgid "Video Preset"
 msgstr "Preset vidéo"
 
-msgid "Compatible"
-msgstr "Compatible"
-
-msgid "Balanced"
-msgstr "Équilibré"
-
-msgid "Fast Encode"
-msgstr "Encodage rapide"
-
+#: ui/settings_dialog.py:544
 msgid "Lower CRF means better quality and bigger file."
-msgstr "Un CRF plus faible donne une meilleure qualité et un fichier plus volumineux."
+msgstr ""
+"Un CRF plus faible donne une meilleure qualité et un fichier plus "
+"volumineux."
 
+#: ui/settings_dialog.py:540 ui/settings_dialog.py:564
 msgid "Video quality CRF"
 msgstr "Qualité vidéo CRF"
 
+#: ui/settings_dialog.py:207
 msgid "Encoder Preset:"
 msgstr "Preset d'encodage :"
 
+#: ui/settings_dialog.py:541 ui/settings_dialog.py:565
 msgid "Encoder Preset"
 msgstr "Preset d'encodage"
 
+#: ui/settings_dialog.py:545
 msgid "Choose the x264 speed preset used for encoding."
 msgstr "Choisissez le preset de vitesse x264 utilisé pour l'encodage."
 
+#: ui/settings_dialog.py:212
 msgid "H.264 Profile:"
 msgstr "Profil H.264 :"
 
+#: ui/settings_dialog.py:542 ui/settings_dialog.py:566
 msgid "H.264 Profile"
 msgstr "Profil H.264"
 
+#: ui/settings_dialog.py:546
 msgid "Choose the H.264 profile used for compatible outputs."
 msgstr "Choisissez le profil H.264 utilisé pour les sorties compatibles."
 
+#: ui/settings_dialog.py:217
 msgid "Pixel Format:"
 msgstr "Format de pixel :"
 
+#: ui/settings_dialog.py:543 ui/settings_dialog.py:567
 msgid "Pixel Format"
 msgstr "Format de pixel"
 
+#: ui/settings_dialog.py:547
 msgid "Choose the output pixel format."
 msgstr "Choisissez le format de pixel de sortie."
 
+#: core/formatting.py:211
 msgid "AAC"
 msgstr "AAC"
 
+#: core/formatting.py:212
 msgid "MP3"
 msgstr "MP3"
 
+#: core/formatting.py:213
 msgid "Opus"
 msgstr "Opus"
 
+#: core/formatting.py:214
 msgid "FLAC"
 msgstr "FLAC"
 
-msgid "Very Fast"
-msgstr "Très rapide"
-
-msgid "Baseline"
-msgstr "Baseline"
-
-msgid "Main"
-msgstr "Main"
-
-msgid "YUV 4:2:0 (Compatible)"
-msgstr "YUV 4:2:0 (compatible)"
-
-msgid "YUV 4:4:4 (Advanced)"
-msgstr "YUV 4:4:4 (avancé)"
-
+#: ui/settings_dialog.py:202
 msgid "Quality (CRF):"
 msgstr "Qualité (CRF) :"
 
+#: ui/settings_dialog.py:602
 msgid "CRF {value} ({label})"
 msgstr "CRF {value} ({label})"
 
+#: ui/settings_dialog.py:601 ui/settings_dialog.py:638
 msgid "Custom"
 msgstr "Personnalisé"
 
-msgid "Very High Quality"
-msgstr "Très haute qualité"
-
-msgid "Balanced Quality"
-msgstr "Qualité équilibrée"
-
-msgid "Balanced - Recommended"
-msgstr "Équilibré - recommandé"
-
-msgid "Compact"
-msgstr "Compact"
-
-msgid "More Compact"
-msgstr "Plus compact"
-
-msgid "Small File"
-msgstr "Petit fichier"
-
-msgid "Very Compact"
-msgstr "Très compact"
-
 # --- FENÊTRE DE PRÉFÉRENCES ---
+#: ui/preferences_dialog.py:17
 msgid "Preferences dialog"
 msgstr "Boîte de dialogue des préférences"
 
-msgid "Output Destination"
-msgstr "Destination de sortie"
-
+#: ui/preferences_dialog.py:63
 msgid "Same as source file"
 msgstr "Même dossier que le fichier source"
 
+#: ui/preferences_dialog.py:64
 msgid "Output in source folder"
 msgstr "Sortie dans le dossier source"
 
+#: ui/preferences_dialog.py:67
 msgid "Specific folder:"
 msgstr "Dossier spécifique :"
 
+#: ui/preferences_dialog.py:68
 msgid "Output in specific folder"
 msgstr "Sortie dans un dossier spécifique"
 
+#: ui/preferences_dialog.py:74
 msgid "Custom output folder path"
 msgstr "Chemin du dossier de sortie personnalisé"
 
+#: ui/preferences_dialog.py:73
 msgid "Browse..."
 msgstr "Parcourir..."
 
+#: ui/preferences_dialog.py:75
 msgid "Browse output folder"
 msgstr "Parcourir le dossier de sortie"
 
-msgid "Type or paste the destination folder path."
-msgstr "Saisissez ou collez le chemin du dossier de destination."
-
+#: ui/preferences_dialog.py:81
 msgid "Ask every time (Batch)"
 msgstr "Demander à chaque fois (lot)"
 
+#: ui/preferences_dialog.py:82
 msgid "Ask output folder each time"
 msgstr "Demander le dossier de sortie à chaque fois"
 
+#: ui/preferences_dialog.py:163
 msgid "Save preferences"
 msgstr "Enregistrer les préférences"
 
+#: ui/preferences_dialog.py:164
 msgid "Cancel preferences"
 msgstr "Annuler les préférences"
 
+#: ui/main_window.py:1203 ui/preferences_dialog.py:244
 msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
 
+#: ui/preferences_dialog.py:161 ui/settings_dialog.py:228
 msgid "OK"
 msgstr "Valider"
 
 # --- TRACK MANAGER ---
+#: ui/track_manager.py:394
 msgid "Track Manager"
 msgstr "Gestionnaire de pistes"
 
+#: ui/track_manager.py:395
 msgid "Track manager dialog"
 msgstr "Boîte de dialogue du gestionnaire de pistes"
 
+#: ui/track_manager.py:399
 msgid "Track categories"
 msgstr "Catégories de pistes"
 
+#: ui/track_manager.py:406
 msgid "Audio Tracks"
 msgstr "Pistes audio"
 
+#: ui/track_manager.py:405
 msgid "Video Tracks"
 msgstr "Pistes vidéo"
 
+#: ui/track_manager.py:407
 msgid "Subtitles"
 msgstr "Sous-titres"
 
+#: ui/main_window.py:774
 msgid "Manage Tracks..."
 msgstr "Gérer les pistes..."
 
-msgid "Manage Tracks... (MKV/MP4 only)"
-msgstr "Gérer les pistes... (MKV/MP4 uniquement)"
-
+#: ui/main_window.py:782 ui/track_manager.py:450
 msgid "Choose Audio Track..."
 msgstr "Choisir la piste audio..."
 
+#: ui/track_manager.py:409
 msgid "Shortcuts: Ctrl+Up/Down to reorder, Space to toggle."
-msgstr "Raccourcis : Ctrl+Haut/Bas pour réordonner, Espace pour activer ou désactiver."
+msgstr ""
+"Raccourcis : Ctrl+Haut/Bas pour réordonner, Espace pour activer ou "
+"désactiver."
 
+#: ui/track_manager.py:411
 msgid "Keyboard shortcuts hint"
 msgstr "Aide des raccourcis clavier"
 
-msgid "Audio tracks list"
-msgstr "Liste des pistes audio"
+#: ui/track_manager.py:146
+msgid ""
+"Use Space to keep or remove a track. Use Ctrl+Up and Ctrl+Down to reorder."
+msgstr ""
+"Utilisez Espace pour conserver ou retirer une piste. Utilisez Ctrl+Haut et "
+"Ctrl+Bas pour la réordonner."
 
-msgid "Video tracks list"
-msgstr "Liste des pistes vidéo"
-
-msgid "Subtitle tracks list"
-msgstr "Liste des pistes de sous-titres"
-
-msgid "Use Space to keep or remove a track. Use Ctrl+Up and Ctrl+Down to reorder."
-msgstr "Utilisez Espace pour conserver ou retirer une piste. Utilisez Ctrl+Haut et Ctrl+Bas pour la réordonner."
-
+#: ui/track_manager.py:147
 msgid "#"
 msgstr "N°"
 
+#: ui/track_manager.py:148
 msgid "Codec"
 msgstr "Codec"
 
+#: ui/track_manager.py:149
 msgid "Lang"
 msgstr "Langue"
 
+#: ui/track_manager.py:150
 msgid "Title"
 msgstr "Titre"
 
+#: ui/track_manager.py:151
 msgid "Flags"
 msgstr "Attributs"
 
+#: ui/track_manager.py:155
 msgid "Move Up"
 msgstr "Monter"
 
+#: ui/track_manager.py:156
 msgid "Move Down"
 msgstr "Descendre"
 
+#: ui/track_manager.py:157
 msgid "Move selected track up"
 msgstr "Monter la piste sélectionnée"
 
+#: ui/track_manager.py:158
 msgid "Move selected track down"
 msgstr "Descendre la piste sélectionnée"
 
+#: ui/track_manager.py:165
 msgid "Track Settings"
 msgstr "Réglages de la piste"
 
+#: ui/track_manager.py:171
 msgid "Language:"
 msgstr "Langue :"
 
+#: ui/preferences_dialog.py:41 ui/track_manager.py:173
 msgid "Language"
 msgstr "Langue"
 
+#: ui/track_manager.py:174
 msgid "Track language"
 msgstr "Langue de la piste"
 
+#: ui/track_manager.py:178
 msgid "Track Title:"
 msgstr "Titre de la piste :"
 
+#: ui/track_manager.py:180
 msgid "Track title"
 msgstr "Titre de la piste"
 
+#: ui/track_manager.py:186
 msgid "Attributes:"
 msgstr "Attributs :"
 
-msgid "Advanced dispositions"
-msgstr "Dispositions avancées"
-
+#: ui/track_manager.py:102
 msgid "Default"
 msgstr "Par défaut"
 
+#: ui/track_manager.py:104
 msgid "Forced"
 msgstr "Forcée"
 
-msgid "Set selected track as default"
-msgstr "Définir la piste sélectionnée par défaut"
-
-msgid "Set selected track as forced"
-msgstr "Définir la piste sélectionnée comme forcée"
-
-msgid "Audio Description"
-msgstr "Audiodescription"
-
-msgid "Hearing Impaired"
-msgstr "Malentendants"
-
-msgid "Captions"
-msgstr "Sous-titres de transcription"
-
-msgid "Descriptions"
-msgstr "Descriptions"
-
 # --- BATCH PARALLELE ---
+#: ui/main_window.py:1244
 msgid "Queued"
 msgstr "En file d'attente"
 
+#: ui/main_window.py:1256
 msgid "Skipped"
 msgstr "Ignoré"
 
+#: ui/main_window.py:1253
 msgid "Skipped (Exists)"
 msgstr "Ignoré (déjà présent)"
 
+#: ui/main_window.py:1255
 msgid "Skipped (Batch stopped)"
 msgstr "Ignoré (batch interrompu)"
 
-msgid "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error"
-msgstr "{progress}% - {running} en cours / {queued} en attente / {done} terminés / {skipped} ignorés / {error} erreurs"
+#: ui/main_window.py:1260
+msgid ""
+"{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
+"skipped / {error} error"
+msgstr ""
+"{progress}% - {running} en cours / {queued} en attente / {done} terminés / "
+"{skipped} ignorés / {error} erreurs"
 
-msgid "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error / {stopped} stopped"
-msgstr "{progress}% - {running} en cours / {queued} en attente / {done} terminés / {skipped} ignorés / {error} erreurs / {stopped} arrêtés"
+#: ui/main_window.py:1264
+msgid ""
+"{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
+"skipped / {error} error / {stopped} stopped"
+msgstr ""
+"{progress}% - {running} en cours / {queued} en attente / {done} terminés / "
+"{skipped} ignorés / {error} erreurs / {stopped} arrêtés"
 
+#: ui/main_window.py:1402
 msgid "Batch stopped by user."
 msgstr "Batch arrêté par l'utilisateur."
 
-msgid "Batch completed.\n\nDone: {done}\nSkipped: {skipped}\nErrors: {error}"
-msgstr "Batch terminé.\n\nTerminés : {done}\nIgnorés : {skipped}\nErreurs : {error}"
+#: ui/main_window.py:1414
+msgid ""
+"Batch completed.\n"
+"\n"
+"Done: {done}\n"
+"Skipped: {skipped}\n"
+"Errors: {error}"
+msgstr ""
+"Batch terminé.\n"
+"\n"
+"Terminés : {done}\n"
+"Ignorés : {skipped}\n"
+"Erreurs : {error}"
 
+#: ui/main_window.py:1424
 msgid "Batch finished: {done} done / {skipped} skipped / {error} error"
 msgstr "Batch terminé : {done} terminés / {skipped} ignorés / {error} erreurs"
 
 # --- PREFERENCES V1.1 ---
+#: ui/preferences_dialog.py:60
 msgid "Output"
 msgstr "Sortie"
 
+#: ui/preferences_dialog.py:107
 msgid "Execution"
 msgstr "Exécution"
 
+#: ui/preferences_dialog.py:86 ui/preferences_dialog.py:95
 msgid "Existing file policy"
 msgstr "Politique en cas de fichier existant"
 
+#: core/support.py:272 ui/preferences_dialog.py:90
 msgid "Rename automatically"
 msgstr "Renommer automatiquement"
 
+#: core/support.py:273 ui/preferences_dialog.py:91
 msgid "Overwrite existing file"
 msgstr "Écraser le fichier existant"
 
+#: core/support.py:274 ui/preferences_dialog.py:92
 msgid "Skip existing file"
 msgstr "Ignorer le fichier existant"
 
+#: ui/preferences_dialog.py:97
 msgid "Choose what to do if an output file already exists."
 msgstr "Choisissez quoi faire si un fichier de sortie existe déjà."
 
+#: ui/preferences_dialog.py:103 ui/preferences_dialog.py:104
 msgid "Open output folder when done"
 msgstr "Ouvrir le dossier de sortie à la fin"
 
+#: ui/preferences_dialog.py:115
 msgid "1 conversion"
 msgstr "1 conversion"
 
+#: ui/preferences_dialog.py:116
 msgid "2 conversions"
 msgstr "2 conversions"
 
+#: ui/preferences_dialog.py:117
 msgid "3 conversions"
 msgstr "3 conversions"
 
+#: ui/preferences_dialog.py:118
 msgid "4 conversions"
 msgstr "4 conversions"
 
+#: ui/preferences_dialog.py:111 ui/preferences_dialog.py:123
 msgid "Max concurrent conversions"
 msgstr "Nombre maximal de conversions simultanées"
 
+#: core/support.py:142
 msgid "Max concurrent conversions: {value}"
 msgstr "Nombre maximal de conversions simultanées : {value}"
 
+#: ui/preferences_dialog.py:124
 msgid "Set how many conversions can run at the same time."
 msgstr "Définissez combien de conversions peuvent s'exécuter en même temps."
 
+#: ui/preferences_dialog.py:130 ui/preferences_dialog.py:135
 msgid "FFmpeg threads per conversion"
 msgstr "Threads FFmpeg par conversion"
 
+#: ui/preferences_dialog.py:136
 msgid "Set how many FFmpeg threads each conversion can use."
 msgstr "Définissez combien de threads FFmpeg chaque conversion peut utiliser."
 
+#: ui/preferences_dialog.py:201
 msgid "Automatic ({count} detected)"
 msgstr "Automatique ({count} détectés)"
 
+#: ui/preferences_dialog.py:205
+msgid "Automatic (detected: {language})"
+msgstr "Automatique (détecté : {language})"
+
+#: ui/preferences_dialog.py:203
 msgid "{count} thread(s)"
 msgstr "{count} thread(s)"
 
+#: ui/preferences_dialog.py:76
 msgid "Selected destination folder path."
 msgstr "Chemin du dossier de destination sélectionné."
 
+#: ui/preferences_dialog.py:142 ui/preferences_dialog.py:143
 msgid "Continue batch after an error"
 msgstr "Continuer le batch après une erreur"
 
-msgid "Comment"
-msgstr "Commentaire"
-
-msgid "Commentary"
-msgstr "Commentaire"
-
-msgid "Dub"
-msgstr "Doublage"
-
-msgid "Lyrics"
-msgstr "Paroles"
-
-msgid "Karaoke"
-msgstr "Karaoké"
-
-msgid "Clean Effects"
-msgstr "Effets seuls"
-
-msgid "Non-Diegetic"
-msgstr "Non diégétique"
-
-msgid "HI"
-msgstr "HI"
-
-msgid "AD"
-msgstr "AD"
-
+#: ui/track_manager.py:414 ui/track_manager.py:473
 msgid "Apply"
 msgstr "Appliquer"
 
+#: ui/track_manager.py:416
 msgid "Apply track settings"
 msgstr "Appliquer les réglages des pistes"
 
+#: ui/preferences_dialog.py:162 ui/settings_dialog.py:229
+#: ui/support_dialog.py:175 ui/support_dialog.py:176 ui/track_manager.py:415
+#: ui/track_manager.py:474
 msgid "Cancel"
 msgstr "Annuler"
 
+#: ui/track_manager.py:417
 msgid "Cancel track settings"
 msgstr "Annuler les réglages des pistes"
 
+#: ui/track_manager.py:451
 msgid "Audio extract track dialog"
 msgstr "Boîte de dialogue de choix de la piste audio"
 
+#: ui/track_manager.py:457
 msgid "Select the audio track to extract. Only one track can be kept."
-msgstr "Sélectionnez la piste audio à extraire. Une seule piste peut être conservée."
+msgstr ""
+"Sélectionnez la piste audio à extraire. Une seule piste peut être conservée."
 
+#: ui/track_manager.py:465
 msgid "Audio extraction tracks list"
 msgstr "Liste des pistes audio à extraire"
 
+#: ui/track_manager.py:466
 msgid "Select the single audio track to extract."
 msgstr "Sélectionnez l'unique piste audio à extraire."
 
+#: ui/track_manager.py:475
 msgid "Apply audio extraction track"
 msgstr "Appliquer la piste audio d'extraction"
 
+#: ui/track_manager.py:476
 msgid "Cancel audio extraction track"
 msgstr "Annuler le choix de la piste audio d'extraction"
 
+#: ui/main_window.py:868
 msgid "Audio extraction track selected: {track}"
 msgstr "Piste audio d'extraction sélectionnée : {track}"
 
+#: ui/track_manager.py:435
 msgid "At least one video track must be kept."
 msgstr "Au moins une piste vidéo doit être conservée."
 
-# --- LANGUES ---
-msgid "Undetermined"
-msgstr "Indéterminé"
-
+#: ui/preferences_dialog.py:209
 msgid "French"
 msgstr "Français"
 
+#: ui/preferences_dialog.py:210
 msgid "English"
 msgstr "Anglais"
 
-msgid "Japanese"
-msgstr "Japonais"
+#: ui/main_window.py:181
+msgid "&Documentation..."
+msgstr "&Documentation..."
 
-msgid "Spanish"
-msgstr "Espagnol"
+#: ui/main_window.py:1446
+msgid "Documentation"
+msgstr "Documentation"
 
-msgid "German"
-msgstr "Allemand"
+#: ui/main_window.py:1438
+msgid ""
+"The local documentation files were not found.\n"
+"\n"
+"Expected file:\n"
+"{path}"
+msgstr ""
+"Les fichiers de documentation locale sont introuvables.\n"
+"\n"
+"Fichier attendu :\n"
+"{path}"
 
-msgid "Italian"
-msgstr "Italien"
+#: ui/main_window.py:1442
+msgid ""
+"The local documentation could not be opened.\n"
+"\n"
+"File:\n"
+"{path}"
+msgstr ""
+"La documentation locale n'a pas pu être ouverte.\n"
+"\n"
+"Fichier :\n"
+"{path}"
 
-msgid "Portuguese"
-msgstr "Portugais"
+#: ui/main_window.py:1310
+msgid ""
+"{paths}\n"
+"...and {count} more file(s)."
+msgstr ""
+"{paths}\n"
+"...et {count} fichier(s) supplémentaire(s)."
 
-msgid "Russian"
-msgstr "Russe"
+#: ui/main_window.py:1339
+msgid ""
+"Conversion stopped.\n"
+"\n"
+"A partially generated file was found:\n"
+"{path}\n"
+"\n"
+"Do you want to delete it?"
+msgstr ""
+"La conversion a été arrêtée.\n"
+"\n"
+"Un fichier partiellement généré a été trouvé :\n"
+"{path}\n"
+"\n"
+"Voulez-vous le supprimer ?"
 
-msgid "Chinese"
-msgstr "Chinois"
+#: ui/main_window.py:1343
+msgid ""
+"Conversion stopped.\n"
+"\n"
+"{count} partially generated files were found:\n"
+"{paths}\n"
+"\n"
+"Do you want to delete them?"
+msgstr ""
+"La conversion a été arrêtée.\n"
+"\n"
+"{count} fichiers partiellement générés ont été trouvés :\n"
+"{paths}\n"
+"\n"
+"Voulez-vous les supprimer ?"
 
-msgid "Dutch"
-msgstr "Néerlandais"
+#: ui/main_window.py:1353 ui/main_window.py:1379
+msgid "Delete Partial Files"
+msgstr "Supprimer les fichiers partiels"
 
-msgid "Polish"
-msgstr "Polonais"
+#: ui/main_window.py:1376
+msgid ""
+"Some partially generated files could not be deleted.\n"
+"\n"
+"{paths}"
+msgstr ""
+"Certains fichiers partiellement générés n'ont pas pu être supprimés.\n"
+"\n"
+"{paths}"
 
-msgid "Korean"
-msgstr "Coréen"
+#: ui/main_window.py:894
+msgid "Application Language"
+msgstr "Langue de l'application"
 
-msgid "Hindi"
-msgstr "Hindi"
+#: ui/preferences_dialog.py:45 ui/preferences_dialog.py:52
+msgid "Application language"
+msgstr "Langue de l'application"
 
-msgid "Arabic"
-msgstr "Arabe"
+#: ui/preferences_dialog.py:54
+msgid "Choose the language used by the application interface."
+msgstr "Choisissez la langue utilisée par l'interface de l'application."
+
+#: ui/main_window.py:898 ui/main_window.py:921
+msgid "Language change saved. It will be applied on next launch."
+msgstr ""
+"Le changement de langue est enregistré. Il sera appliqué au prochain "
+"lancement."
+
+#: ui/main_window.py:906
+msgid "Restart Required"
+msgstr "Redémarrage nécessaire"
+
+#: ui/main_window.py:900
+msgid ""
+"The application language has changed.\n"
+"\n"
+"Restart now to apply the new language?"
+msgstr ""
+"La langue de l'application a changé.\n"
+"\n"
+"Redémarrer maintenant pour appliquer la nouvelle langue ?"
+
+#: ui/main_window.py:891
+msgid ""
+"The new language will be applied the next time the application starts "
+"because a conversion is currently running."
+msgstr ""
+"La nouvelle langue sera appliquée au prochain lancement de l'application car"
+" une conversion est actuellement en cours."
+
+#: ui/main_window.py:917
+msgid "Unable to restart the application after changing language."
+msgstr "Impossible de redémarrer l'application après le changement de langue."
+
+#~ msgid "Automatic (detected: {language})"
+#~ msgstr "Automatique (détecté : {language})"
+
+# --- MENUS ---
+#~ msgid "Accessible Media Converter"
+#~ msgstr "Accessible Media Converter"
+
+#~ msgid "Conversion problem"
+#~ msgstr "Problème de conversion"
+
+#~ msgid "Application crash"
+#~ msgstr "Crash de l'application"
+
+#~ msgid "Update problem"
+#~ msgstr "Problème de mise à jour"
+
+#~ msgid "Accessibility issue"
+#~ msgstr "Problème d'accessibilité"
+
+#~ msgid "Installation problem"
+#~ msgstr "Problème d'installation"
+
+#~ msgid "Feature request"
+#~ msgstr "Demande de fonctionnalité"
+
+#~ msgid ""
+#~ "Describe your issue below. Your mail client will open with the message "
+#~ "already prepared."
+#~ msgstr ""
+#~ "Décrivez votre problème ci-dessous. Votre client mail s'ouvrira avec le "
+#~ "message déjà préparé."
+
+#~ msgid "You will only need to review the email and send it."
+#~ msgstr "Vous n'aurez plus qu'à vérifier le mail et l'envoyer."
+
+#~ msgid ""
+#~ "If the mail client did not open, copy the information below and send it "
+#~ "manually."
+#~ msgstr ""
+#~ "Si le client mail ne s'est pas ouvert, copiez les informations ci-dessous et"
+#~ " envoyez-les manuellement."
+
+#~ msgid "Your message"
+#~ msgstr "Votre message"
+
+#~ msgid "Describe the problem you encountered."
+#~ msgstr "Décrivez le problème rencontré."
+
+#~ msgid "Mail details"
+#~ msgstr "Détails du mail"
+
+#~ msgid "Support email address to copy."
+#~ msgstr "Adresse mail du support à copier."
+
+#~ msgid "Support email subject to copy."
+#~ msgstr "Sujet du mail de support à copier."
+
+#~ msgid "Technical information included in the support message."
+#~ msgstr "Informations techniques incluses dans le message de support."
+
+#~ msgid "Message preview"
+#~ msgstr "Aperçu du message"
+
+#~ msgid "Full support message that can be copied manually if needed."
+#~ msgstr ""
+#~ "Message complet de support pouvant être copié manuellement si nécessaire."
+
+#~ msgid "Copy full message"
+#~ msgstr "Copier le message complet"
+
+#~ msgid "Open Debug Folder"
+#~ msgstr "Ouvrir le dossier debug"
+
+#~ msgid "Open the debug folder in File Explorer."
+#~ msgstr "Ouvrir le dossier debug dans l'explorateur de fichiers."
+
+#~ msgid "Open Mail Client"
+#~ msgstr "Ouvrir le client mail"
+
+#~ msgid "Open the default mail client with the prepared message."
+#~ msgstr "Ouvrir le client mail par défaut avec le message préparé."
+
+#~ msgid "Support email subject copied to clipboard."
+#~ msgstr "Sujet du mail de support copié dans le presse-papiers."
+
+#~ msgid "Support message copied to clipboard."
+#~ msgstr "Message de support copié dans le presse-papiers."
+
+#~ msgid "Debug folder opened."
+#~ msgstr "Dossier debug ouvert."
+
+#~ msgid "Default mail client opened."
+#~ msgstr "Client mail par défaut ouvert."
+
+#~ msgid ""
+#~ "Unable to open the default mail client. Copy the address, subject, and "
+#~ "message below."
+#~ msgstr ""
+#~ "Impossible d'ouvrir le client mail par défaut. Copiez l'adresse, le sujet et"
+#~ " le message ci-dessous."
+
+#~ msgid "Support dialog closed."
+#~ msgstr "Fenêtre de support fermée."
+
+#~ msgid "Enabled"
+#~ msgstr "Activé"
+
+#~ msgid "Disabled"
+#~ msgstr "Désactivé"
+
+#~ msgid "{app_name} support request"
+#~ msgstr "Demande de support {app_name}"
+
+#~ msgid "Python version: {value}"
+#~ msgstr "Version de Python : {value}"
+
+#~ msgid "Debug folder: {value}"
+#~ msgstr "Dossier debug : {value}"
+
+#~ msgid "Conversion stopped by user."
+#~ msgstr "Conversion arrêtée par l'utilisateur."
+
+#~ msgid "File converted successfully."
+#~ msgstr "Fichier converti avec succès."
+
+#~ msgid ""
+#~ "All tasks completed!\n"
+#~ "\n"
+#~ "{count} error(s)"
+#~ msgstr ""
+#~ "Toutes les tâches sont terminées !\n"
+#~ "\n"
+#~ "{count} erreur(s)"
+
+#~ msgid "{count} error(s) during conversion."
+#~ msgstr "{count} erreur(s) pendant la conversion."
+
+#~ msgid "An error occurred during conversion."
+#~ msgstr "Une erreur est survenue pendant la conversion."
+
+#~ msgid "Powered by FFmpeg & wxPython"
+#~ msgstr "Propulsé par FFmpeg et wxPython"
+
+#~ msgid "Compatible"
+#~ msgstr "Compatible"
+
+#~ msgid "Balanced"
+#~ msgstr "Équilibré"
+
+#~ msgid "Fast Encode"
+#~ msgstr "Encodage rapide"
+
+#~ msgid "Very Fast"
+#~ msgstr "Très rapide"
+
+#~ msgid "Baseline"
+#~ msgstr "Baseline"
+
+#~ msgid "Main"
+#~ msgstr "Main"
+
+#~ msgid "YUV 4:2:0 (Compatible)"
+#~ msgstr "YUV 4:2:0 (compatible)"
+
+#~ msgid "YUV 4:4:4 (Advanced)"
+#~ msgstr "YUV 4:4:4 (avancé)"
+
+#~ msgid "Very High Quality"
+#~ msgstr "Très haute qualité"
+
+#~ msgid "Balanced Quality"
+#~ msgstr "Qualité équilibrée"
+
+#~ msgid "Balanced - Recommended"
+#~ msgstr "Équilibré - recommandé"
+
+#~ msgid "Compact"
+#~ msgstr "Compact"
+
+#~ msgid "More Compact"
+#~ msgstr "Plus compact"
+
+#~ msgid "Small File"
+#~ msgstr "Petit fichier"
+
+#~ msgid "Very Compact"
+#~ msgstr "Très compact"
+
+#~ msgid "Output Destination"
+#~ msgstr "Destination de sortie"
+
+#~ msgid "Type or paste the destination folder path."
+#~ msgstr "Saisissez ou collez le chemin du dossier de destination."
+
+#~ msgid "Manage Tracks... (MKV/MP4 only)"
+#~ msgstr "Gérer les pistes... (MKV/MP4 uniquement)"
+
+#~ msgid "Audio tracks list"
+#~ msgstr "Liste des pistes audio"
+
+#~ msgid "Video tracks list"
+#~ msgstr "Liste des pistes vidéo"
+
+#~ msgid "Subtitle tracks list"
+#~ msgstr "Liste des pistes de sous-titres"
+
+#~ msgid "Advanced dispositions"
+#~ msgstr "Dispositions avancées"
+
+#~ msgid "Set selected track as default"
+#~ msgstr "Définir la piste sélectionnée par défaut"
+
+#~ msgid "Set selected track as forced"
+#~ msgstr "Définir la piste sélectionnée comme forcée"
+
+#~ msgid "Audio Description"
+#~ msgstr "Audiodescription"
+
+#~ msgid "Hearing Impaired"
+#~ msgstr "Malentendants"
+
+#~ msgid "Captions"
+#~ msgstr "Sous-titres de transcription"
+
+#~ msgid "Descriptions"
+#~ msgstr "Descriptions"
+
+#~ msgid "Comment"
+#~ msgstr "Commentaire"
+
+#~ msgid "Commentary"
+#~ msgstr "Commentaire"
+
+#~ msgid "Dub"
+#~ msgstr "Doublage"
+
+#~ msgid "Lyrics"
+#~ msgstr "Paroles"
+
+#~ msgid "Karaoke"
+#~ msgstr "Karaoké"
+
+#~ msgid "Clean Effects"
+#~ msgstr "Effets seuls"
+
+#~ msgid "Non-Diegetic"
+#~ msgstr "Non diégétique"
+
+#~ msgid "HI"
+#~ msgstr "HI"
+
+#~ msgid "AD"
+#~ msgstr "AD"
+
+# --- LANGUES ---
+#~ msgid "Undetermined"
+#~ msgstr "Indéterminé"
+
+#~ msgid "Japanese"
+#~ msgstr "Japonais"
+
+#~ msgid "Spanish"
+#~ msgstr "Espagnol"
+
+#~ msgid "German"
+#~ msgstr "Allemand"
+
+#~ msgid "Italian"
+#~ msgstr "Italien"
+
+#~ msgid "Portuguese"
+#~ msgstr "Portugais"
+
+#~ msgid "Russian"
+#~ msgstr "Russe"
+
+#~ msgid "Chinese"
+#~ msgstr "Chinois"
+
+#~ msgid "Dutch"
+#~ msgstr "Néerlandais"
+
+#~ msgid "Polish"
+#~ msgstr "Polonais"
+
+#~ msgid "Korean"
+#~ msgstr "Coréen"
+
+#~ msgid "Hindi"
+#~ msgstr "Hindi"
+
+#~ msgid "Arabic"
+#~ msgstr "Arabe"

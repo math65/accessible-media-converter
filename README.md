@@ -7,6 +7,7 @@ The project is designed with accessibility and keyboard-driven workflows in mind
 ## Highlights
 
 - Accessible desktop UI for Windows
+- Application language preference with automatic system detection
 - Audio-to-audio and video-to-audio conversion
 - Video-to-video conversion for `MP4` and `MKV`
 - Explicit track selection for video, audio, and subtitles
@@ -96,6 +97,21 @@ Expected outputs:
 
 - `dist\AccessibleMediaConverter\AccessibleMediaConverter.exe`
 - `dist\AccessibleMediaConverter-Setup.exe`
+
+## Internationalization
+
+- English is the source language used by the code and the gettext catalogs.
+- French is currently shipped as a translation catalog in `locales/fr/LC_MESSAGES/base.po`.
+- Local offline documentation is organized by language under `docs/<lang>/`.
+- The application preference supports `auto`, `fr`, and `en`.
+
+Translation maintenance commands:
+
+```powershell
+python .\scripts\manage_i18n.py extract
+python .\scripts\manage_i18n.py update --lang fr
+python .\scripts\manage_i18n.py init --lang es
+```
 
 ## Project layout
 

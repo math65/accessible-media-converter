@@ -298,12 +298,15 @@ class BatchConversionManager:
         }
         total_weight = 0.0
         accumulated_progress = 0.0
+        stopped_output_paths = []
 
         for job in self.jobs:
             counts[job.state] = counts.get(job.state, 0) + 1
             weight = job.weight
             total_weight += weight
             accumulated_progress += weight * job.progress
+            if job.state == JOB_STATE_STOPPED and job.output_path:
+                stopped_output_paths.append(job.output_path)
 
         overall_progress = 0
         if total_weight > 0:
@@ -319,6 +322,7 @@ class BatchConversionManager:
             "stopped": counts[JOB_STATE_STOPPED],
             "overall_progress": max(0, min(overall_progress, 100)),
             "primary_output_dir": self.primary_output_dir,
+            "stopped_output_paths": stopped_output_paths,
         }
 
     @staticmethod

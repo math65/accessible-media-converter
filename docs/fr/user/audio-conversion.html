@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convertir des fichiers audio - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Convertir des fichiers audio</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Manuel utilisateur</p>
+      <h1>Convertir des fichiers audio</h1>
+      <p>
+        L'onglet Audio est pensé pour rester simple : vous choisissez un format de sortie,
+        puis vous ajustez la qualité, le bitrate, les canaux et la normalisation si besoin.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Dans cette page</h2>
+      <ul>
+        <li><a href="#formats">Choisir un format de sortie</a></li>
+        <li><a href="#reglages">Régler la qualité</a></li>
+        <li><a href="#normalisation">Normalisation streaming</a></li>
+        <li><a href="#batch">Traitement par lot</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="formats">
+      <h2>Choisir un format de sortie</h2>
+      <p>Les formats audio courants incluent :</p>
+      <ul>
+        <li>MP3</li>
+        <li>AAC / M4A</li>
+        <li>WAV</li>
+        <li>FLAC</li>
+        <li>ALAC / M4A</li>
+        <li>OGG</li>
+        <li>WMA</li>
+      </ul>
+      <p>
+        Le format choisi détermine ensuite les réglages disponibles. Un format sans perte
+        comme FLAC n'a pas la même logique qu'un format avec perte comme MP3 ou AAC.
+      </p>
+    </section>
+
+    <section class="section" id="reglages">
+      <h2>Régler la qualité</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Copy Stream</strong>
+          Copie le flux audio existant sans réencodage, quand le conteneur ou le format le permet.
+        </li>
+        <li>
+          <strong>Convert</strong>
+          Réencode l'audio avec les paramètres choisis.
+        </li>
+        <li>
+          <strong>CBR</strong>
+          Utilise un bitrate constant.
+        </li>
+        <li>
+          <strong>VBR</strong>
+          Utilise une qualité variable pour optimiser le rapport qualité / taille.
+        </li>
+        <li>
+          <strong>Sample rate, canaux, bit depth</strong>
+          Permettent d'affiner la sortie selon le codec choisi.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="normalisation">
+      <h2>Normalisation streaming</h2>
+      <p>
+        Une option permet de normaliser l'audio pour le streaming autour de
+        <strong>-16 LUFS</strong>. Elle s'applique seulement quand l'audio est réencodé.
+      </p>
+      <div class="callout">
+        Si vous laissez l'audio en <strong>Copy Stream</strong>, aucune normalisation n'est appliquée.
+      </div>
+    </section>
+
+    <section class="section" id="batch">
+      <h2>Traitement par lot</h2>
+      <p>
+        L'application peut lancer plusieurs conversions en parallèle sur l'onglet courant.
+        Le nombre maximal de tâches simultanées se règle dans les préférences.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Lire ensuite :
+        <a href="video-conversion.html">Conversions vidéo</a> ou
+        <a href="preferences-and-support.html">Préférences, support et mises à jour</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

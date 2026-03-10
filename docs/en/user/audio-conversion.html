@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convert audio files - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../../fr/assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span>Convert audio files</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">User guide</p>
+      <h1>Convert audio files</h1>
+      <p>
+        The Audio tab is designed to stay simple: choose an output format, then adjust
+        quality, bitrate, channels, and normalization if needed.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#formats">Choose an output format</a></li>
+        <li><a href="#settings">Adjust quality</a></li>
+        <li><a href="#normalization">Streaming normalization</a></li>
+        <li><a href="#batch">Batch processing</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="formats">
+      <h2>Choose an output format</h2>
+      <p>Common audio formats include:</p>
+      <ul>
+        <li>MP3</li>
+        <li>AAC / M4A</li>
+        <li>WAV</li>
+        <li>FLAC</li>
+        <li>ALAC / M4A</li>
+        <li>OGG</li>
+        <li>WMA</li>
+      </ul>
+      <p>
+        The selected format determines which settings are available afterwards. A lossless
+        format such as FLAC does not follow the same logic as a lossy format such as MP3 or AAC.
+      </p>
+    </section>
+
+    <section class="section" id="settings">
+      <h2>Adjust quality</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Copy Stream</strong>
+          Copies the existing audio stream without re-encoding when the format allows it.
+        </li>
+        <li>
+          <strong>Convert</strong>
+          Re-encodes the audio with the selected parameters.
+        </li>
+        <li>
+          <strong>CBR</strong>
+          Uses a constant bitrate.
+        </li>
+        <li>
+          <strong>VBR</strong>
+          Uses variable quality to optimize the balance between quality and size.
+        </li>
+        <li>
+          <strong>Sample rate, channels, bit depth</strong>
+          Let you refine the result depending on the selected codec.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="normalization">
+      <h2>Streaming normalization</h2>
+      <p>
+        An option can normalize audio for streaming around <strong>-16 LUFS</strong>.
+        It only applies when the audio is re-encoded.
+      </p>
+      <div class="callout">
+        If you keep the audio in <strong>Copy Stream</strong>, no normalization is applied.
+      </div>
+    </section>
+
+    <section class="section" id="batch">
+      <h2>Batch processing</h2>
+      <p>
+        The application can run several conversions in parallel on the active tab.
+        The maximum number of simultaneous tasks is configured in the preferences.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Read next:
+        <a href="video-conversion.html">Video conversion</a> or
+        <a href="preferences-and-support.html">Preferences, support, and updates</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
