@@ -6,6 +6,46 @@ AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "wav", "flac", "alac", "ogg", "wma")
 VIDEO_OUTPUT_FORMAT_KEYS = ("mp4", "mkv", *AUDIO_OUTPUT_FORMAT_KEYS)
 VIDEO_CONTAINER_FORMAT_KEYS = ("mp4", "mkv")
 LOSSLESS_AUDIO_FORMAT_KEYS = ("wav", "flac", "alac")
+CONTAINER_AUDIO_CODEC_OPTIONS = {
+    "mp4": ("aac", "mp3"),
+    "mkv": ("aac", "mp3", "opus", "flac"),
+}
+VIDEO_PRESET_PROFILE_SETTINGS = {
+    "compatible": {
+        "video_crf": 23,
+        "video_encoder_preset": "medium",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
+    },
+    "balanced": {
+        "video_crf": 22,
+        "video_encoder_preset": "medium",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
+    },
+    "high_quality": {
+        "video_crf": 18,
+        "video_encoder_preset": "slow",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
+    },
+    "small_file": {
+        "video_crf": 28,
+        "video_encoder_preset": "medium",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
+    },
+    "fast_encode": {
+        "video_crf": 23,
+        "video_encoder_preset": "veryfast",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
+    },
+}
+VALID_VIDEO_PRESET_PROFILE_KEYS = (*VIDEO_PRESET_PROFILE_SETTINGS.keys(), "custom")
+VALID_VIDEO_ENCODER_PRESETS = ("veryfast", "fast", "medium", "slow")
+VALID_VIDEO_PROFILES = ("baseline", "main", "high")
+VALID_VIDEO_PIXEL_FORMATS = ("yuv420p", "yuv444p")
 VALID_OUTPUT_MODES = ("source", "custom", "ask")
 VALID_EXISTING_OUTPUT_POLICIES = ("rename", "overwrite", "skip")
 MIN_CONCURRENT_JOBS = 1
@@ -71,8 +111,13 @@ DEFAULT_FORMAT_SETTINGS = {
     },
     "mp4": {
         "video_mode": "convert",
-        "video_crf": 23,
+        "video_preset_profile": "balanced",
+        "video_crf": 22,
+        "video_encoder_preset": "medium",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
         "audio_mode": "convert",
+        "audio_codec": "aac",
         "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
@@ -82,8 +127,13 @@ DEFAULT_FORMAT_SETTINGS = {
     },
     "mkv": {
         "video_mode": "convert",
-        "video_crf": 23,
+        "video_preset_profile": "balanced",
+        "video_crf": 22,
+        "video_encoder_preset": "medium",
+        "video_profile": "high",
+        "video_pixel_format": "yuv420p",
         "audio_mode": "convert",
+        "audio_codec": "aac",
         "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
@@ -148,6 +198,58 @@ def build_format_label(format_key, context="audio"):
     return labels.get(format_key, format_key.upper())
 
 
+def get_container_audio_codec_options(format_key):
+    return CONTAINER_AUDIO_CODEC_OPTIONS.get(format_key, ())
+
+
+def get_audio_codec_label(codec_key):
+    labels = {
+        "aac": _translate("AAC"),
+        "mp3": _translate("MP3"),
+        "opus": _translate("Opus"),
+        "flac": _translate("FLAC"),
+        "wav": "WAV",
+        "alac": "ALAC",
+        "ogg": "OGG",
+        "wma": "WMA",
+    }
+    return labels.get(codec_key, str(codec_key or "").upper())
+
+
+def get_effective_audio_codec(format_key, settings):
+    if format_key == "mov":
+        return str(settings.get("audio_codec", "aac") or "aac").lower()
+    if format_key in VIDEO_CONTAINER_FORMAT_KEYS:
+        default_codec = DEFAULT_FORMAT_SETTINGS[format_key]["audio_codec"]
+        allowed_codecs = get_container_audio_codec_options(format_key)
+        codec = str(settings.get("audio_codec", default_codec) or default_codec).lower()
+        if codec in allowed_codecs:
+            return codec
+        return default_codec
+    return format_key
+
+
+def get_video_preset_definition(preset_key):
+    return VIDEO_PRESET_PROFILE_SETTINGS.get(preset_key)
+
+
+def apply_video_preset_profile(settings, preset_key):
+    updated = dict(settings)
+    preset_definition = get_video_preset_definition(preset_key)
+    if not preset_definition:
+        return updated
+    updated.update(preset_definition)
+    updated["video_preset_profile"] = preset_key
+    return updated
+
+
+def get_matching_video_preset_profile(settings):
+    for preset_key, preset_definition in VIDEO_PRESET_PROFILE_SETTINGS.items():
+        if all(settings.get(field_name) == expected_value for field_name, expected_value in preset_definition.items()):
+            return preset_key
+    return None
+
+
 def build_default_settings_store():
     store = {}
     for format_key, settings in DEFAULT_FORMAT_SETTINGS.items():
@@ -161,6 +263,8 @@ def normalize_format_settings(format_key, settings):
     if isinstance(settings, dict):
         normalized.update(settings)
     normalized["audio_normalize_streaming"] = bool(normalized.get("audio_normalize_streaming", False))
+    if format_key in VIDEO_CONTAINER_FORMAT_KEYS:
+        normalized = _normalize_container_video_settings(format_key, normalized)
     normalized["summary"] = build_format_summary(format_key, normalized)
     return normalized
 
@@ -236,13 +340,55 @@ def _normalize_ffmpeg_threads(value):
     return min(max(threads, 1), get_detected_cpu_threads())
 
 
+def _normalize_container_video_settings(format_key, settings):
+    normalized = dict(settings)
+    normalized["video_crf"] = _normalize_video_crf_value(
+        normalized.get("video_crf", DEFAULT_FORMAT_SETTINGS[format_key]["video_crf"]),
+        default_value=DEFAULT_FORMAT_SETTINGS[format_key]["video_crf"],
+    )
+
+    if normalized.get("video_encoder_preset") not in VALID_VIDEO_ENCODER_PRESETS:
+        normalized["video_encoder_preset"] = DEFAULT_FORMAT_SETTINGS[format_key]["video_encoder_preset"]
+    if normalized.get("video_profile") not in VALID_VIDEO_PROFILES:
+        normalized["video_profile"] = DEFAULT_FORMAT_SETTINGS[format_key]["video_profile"]
+    if normalized.get("video_pixel_format") not in VALID_VIDEO_PIXEL_FORMATS:
+        normalized["video_pixel_format"] = DEFAULT_FORMAT_SETTINGS[format_key]["video_pixel_format"]
+
+    normalized["audio_codec"] = get_effective_audio_codec(format_key, normalized)
+
+    requested_preset = str(normalized.get("video_preset_profile", "") or "").strip()
+    matched_preset = get_matching_video_preset_profile(normalized)
+
+    if matched_preset:
+        normalized["video_preset_profile"] = matched_preset
+    elif requested_preset == "custom":
+        normalized["video_preset_profile"] = "custom"
+    elif requested_preset in VIDEO_PRESET_PROFILE_SETTINGS:
+        normalized["video_preset_profile"] = "custom"
+    else:
+        normalized["video_preset_profile"] = DEFAULT_FORMAT_SETTINGS[format_key]["video_preset_profile"]
+
+    return normalized
+
+
+def _normalize_video_crf_value(value, default_value):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default_value
+
+    if 0 <= parsed <= 51:
+        return parsed
+    return default_value
+
+
 def build_format_summary(format_key, settings):
     if format_key in VIDEO_CONTAINER_FORMAT_KEYS:
-        return _build_video_summary(settings)
+        return _build_video_summary(format_key, settings)
     return _build_audio_summary(format_key, settings, include_channels=True)
 
 
-def _build_video_summary(settings):
+def _build_video_summary(format_key, settings):
     if settings.get("video_mode", "convert") == "copy":
         video_summary = _translate("Video: Copy")
     else:
@@ -254,7 +400,7 @@ def _build_video_summary(settings):
     if settings.get("audio_mode", "convert") == "copy":
         audio_summary = _translate("Audio: Copy")
     else:
-        audio_parts = [_build_audio_mode_summary("mp4", settings)]
+        audio_parts = [_build_audio_mode_summary(format_key, settings, include_codec_label=True)]
         if _should_include_audio_normalization(settings):
             audio_parts.append(_translate("Normalized -16 LUFS"))
         audio_summary = _translatef("Audio: {summary}", summary=" / ".join(audio_parts))
@@ -271,29 +417,43 @@ def _build_audio_summary(format_key, settings, include_channels):
     return " / ".join(parts)
 
 
-def _build_audio_mode_summary(format_key, settings):
+def _build_audio_mode_summary(format_key, settings, include_codec_label=False):
+    codec_key = get_effective_audio_codec(format_key, settings)
+    codec_label = get_audio_codec_label(codec_key)
     if settings.get("audio_mode", "convert") == "copy":
         return _translate("Copy")
 
-    if format_key in LOSSLESS_AUDIO_FORMAT_KEYS:
+    if codec_key in LOSSLESS_AUDIO_FORMAT_KEYS:
+        if include_codec_label:
+            return f"{codec_label} {_translate('Lossless')}"
         return _translate("Lossless")
+
+    if codec_key == "opus":
+        bitrate = settings.get("audio_bitrate", "192k")
+        if include_codec_label:
+            return f"{codec_label} {bitrate}"
+        return _translatef("Bitrate {bitrate}", bitrate=bitrate)
 
     if settings.get("rate_mode", "cbr") == "vbr":
         quality = settings.get(
             "audio_qscale",
-            DEFAULT_FORMAT_SETTINGS.get(format_key, DEFAULT_FORMAT_SETTINGS["mp3"]).get(
+            DEFAULT_FORMAT_SETTINGS.get(codec_key, DEFAULT_FORMAT_SETTINGS["mp3"]).get(
                 "audio_qscale", 0
             ),
         )
-        return _translatef("VBR Q{quality}", quality=quality)
+        summary = _translatef("VBR Q{quality}", quality=quality)
+    else:
+        bitrate = settings.get(
+            "audio_bitrate",
+            DEFAULT_FORMAT_SETTINGS.get(codec_key, DEFAULT_FORMAT_SETTINGS["mp3"]).get(
+                "audio_bitrate", "192k"
+            ),
+        )
+        summary = _translatef("CBR {bitrate}", bitrate=bitrate)
 
-    bitrate = settings.get(
-        "audio_bitrate",
-        DEFAULT_FORMAT_SETTINGS.get(format_key, DEFAULT_FORMAT_SETTINGS["mp3"]).get(
-            "audio_bitrate", "192k"
-        ),
-    )
-    return _translatef("CBR {bitrate}", bitrate=bitrate)
+    if include_codec_label:
+        return f"{codec_label} {summary}"
+    return summary
 
 
 def _build_channel_summary(channels):

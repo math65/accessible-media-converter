@@ -4,6 +4,7 @@ import sys
 import re
 import logging # Ajout
 
+from core.formatting import VIDEO_CONTAINER_FORMAT_KEYS, get_effective_audio_codec
 from core.track_settings import get_effective_track_settings, get_kept_track_entries
 
 
@@ -195,6 +196,65 @@ class ConversionTask:
 
         return max(1, parsed)
 
+    def _get_target_audio_codec(self):
+        if self.target_format in VIDEO_CONTAINER_FORMAT_KEYS or self.target_format == "mov":
+            return get_effective_audio_codec(self.target_format, self.settings)
+        return self.target_format
+
+    def _apply_common_audio_options(self, cmd):
+        sample_rate = self.settings.get('audio_sample_rate', 'original')
+        if sample_rate != 'original':
+            cmd.extend(['-ar', sample_rate])
+
+        channels = self.settings.get('audio_channels', 'original')
+        if channels == '2':
+            cmd.extend(['-ac', '2'])
+        elif channels == '1':
+            cmd.extend(['-ac', '1'])
+
+    def _apply_encoded_audio_settings(self, cmd, mapped_container_tracks):
+        codec_key = self._get_target_audio_codec()
+        self._apply_common_audio_options(cmd)
+
+        if codec_key == 'mp3':
+            cmd.extend(['-c:a', 'libmp3lame'])
+            if self.settings.get('rate_mode', 'cbr') == 'cbr':
+                cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
+            else:
+                cmd.extend(['-q:a', str(self.settings.get('audio_qscale', 0))])
+        elif codec_key == 'aac':
+            cmd.extend(['-c:a', 'aac'])
+            if self.settings.get('rate_mode', 'cbr') == 'cbr':
+                cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
+            else:
+                cmd.extend(['-q:a', str(self.settings.get('audio_qscale', 3))])
+        elif codec_key == 'opus':
+            cmd.extend(['-c:a', 'libopus', '-b:a', self.settings.get('audio_bitrate', '192k')])
+        elif codec_key == 'ogg':
+            cmd.extend(['-c:a', 'libvorbis', '-q:a', str(self.settings.get('audio_qscale', 6))])
+        elif codec_key == 'wma':
+            cmd.extend(['-c:a', 'wmav2', '-b:a', self.settings.get('audio_bitrate', '128k')])
+        elif codec_key == 'wav':
+            depth = self.settings.get('audio_bit_depth', 'original')
+            codec_map = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
+            cmd.extend(['-c:a', codec_map.get(str(depth), 'pcm_s16le')])
+        elif codec_key == 'flac':
+            cmd.extend(['-c:a', 'flac', '-compression_level', str(self.settings.get('flac_compression', 5))])
+            depth = self.settings.get('audio_bit_depth', 'original')
+            if depth == '16':
+                cmd.extend(['-sample_fmt', 's16'])
+            elif depth == '24':
+                cmd.extend(['-sample_fmt', 's32'])
+        elif codec_key == 'alac':
+            cmd.extend(['-c:a', 'alac'])
+            depth = self.settings.get('audio_bit_depth', 'original')
+            if depth == '16':
+                cmd.extend(['-sample_fmt', 's16p'])
+            elif depth == '24':
+                cmd.extend(['-sample_fmt', 's32p'])
+
+        self._apply_audio_normalization_filters(cmd, mapped_container_tracks)
+
     def _filter_subtitle_entries_for_container(self, subtitle_entries):
         if self.target_format not in ['mp4', 'mov']:
             return subtitle_entries
@@ -298,44 +358,7 @@ class ConversionTask:
         if audio_mode == 'copy':
             cmd.extend(['-c:a', 'copy'])
         else:
-            sr = self.settings.get('audio_sample_rate', 'original')
-            if sr != 'original': cmd.extend(['-ar', sr])
-            ch = self.settings.get('audio_channels', 'original')
-            if ch == '2': cmd.extend(['-ac', '2'])
-            elif ch == '1': cmd.extend(['-ac', '1'])
-
-            if self.target_format == 'mp3':
-                cmd.extend(['-c:a', 'libmp3lame'])
-                if self.settings.get('rate_mode', 'cbr') == 'cbr':
-                    cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
-                else:
-                    cmd.extend(['-q:a', str(self.settings.get('audio_qscale', 0))])
-            elif self.target_format == 'aac':
-                cmd.extend(['-c:a', 'aac'])
-                if self.settings.get('rate_mode', 'cbr') == 'cbr':
-                    cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
-                else:
-                    cmd.extend(['-q:a', str(self.settings.get('audio_qscale', 3))])
-            elif self.target_format == 'ogg':
-                cmd.extend(['-c:a', 'libvorbis', '-q:a', str(self.settings.get('audio_qscale', 6))])
-            elif self.target_format == 'wma':
-                cmd.extend(['-c:a', 'wmav2', '-b:a', self.settings.get('audio_bitrate', '128k')])
-            elif self.target_format == 'wav':
-                depth = self.settings.get('audio_bit_depth', 'original')
-                codec_map = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
-                cmd.extend(['-c:a', codec_map.get(str(depth), 'pcm_s16le')])
-            elif self.target_format == 'flac':
-                cmd.extend(['-c:a', 'flac', '-compression_level', str(self.settings.get('flac_compression', 5))])
-                depth = self.settings.get('audio_bit_depth', 'original')
-                if depth == '16': cmd.extend(['-sample_fmt', 's16'])
-                elif depth == '24': cmd.extend(['-sample_fmt', 's32'])
-            elif self.target_format == 'alac':
-                cmd.extend(['-c:a', 'alac'])
-                depth = self.settings.get('audio_bit_depth', 'original')
-                if depth == '16': cmd.extend(['-sample_fmt', 's16p'])
-                elif depth == '24': cmd.extend(['-sample_fmt', 's32p'])
-
-            self._apply_audio_normalization_filters(cmd, mapped_container_tracks)
+            self._apply_encoded_audio_settings(cmd, mapped_container_tracks)
 
         if self.target_format in ['mp4', 'mkv', 'mov']:
             video_mode = self.settings.get('video_mode', 'convert')
@@ -343,7 +366,18 @@ class ConversionTask:
                 cmd.extend(['-c:v', 'copy'])
             else:
                 crf = str(self.settings.get('video_crf', 23))
-                cmd.extend(['-c:v', 'libx264', '-crf', crf, '-preset', 'medium'])
+                encoder_preset = str(self.settings.get('video_encoder_preset', 'medium') or 'medium')
+                pixel_format = str(self.settings.get('video_pixel_format', 'yuv420p') or 'yuv420p')
+                cmd.extend(['-c:v', 'libx264', '-crf', crf, '-preset', encoder_preset, '-pix_fmt', pixel_format])
+
+                if pixel_format == 'yuv420p':
+                    video_profile = str(self.settings.get('video_profile', 'high') or 'high')
+                    cmd.extend(['-profile:v', video_profile])
+                else:
+                    logging.info(
+                        "Profil H.264 ignoré pour le pixel format %s afin d'éviter une combinaison invalide.",
+                        pixel_format,
+                    )
 
             if mapped_container_tracks and mapped_container_tracks.get("subtitle"):
                 if self.target_format in ['mp4', 'mov']:

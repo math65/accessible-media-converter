@@ -364,6 +364,9 @@ msgstr "Message complet de support pouvant être copié manuellement si nécessa
 msgid "Copy full message"
 msgstr "Copier le message complet"
 
+msgid "Copy report"
+msgstr "Copier le rapport"
+
 msgid "Open Debug Folder"
 msgstr "Ouvrir le dossier debug"
 
@@ -909,6 +912,9 @@ msgstr "Débit :"
 msgid "Bitrate"
 msgstr "Débit"
 
+msgid "Bitrate {bitrate}"
+msgstr "Débit {bitrate}"
+
 msgid "Bitrate used in CBR mode."
 msgstr "Débit utilisé en mode CBR."
 
@@ -999,17 +1005,95 @@ msgstr "Réglages vidéo"
 msgid "Video settings panel"
 msgstr "Panneau des réglages vidéo"
 
+msgid "Audio Codec:"
+msgstr "Codec audio :"
+
+msgid "Audio Codec"
+msgstr "Codec audio"
+
+msgid "Choose the audio codec used for the container output."
+msgstr "Choisissez le codec audio utilisé pour la sortie conteneur."
+
 msgid "Video mode re-encode"
 msgstr "Mode vidéo réencodage"
 
 msgid "Video mode copy stream"
 msgstr "Mode vidéo copie du flux"
 
+msgid "Video Preset:"
+msgstr "Preset vidéo :"
+
+msgid "Video Preset"
+msgstr "Preset vidéo"
+
+msgid "Compatible"
+msgstr "Compatible"
+
+msgid "Balanced"
+msgstr "Équilibré"
+
+msgid "Fast Encode"
+msgstr "Encodage rapide"
+
 msgid "Lower CRF means better quality and bigger file."
 msgstr "Un CRF plus faible donne une meilleure qualité et un fichier plus volumineux."
 
 msgid "Video quality CRF"
 msgstr "Qualité vidéo CRF"
+
+msgid "Encoder Preset:"
+msgstr "Preset d'encodage :"
+
+msgid "Encoder Preset"
+msgstr "Preset d'encodage"
+
+msgid "Choose the x264 speed preset used for encoding."
+msgstr "Choisissez le preset de vitesse x264 utilisé pour l'encodage."
+
+msgid "H.264 Profile:"
+msgstr "Profil H.264 :"
+
+msgid "H.264 Profile"
+msgstr "Profil H.264"
+
+msgid "Choose the H.264 profile used for compatible outputs."
+msgstr "Choisissez le profil H.264 utilisé pour les sorties compatibles."
+
+msgid "Pixel Format:"
+msgstr "Format de pixel :"
+
+msgid "Pixel Format"
+msgstr "Format de pixel"
+
+msgid "Choose the output pixel format."
+msgstr "Choisissez le format de pixel de sortie."
+
+msgid "AAC"
+msgstr "AAC"
+
+msgid "MP3"
+msgstr "MP3"
+
+msgid "Opus"
+msgstr "Opus"
+
+msgid "FLAC"
+msgstr "FLAC"
+
+msgid "Very Fast"
+msgstr "Très rapide"
+
+msgid "Baseline"
+msgstr "Baseline"
+
+msgid "Main"
+msgstr "Main"
+
+msgid "YUV 4:2:0 (Compatible)"
+msgstr "YUV 4:2:0 (compatible)"
+
+msgid "YUV 4:4:4 (Advanced)"
+msgstr "YUV 4:4:4 (avancé)"
 
 msgid "Quality (CRF):"
 msgstr "Qualité (CRF) :"
@@ -1278,6 +1362,9 @@ msgstr "4 conversions"
 
 msgid "Max concurrent conversions"
 msgstr "Nombre maximal de conversions simultanées"
+
+msgid "Max concurrent conversions: {value}"
+msgstr "Nombre maximal de conversions simultanées : {value}"
 
 msgid "Set how many conversions can run at the same time."
 msgstr "Définissez combien de conversions peuvent s'exécuter en même temps."

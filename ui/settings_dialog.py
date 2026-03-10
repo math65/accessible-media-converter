@@ -1,6 +1,17 @@
 import wx
 
-from core.formatting import DEFAULT_FORMAT_SETTINGS, build_format_summary
+from core.formatting import (
+    DEFAULT_FORMAT_SETTINGS,
+    VALID_VIDEO_ENCODER_PRESETS,
+    VALID_VIDEO_PIXEL_FORMATS,
+    VALID_VIDEO_PROFILES,
+    VIDEO_CONTAINER_FORMAT_KEYS,
+    VIDEO_PRESET_PROFILE_SETTINGS,
+    build_format_summary,
+    get_audio_codec_label,
+    get_container_audio_codec_options,
+    get_matching_video_preset_profile,
+)
 
 
 VIDEO_CRF_PRESET_OPTIONS = (
@@ -15,107 +26,146 @@ VIDEO_CRF_PRESET_OPTIONS = (
     (30, "Very Compact"),
 )
 
+VIDEO_PRESET_OPTIONS = (
+    ("compatible", "Compatible"),
+    ("balanced", "Balanced"),
+    ("high_quality", "High Quality"),
+    ("small_file", "Small File"),
+    ("fast_encode", "Fast Encode"),
+)
+
+VIDEO_ENCODER_PRESET_OPTIONS = (
+    ("veryfast", "Very Fast"),
+    ("fast", "Fast"),
+    ("medium", "Medium"),
+    ("slow", "Slow"),
+)
+
+VIDEO_PROFILE_OPTIONS = (
+    ("baseline", "Baseline"),
+    ("main", "Main"),
+    ("high", "High"),
+)
+
+VIDEO_PIXEL_FORMAT_OPTIONS = (
+    ("yuv420p", "YUV 4:2:0 (Compatible)"),
+    ("yuv444p", "YUV 4:4:4 (Advanced)"),
+)
+
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent, title_format, has_video, input_ac, current_settings, format_key):
-        super().__init__(parent, title=_("Configure settings for: ") + title_format, size=(500, 600))
+        super().__init__(parent, title=_("Configure settings for: ") + title_format, size=(560, 760))
         self.current_settings = current_settings
-        self.format_key = format_key 
-        
+        self.format_key = format_key
+        self.has_video_controls = bool(has_video and format_key in VIDEO_CONTAINER_FORMAT_KEYS)
+
+        self.video_preset_choice_keys = []
+        self.video_crf_values = []
+        self.audio_codec_keys = []
+
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        # --- AUDIO ---
+
+        self._build_audio_section()
+        if self.has_video_controls:
+            self._build_video_section()
+        self._build_buttons()
+
+        self.SetSizer(self.main_sizer)
+        self.Centre()
+
+        self._bind_events()
+        self._load_from_settings()
+        self._update_visibility()
+        self._set_accessibility_metadata()
+
+    def _build_audio_section(self):
         audio_box = wx.StaticBox(self, label=_("Audio Settings"))
         audio_sizer = wx.StaticBoxSizer(audio_box, wx.VERTICAL)
-        
-        # Audio Mode
+
         row_mode = wx.BoxSizer(wx.HORIZONTAL)
         self.rb_convert = wx.RadioButton(self, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
         self.rb_copy = wx.RadioButton(self, label=_("Copy Stream (Advanced)"))
         row_mode.Add(self.rb_convert, 0, wx.RIGHT, 15)
         row_mode.Add(self.rb_copy, 0)
         audio_sizer.Add(row_mode, 0, wx.ALL, 5)
-        
-        self.lbl_copy_warn = wx.StaticText(self, label=_("Keep original quality and speed up conversion.\nWarning: The output format must support the source codec."))
+
+        self.lbl_copy_warn = wx.StaticText(
+            self,
+            label=_(
+                "Keep original quality and speed up conversion.\n"
+                "Warning: The output format must support the source codec."
+            ),
+        )
         self.lbl_copy_warn.SetForegroundColour(wx.Colour(100, 100, 100))
         audio_sizer.Add(self.lbl_copy_warn, 0, wx.ALL | wx.EXPAND, 5)
-        
-        # Audio Details Panel
+
         self.panel_audio_opts = wx.Panel(self)
-        
-        grid_audio = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
-        grid_audio.AddGrowableCol(1, 1)
-        
-        # 1. Sample Rate
+        self.audio_grid = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
+        self.audio_grid.AddGrowableCol(1, 1)
+
+        if self.format_key in VIDEO_CONTAINER_FORMAT_KEYS:
+            self.lbl_audio_codec = wx.StaticText(self.panel_audio_opts, label=_("Audio Codec:"))
+            self.combo_audio_codec = wx.Choice(self.panel_audio_opts, choices=[])
+            self.audio_grid.Add(self.lbl_audio_codec, 0, wx.ALIGN_CENTER_VERTICAL)
+            self.audio_grid.Add(self.combo_audio_codec, 0, wx.EXPAND)
+        else:
+            self.lbl_audio_codec = None
+            self.combo_audio_codec = None
+
         self.sr_display_choices = [_("Original"), "44.1 kHz", "48 kHz", "96 kHz", "22.05 kHz"]
         self.lbl_sr = wx.StaticText(self.panel_audio_opts, label=_("Sample Rate:"))
-        self.combo_sr = wx.Choice(
-            self.panel_audio_opts,
-            choices=self.sr_display_choices
-        )
-        grid_audio.Add(self.lbl_sr, 0, wx.ALIGN_CENTER_VERTICAL)
-        grid_audio.Add(self.combo_sr, 0, wx.EXPAND)
-        
-        # 2. Channels
+        self.combo_sr = wx.Choice(self.panel_audio_opts, choices=self.sr_display_choices)
+        self.audio_grid.Add(self.lbl_sr, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_sr, 0, wx.EXPAND)
+
         self.ch_display_choices = [_("Stereo (Downmix)"), _("Mono"), _("Original Channels")]
         self.lbl_ch = wx.StaticText(self.panel_audio_opts, label=_("Channels:"))
-        self.combo_ch = wx.Choice(
-            self.panel_audio_opts,
-            choices=self.ch_display_choices
-        )
-        grid_audio.Add(self.lbl_ch, 0, wx.ALIGN_CENTER_VERTICAL)
-        grid_audio.Add(self.combo_ch, 0, wx.EXPAND)
-        
-        # 3. Rate Mode (CBR/VBR)
+        self.combo_ch = wx.Choice(self.panel_audio_opts, choices=self.ch_display_choices)
+        self.audio_grid.Add(self.lbl_ch, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_ch, 0, wx.EXPAND)
+
         self.lbl_rate_mode = wx.StaticText(self.panel_audio_opts, label=_("Rate Mode:"))
         self.rate_mode_display_choices = [_("Constant Bitrate (CBR)"), _("Variable Bitrate (VBR)")]
         self.combo_rate_mode = wx.Choice(self.panel_audio_opts, choices=self.rate_mode_display_choices)
-        self.combo_rate_mode.Bind(wx.EVT_CHOICE, self.on_rate_mode_change)
-        
-        if self.format_key == 'wma':
-            self.lbl_rate_mode.Hide()
-            self.combo_rate_mode.Hide()
-        else:
-            grid_audio.Add(self.lbl_rate_mode, 0, wx.ALIGN_CENTER_VERTICAL)
-            grid_audio.Add(self.combo_rate_mode, 0, wx.EXPAND)
-        
-        # 4. Bitrate (CBR)
+        self.audio_grid.Add(self.lbl_rate_mode, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_rate_mode, 0, wx.EXPAND)
+
         self.lbl_bitrate = wx.StaticText(self.panel_audio_opts, label=_("Bitrate:"))
         self.bitrate_display_choices = ['320k', '256k', '192k', '160k', '128k', '96k', '64k']
         self.combo_bitrate = wx.Choice(self.panel_audio_opts, choices=self.bitrate_display_choices)
-        grid_audio.Add(self.lbl_bitrate, 0, wx.ALIGN_CENTER_VERTICAL)
-        grid_audio.Add(self.combo_bitrate, 0, wx.EXPAND)
-        
-        # 5. Quality (VBR/OGG)
+        self.audio_grid.Add(self.lbl_bitrate, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_bitrate, 0, wx.EXPAND)
+
         self.lbl_quality = wx.StaticText(self.panel_audio_opts, label=_("Quality (VBR):"))
-        self.combo_quality = wx.Choice(self.panel_audio_opts, choices=[]) 
-        
-        grid_audio.Add(self.lbl_quality, 0, wx.ALIGN_CENTER_VERTICAL)
-        grid_audio.Add(self.combo_quality, 0, wx.EXPAND)
-        
-        # 6. Specific (FLAC/WAV Depth & Compression)
+        self.combo_quality = wx.Choice(self.panel_audio_opts, choices=[])
+        self.audio_grid.Add(self.lbl_quality, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_quality, 0, wx.EXPAND)
+
         self.lbl_depth = wx.StaticText(self.panel_audio_opts, label=_("Bit Depth:"))
-        self.combo_depth = wx.Choice(self.panel_audio_opts, choices=[_("Original"), _("16-bit (CD Quality)"), _("24-bit (Studio Quality)"), _("32-bit Float (Pro)")])
-        grid_audio.Add(self.lbl_depth, 0, wx.ALIGN_CENTER_VERTICAL)
-        grid_audio.Add(self.combo_depth, 0, wx.EXPAND)
-        
-        # Compression Level (FLAC)
+        self.combo_depth = wx.Choice(
+            self.panel_audio_opts,
+            choices=[_("Original"), _("16-bit (CD Quality)"), _("24-bit (Studio Quality)"), _("32-bit Float (Pro)")],
+        )
+        self.audio_grid.Add(self.lbl_depth, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_depth, 0, wx.EXPAND)
+
         self.lbl_comp = wx.StaticText(self.panel_audio_opts, label=_("Compression Level:"))
-        
         comp_choices = []
-        for i in range(13): # 0 à 12
-            txt = str(i)
-            if i == 0: txt += " (" + _("Fast") + ")"
-            if i == 5: txt += " (" + _("Standard") + ")"
-            if i == 8: txt += " (" + _("Max") + ")"
-            # CORRECTION TRADUCTION ICI
-            if i == 12: txt += " (" + _("Ultra Slow") + ")"
-            comp_choices.append(txt)
-            
+        for value in range(13):
+            label = str(value)
+            if value == 0:
+                label += " (" + _("Fast") + ")"
+            if value == 5:
+                label += " (" + _("Standard") + ")"
+            if value == 8:
+                label += " (" + _("Max") + ")"
+            if value == 12:
+                label += " (" + _("Ultra Slow") + ")"
+            comp_choices.append(label)
         self.combo_comp = wx.Choice(self.panel_audio_opts, choices=comp_choices)
-        
-        grid_audio.Add(self.lbl_comp, 0, wx.ALIGN_CENTER_VERTICAL)
-        grid_audio.Add(self.combo_comp, 0, wx.EXPAND)
+        self.audio_grid.Add(self.lbl_comp, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.audio_grid.Add(self.combo_comp, 0, wx.EXPAND)
 
         self.chk_normalize_streaming = wx.CheckBox(
             self.panel_audio_opts,
@@ -123,42 +173,57 @@ class SettingsDialog(wx.Dialog):
         )
 
         audio_opts_sizer = wx.BoxSizer(wx.VERTICAL)
-        audio_opts_sizer.Add(grid_audio, 0, wx.EXPAND)
+        audio_opts_sizer.Add(self.audio_grid, 0, wx.EXPAND)
         audio_opts_sizer.Add(self.chk_normalize_streaming, 0, wx.TOP, 12)
         self.panel_audio_opts.SetSizer(audio_opts_sizer)
         audio_sizer.Add(self.panel_audio_opts, 1, wx.EXPAND | wx.ALL, 10)
         self.main_sizer.Add(audio_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        
-        # --- VIDEO ---
-        if has_video and format_key in ['mp4', 'mkv', 'mov']:
-            video_box = wx.StaticBox(self, label=_("Video Settings"))
-            video_sizer = wx.StaticBoxSizer(video_box, wx.VERTICAL)
-            
-            row_vmode = wx.BoxSizer(wx.HORIZONTAL)
-            self.rb_v_convert = wx.RadioButton(self, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
-            self.rb_v_copy = wx.RadioButton(self, label=_("Copy Stream (Advanced)"))
-            row_vmode.Add(self.rb_v_convert, 0, wx.RIGHT, 15)
-            row_vmode.Add(self.rb_v_copy, 0)
-            video_sizer.Add(row_vmode, 0, wx.ALL, 5)
-            
-            self.panel_video_opts = wx.Panel(self)
-            grid_vid = wx.FlexGridSizer(rows=1, cols=2, vgap=10, hgap=10)
-            grid_vid.AddGrowableCol(1, 1)
-            
-            self.lbl_crf = wx.StaticText(self.panel_video_opts, label=_("Quality (CRF):"))
-            grid_vid.Add(self.lbl_crf, 0, wx.ALIGN_CENTER_VERTICAL)
 
-            self.combo_crf = wx.Choice(self.panel_video_opts, choices=[])
-            grid_vid.Add(self.combo_crf, 1, wx.EXPAND)
-            
-            self.panel_video_opts.SetSizer(grid_vid)
-            video_sizer.Add(self.panel_video_opts, 1, wx.EXPAND | wx.ALL, 10)
-            self.main_sizer.Add(video_sizer, 0, wx.EXPAND | wx.ALL, 5)
-            
-            self.rb_v_convert.Bind(wx.EVT_RADIOBUTTON, self.on_vmode_change)
-            self.rb_v_copy.Bind(wx.EVT_RADIOBUTTON, self.on_vmode_change)
-        
-        # --- BOUTONS ---
+    def _build_video_section(self):
+        video_box = wx.StaticBox(self, label=_("Video Settings"))
+        video_sizer = wx.StaticBoxSizer(video_box, wx.VERTICAL)
+
+        row_vmode = wx.BoxSizer(wx.HORIZONTAL)
+        self.rb_v_convert = wx.RadioButton(self, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
+        self.rb_v_copy = wx.RadioButton(self, label=_("Copy Stream (Advanced)"))
+        row_vmode.Add(self.rb_v_convert, 0, wx.RIGHT, 15)
+        row_vmode.Add(self.rb_v_copy, 0)
+        video_sizer.Add(row_vmode, 0, wx.ALL, 5)
+
+        self.panel_video_opts = wx.Panel(self)
+        self.video_grid = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
+        self.video_grid.AddGrowableCol(1, 1)
+
+        self.lbl_video_preset = wx.StaticText(self.panel_video_opts, label=_("Video Preset:"))
+        self.combo_video_preset = wx.Choice(self.panel_video_opts, choices=[])
+        self.video_grid.Add(self.lbl_video_preset, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.video_grid.Add(self.combo_video_preset, 0, wx.EXPAND)
+
+        self.lbl_crf = wx.StaticText(self.panel_video_opts, label=_("Quality (CRF):"))
+        self.combo_crf = wx.Choice(self.panel_video_opts, choices=[])
+        self.video_grid.Add(self.lbl_crf, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.video_grid.Add(self.combo_crf, 0, wx.EXPAND)
+
+        self.lbl_video_encoder_preset = wx.StaticText(self.panel_video_opts, label=_("Encoder Preset:"))
+        self.combo_video_encoder_preset = wx.Choice(self.panel_video_opts, choices=[])
+        self.video_grid.Add(self.lbl_video_encoder_preset, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.video_grid.Add(self.combo_video_encoder_preset, 0, wx.EXPAND)
+
+        self.lbl_video_profile = wx.StaticText(self.panel_video_opts, label=_("H.264 Profile:"))
+        self.combo_video_profile = wx.Choice(self.panel_video_opts, choices=[])
+        self.video_grid.Add(self.lbl_video_profile, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.video_grid.Add(self.combo_video_profile, 0, wx.EXPAND)
+
+        self.lbl_video_pixel_format = wx.StaticText(self.panel_video_opts, label=_("Pixel Format:"))
+        self.combo_video_pixel_format = wx.Choice(self.panel_video_opts, choices=[])
+        self.video_grid.Add(self.lbl_video_pixel_format, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.video_grid.Add(self.combo_video_pixel_format, 0, wx.EXPAND)
+
+        self.panel_video_opts.SetSizer(self.video_grid)
+        video_sizer.Add(self.panel_video_opts, 1, wx.EXPAND | wx.ALL, 10)
+        self.main_sizer.Add(video_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+    def _build_buttons(self):
         btn_sizer = wx.StdDialogButtonSizer()
         btn_ok = wx.Button(self, wx.ID_OK, label=_("OK"))
         btn_cancel = wx.Button(self, wx.ID_CANCEL, label=_("Cancel"))
@@ -166,179 +231,272 @@ class SettingsDialog(wx.Dialog):
         btn_sizer.AddButton(btn_cancel)
         btn_sizer.Realize()
         self.main_sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
-        
-        self.SetSizer(self.main_sizer)
-        self.Centre()
-        
-        # Bindings
+
+    def _bind_events(self):
         self.rb_convert.Bind(wx.EVT_RADIOBUTTON, self.on_mode_change)
         self.rb_copy.Bind(wx.EVT_RADIOBUTTON, self.on_mode_change)
+
+        if self.combo_audio_codec:
+            self.combo_audio_codec.Bind(wx.EVT_CHOICE, self.on_audio_codec_change)
         self.combo_sr.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_ch.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
+        self.combo_rate_mode.Bind(wx.EVT_CHOICE, self.on_rate_mode_change)
         self.combo_bitrate.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_quality.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_depth.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.combo_comp.Bind(wx.EVT_CHOICE, self.on_audio_option_change)
         self.chk_normalize_streaming.Bind(wx.EVT_CHECKBOX, self.on_audio_option_change)
-        if hasattr(self, 'combo_crf'):
-            self.combo_crf.Bind(wx.EVT_CHOICE, self.on_video_option_change)
-        
-        self._load_from_settings()
-        self._update_visibility()
-        self._set_accessibility_metadata()
+
+        if self.has_video_controls:
+            self.rb_v_convert.Bind(wx.EVT_RADIOBUTTON, self.on_vmode_change)
+            self.rb_v_copy.Bind(wx.EVT_RADIOBUTTON, self.on_vmode_change)
+            self.combo_video_preset.Bind(wx.EVT_CHOICE, self.on_video_preset_change)
+            self.combo_crf.Bind(wx.EVT_CHOICE, self.on_video_advanced_option_change)
+            self.combo_video_encoder_preset.Bind(wx.EVT_CHOICE, self.on_video_advanced_option_change)
+            self.combo_video_profile.Bind(wx.EVT_CHOICE, self.on_video_advanced_option_change)
+            self.combo_video_pixel_format.Bind(wx.EVT_CHOICE, self.on_video_pixel_format_change)
 
     def _load_from_settings(self):
-        s = self.current_settings
-        
-        if s.get('audio_mode') == 'copy': self.rb_copy.SetValue(True)
-        else: self.rb_convert.SetValue(True)
-        
-        sr_map = {'original': 0, '44100': 1, '48000': 2, '96000': 3, '22050': 4}
-        self.combo_sr.SetSelection(sr_map.get(str(s.get('audio_sample_rate', 'original')), 0))
-        
-        ch_map = {'2': 0, '1': 1, 'original': 2}
-        self.combo_ch.SetSelection(ch_map.get(str(s.get('audio_channels', '2')), 0))
-        
-        if self.format_key == 'wma':
-            self.lbl_rate_mode.Hide()
-            self.combo_rate_mode.Hide()
+        settings = self.current_settings
+
+        if settings.get("audio_mode") == "copy":
+            self.rb_copy.SetValue(True)
         else:
-            self.combo_rate_mode.SetSelection(1 if s.get('rate_mode') == 'vbr' else 0)
-        
+            self.rb_convert.SetValue(True)
+
+        self._populate_audio_codec_combo(settings.get("audio_codec"))
+
+        sr_map = {'original': 0, '44100': 1, '48000': 2, '96000': 3, '22050': 4}
+        self.combo_sr.SetSelection(sr_map.get(str(settings.get('audio_sample_rate', 'original')), 0))
+
+        ch_map = {'2': 0, '1': 1, 'original': 2}
+        self.combo_ch.SetSelection(ch_map.get(str(settings.get('audio_channels', '2')), 0))
+
+        self.combo_rate_mode.SetSelection(1 if settings.get('rate_mode') == 'vbr' else 0)
+
         br_map = {'320k': 0, '256k': 1, '192k': 2, '160k': 3, '128k': 4, '96k': 5, '64k': 6}
-        self.combo_bitrate.SetSelection(br_map.get(s.get('audio_bitrate', '192k'), 2))
-        
-        q = int(s.get('audio_qscale', 0))
-        self._populate_quality_combo() 
-        
-        if self.format_key == 'mp3':
-            if q >= 0 and q <= 9: self.combo_quality.SetSelection(q)
-        elif self.format_key == 'aac':
-            idx = q - 1
-            if idx >= 0 and idx < 5: self.combo_quality.SetSelection(idx)
-        elif self.format_key == 'ogg':
-            if q >= 0 and q <= 10: self.combo_quality.SetSelection(q)
-        
+        self.combo_bitrate.SetSelection(br_map.get(settings.get('audio_bitrate', '192k'), 2))
+
+        self._populate_quality_combo(self._get_active_audio_codec_key())
+        self._set_quality_selection(settings)
+
         d_map = {'original': 0, '16': 1, '24': 2, '32': 3}
-        self.combo_depth.SetSelection(d_map.get(str(s.get('audio_bit_depth', 'original')), 0))
+        self.combo_depth.SetSelection(d_map.get(str(settings.get('audio_bit_depth', 'original')), 0))
 
-        c = int(s.get('flac_compression', 5))
-        if c > 12: c = 12
-        self.combo_comp.SetSelection(c)
+        compression = int(settings.get('flac_compression', 5))
+        self.combo_comp.SetSelection(max(0, min(compression, 12)))
+        self.chk_normalize_streaming.SetValue(bool(settings.get('audio_normalize_streaming', False)))
 
-        self.chk_normalize_streaming.SetValue(bool(s.get('audio_normalize_streaming', False)))
+        if self.has_video_controls:
+            if settings.get("video_mode") == "copy":
+                self.rb_v_copy.SetValue(True)
+            else:
+                self.rb_v_convert.SetValue(True)
 
-        if hasattr(self, 'rb_v_convert'):
-            if s.get('video_mode') == 'copy': self.rb_v_copy.SetValue(True)
-            else: self.rb_v_convert.SetValue(True)
-            self._populate_crf_combo(s.get('video_crf', DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']))
+            self._populate_crf_combo(settings.get('video_crf', DEFAULT_FORMAT_SETTINGS[self.format_key]['video_crf']))
+            self._populate_video_encoder_preset_combo(settings.get("video_encoder_preset"))
+            self._populate_video_profile_combo(settings.get("video_profile"))
+            self._populate_video_pixel_format_combo(settings.get("video_pixel_format"))
+            self._sync_video_preset_selection_from_values(requested_key=settings.get("video_preset_profile"))
 
-    def _populate_quality_combo(self):
+    def _populate_audio_codec_combo(self, selected_codec):
+        if not self.combo_audio_codec:
+            return
+
+        self.audio_codec_keys = list(get_container_audio_codec_options(self.format_key))
+        self.combo_audio_codec.Set([get_audio_codec_label(codec_key) for codec_key in self.audio_codec_keys])
+
+        target_codec = str(selected_codec or DEFAULT_FORMAT_SETTINGS[self.format_key]["audio_codec"]).lower()
+        if target_codec not in self.audio_codec_keys:
+            target_codec = DEFAULT_FORMAT_SETTINGS[self.format_key]["audio_codec"]
+        self.combo_audio_codec.SetSelection(self.audio_codec_keys.index(target_codec))
+
+    def _populate_quality_combo(self, codec_key):
         self.combo_quality.Clear()
         choices = []
-        if self.format_key == 'mp3':
-            for i in range(10):
-                desc = f"V{i}"
-                if i == 0: desc += " (" + _("Best Quality") + ")"
-                elif i == 2: desc += " (" + _("High Quality") + ")"
-                elif i == 4: desc += " (" + _("Medium") + ")"
-                elif i == 9: desc += " (" + _("Smallest Size") + ")"
-                choices.append(desc)
-        elif self.format_key == 'aac':
-            for i in range(1, 6):
-                desc = f"Q{i}"
-                if i == 1: desc += " (" + _("Low") + ")"
-                elif i == 3: desc += " (" + _("Standard") + ")"
-                elif i == 5: desc += " (" + _("High") + ")"
-                choices.append(desc)
-        elif self.format_key == 'ogg':
-            for i in range(11):
-                desc = f"Q{i}"
-                if i == 6: desc += " (" + _("Audiophile") + ")"
-                choices.append(desc)
+        if codec_key == 'mp3':
+            for value in range(10):
+                label = f"V{value}"
+                if value == 0:
+                    label += " (" + _("Best Quality") + ")"
+                elif value == 2:
+                    label += " (" + _("High Quality") + ")"
+                elif value == 4:
+                    label += " (" + _("Medium") + ")"
+                elif value == 9:
+                    label += " (" + _("Smallest Size") + ")"
+                choices.append(label)
+        elif codec_key == 'aac':
+            for value in range(1, 6):
+                label = f"Q{value}"
+                if value == 1:
+                    label += " (" + _("Low") + ")"
+                elif value == 3:
+                    label += " (" + _("Standard") + ")"
+                elif value == 5:
+                    label += " (" + _("High") + ")"
+                choices.append(label)
+        elif codec_key == 'ogg':
+            for value in range(11):
+                label = f"Q{value}"
+                if value == 6:
+                    label += " (" + _("Audiophile") + ")"
+                choices.append(label)
         self.combo_quality.Set(choices)
 
-    def on_mode_change(self, e):
+    def _set_quality_selection(self, settings):
+        codec_key = self._get_active_audio_codec_key()
+        quality = int(settings.get("audio_qscale", 0))
+        if codec_key == "mp3":
+            self.combo_quality.SetSelection(max(0, min(quality, 9)))
+        elif codec_key == "aac":
+            self.combo_quality.SetSelection(max(0, min(quality - 1, 4)))
+        elif codec_key == "ogg":
+            self.combo_quality.SetSelection(max(0, min(quality, 10)))
+        else:
+            self.combo_quality.SetSelection(wx.NOT_FOUND)
+
+    def _populate_video_encoder_preset_combo(self, selected_key):
+        self.video_encoder_preset_keys = [key for key, _msgid in VIDEO_ENCODER_PRESET_OPTIONS]
+        self.combo_video_encoder_preset.Set([_(msgid) for _key, msgid in VIDEO_ENCODER_PRESET_OPTIONS])
+
+        target_key = str(selected_key or DEFAULT_FORMAT_SETTINGS[self.format_key]["video_encoder_preset"]).lower()
+        if target_key not in VALID_VIDEO_ENCODER_PRESETS:
+            target_key = DEFAULT_FORMAT_SETTINGS[self.format_key]["video_encoder_preset"]
+        self.combo_video_encoder_preset.SetSelection(self.video_encoder_preset_keys.index(target_key))
+
+    def _populate_video_profile_combo(self, selected_key):
+        self.video_profile_keys = [key for key, _msgid in VIDEO_PROFILE_OPTIONS]
+        self.combo_video_profile.Set([_(msgid) for _key, msgid in VIDEO_PROFILE_OPTIONS])
+
+        target_key = str(selected_key or DEFAULT_FORMAT_SETTINGS[self.format_key]["video_profile"]).lower()
+        if target_key not in VALID_VIDEO_PROFILES:
+            target_key = DEFAULT_FORMAT_SETTINGS[self.format_key]["video_profile"]
+        self.combo_video_profile.SetSelection(self.video_profile_keys.index(target_key))
+
+    def _populate_video_pixel_format_combo(self, selected_key):
+        self.video_pixel_format_keys = [key for key, _msgid in VIDEO_PIXEL_FORMAT_OPTIONS]
+        self.combo_video_pixel_format.Set([_(msgid) for _key, msgid in VIDEO_PIXEL_FORMAT_OPTIONS])
+
+        target_key = str(selected_key or DEFAULT_FORMAT_SETTINGS[self.format_key]["video_pixel_format"]).lower()
+        if target_key not in VALID_VIDEO_PIXEL_FORMATS:
+            target_key = DEFAULT_FORMAT_SETTINGS[self.format_key]["video_pixel_format"]
+        self.combo_video_pixel_format.SetSelection(self.video_pixel_format_keys.index(target_key))
+
+    def on_mode_change(self, event):
         self._update_visibility()
         if self.rb_convert.GetValue():
             self._focus_primary_audio_control()
             wx.CallAfter(self._focus_primary_audio_control)
+        event.Skip()
 
-    def on_vmode_change(self, e):
+    def on_vmode_change(self, event):
         self._update_visibility()
+        event.Skip()
 
-    def on_rate_mode_change(self, e):
+    def on_rate_mode_change(self, event):
         self._update_visibility(preserve_focus=self.combo_rate_mode)
+        event.Skip()
 
-    def on_audio_option_change(self, e):
-        self._update_dynamic_accessible_names()
-        e.Skip()
+    def on_audio_codec_change(self, event):
+        self._populate_quality_combo(self._get_active_audio_codec_key())
+        self._set_quality_selection(self.current_settings)
+        self._update_visibility(preserve_focus=self.combo_audio_codec)
+        event.Skip()
 
-    def on_video_option_change(self, e):
+    def on_audio_option_change(self, event):
         self._update_dynamic_accessible_names()
-        e.Skip()
+        event.Skip()
+
+    def on_video_preset_change(self, event):
+        preset_key = self._get_selected_video_preset_key()
+        if preset_key and preset_key != "custom":
+            self._apply_video_preset_to_controls(preset_key)
+            self._sync_video_preset_selection_from_values(requested_key=preset_key)
+        self._update_dynamic_accessible_names()
+        event.Skip()
+
+    def on_video_advanced_option_change(self, event):
+        self._sync_video_preset_selection_from_values(requested_key="custom")
+        self._update_profile_availability()
+        self._update_dynamic_accessible_names()
+        event.Skip()
+
+    def on_video_pixel_format_change(self, event):
+        self._sync_video_preset_selection_from_values(requested_key="custom")
+        self._update_profile_availability()
+        self._update_dynamic_accessible_names()
+        event.Skip()
 
     def _update_visibility(self, preserve_focus=None):
-        is_convert = self.rb_convert.GetValue()
-        self.panel_audio_opts.Enable(is_convert)
-        self.chk_normalize_streaming.Enable(is_convert)
-        self.lbl_copy_warn.Show(not is_convert)
-        
-        if is_convert:
-            self.lbl_rate_mode.Hide()
-            self.combo_rate_mode.Hide()
-            self.lbl_bitrate.Hide()
-            self.combo_bitrate.Hide()
-            self.lbl_quality.Hide()
-            self.combo_quality.Hide()
-            self.lbl_depth.Hide()
-            self.combo_depth.Hide()
-            self.lbl_comp.Hide()
-            self.combo_comp.Hide()
-            
-            fmt = self.format_key
-            is_vbr = (self.combo_rate_mode.GetSelection() == 1)
-            
-            if fmt == 'wma': is_vbr = False
-            
-            if fmt in ['mp3', 'aac']:
+        is_audio_convert = self.rb_convert.GetValue()
+        self.panel_audio_opts.Enable(is_audio_convert)
+        self.lbl_copy_warn.Show(not is_audio_convert)
+
+        for widget in (
+            self.lbl_rate_mode,
+            self.combo_rate_mode,
+            self.lbl_bitrate,
+            self.combo_bitrate,
+            self.lbl_quality,
+            self.combo_quality,
+            self.lbl_depth,
+            self.combo_depth,
+            self.lbl_comp,
+            self.combo_comp,
+        ):
+            widget.Hide()
+
+        if is_audio_convert:
+            codec_key = self._get_active_audio_codec_key()
+            if codec_key in ("mp3", "aac"):
                 self.lbl_rate_mode.Show()
                 self.combo_rate_mode.Show()
-                if is_vbr:
+                if self.combo_rate_mode.GetSelection() == 1:
+                    self.lbl_quality.SetLabel(_("Quality (VBR):"))
                     self.lbl_quality.Show()
                     self.combo_quality.Show()
-                    self.lbl_quality.SetLabel(_("Quality (VBR):"))
                 else:
                     self.lbl_bitrate.Show()
                     self.combo_bitrate.Show()
-            
-            elif fmt == 'ogg':
+            elif codec_key == "ogg":
+                self.lbl_quality.SetLabel(_("Quality (OGG):"))
                 self.lbl_quality.Show()
                 self.combo_quality.Show()
-                self.lbl_quality.SetLabel(_("Quality (OGG):"))
-                
-            elif fmt == 'wma':
+            elif codec_key in ("wma", "opus"):
                 self.lbl_bitrate.Show()
                 self.combo_bitrate.Show()
-                
-            elif fmt in ['wav', 'flac', 'alac']:
+            elif codec_key in ("wav", "flac", "alac"):
                 self.lbl_depth.Show()
                 self.combo_depth.Show()
-                if fmt == 'flac':
+                if codec_key == "flac":
                     self.lbl_comp.Show()
                     self.combo_comp.Show()
 
-        if hasattr(self, 'panel_video_opts'):
-            is_v_convert = self.rb_v_convert.GetValue()
-            self.panel_video_opts.Enable(is_v_convert)
+        self.chk_normalize_streaming.Enable(is_audio_convert)
+
+        if self.has_video_controls:
+            self.panel_video_opts.Enable(self.rb_v_convert.GetValue())
+            self._update_profile_availability()
 
         self._update_dynamic_accessible_names()
         self.panel_audio_opts.Layout()
+        if self.has_video_controls:
+            self.panel_video_opts.Layout()
         self.main_sizer.Layout()
+
         if preserve_focus and preserve_focus.IsShown() and preserve_focus.IsEnabled():
             current_focus = wx.Window.FindFocus()
             if current_focus is not preserve_focus:
                 wx.CallAfter(preserve_focus.SetFocus)
+
+    def _update_profile_availability(self):
+        if not self.has_video_controls:
+            return
+
+        profile_enabled = self.rb_v_convert.GetValue() and self._get_selected_video_pixel_format_key() != "yuv444p"
+        self.lbl_video_profile.Enable(profile_enabled)
+        self.combo_video_profile.Enable(profile_enabled)
 
     def _set_accessibility_metadata(self):
         self.SetName(_("Format settings dialog"))
@@ -349,6 +507,10 @@ class SettingsDialog(wx.Dialog):
         self.rb_copy.SetName(_("Audio mode copy stream"))
         self.rb_convert.SetToolTip(_("Re-encode audio with detailed settings."))
         self.rb_copy.SetToolTip(_("Copy source audio without re-encoding."))
+
+        if self.combo_audio_codec:
+            self.combo_audio_codec.SetName(_("Audio Codec"))
+            self.combo_audio_codec.SetToolTip(_("Choose the audio codec used for the container output."))
 
         self.combo_sr.SetName(_("Sample Rate"))
         self.combo_ch.SetName(_("Channels"))
@@ -370,18 +532,25 @@ class SettingsDialog(wx.Dialog):
 
         self.lbl_copy_warn.SetName(_("Copy mode warning"))
 
-        if hasattr(self, 'panel_video_opts'):
+        if self.has_video_controls:
             self.panel_video_opts.SetName(_("Video settings panel"))
             self.rb_v_convert.SetName(_("Video mode re-encode"))
             self.rb_v_copy.SetName(_("Video mode copy stream"))
+            self.combo_video_preset.SetName(_("Video Preset"))
             self.combo_crf.SetName(_("Video quality CRF"))
+            self.combo_video_encoder_preset.SetName(_("Encoder Preset"))
+            self.combo_video_profile.SetName(_("H.264 Profile"))
+            self.combo_video_pixel_format.SetName(_("Pixel Format"))
             self.combo_crf.SetToolTip(_("Lower CRF means better quality and bigger file."))
-            self.lbl_crf.SetName(_("Video quality CRF"))
+            self.combo_video_encoder_preset.SetToolTip(_("Choose the x264 speed preset used for encoding."))
+            self.combo_video_profile.SetToolTip(_("Choose the H.264 profile used for compatible outputs."))
+            self.combo_video_pixel_format.SetToolTip(_("Choose the output pixel format."))
 
         self._update_dynamic_accessible_names()
 
     def _update_dynamic_accessible_names(self):
-        # Keep stable, explicit names so NVDA always announces the same label for each field.
+        if self.combo_audio_codec:
+            self.combo_audio_codec.SetName(_("Audio Codec"))
         self.combo_sr.SetName(_("Sample Rate"))
         self.combo_ch.SetName(_("Channels"))
         self.combo_rate_mode.SetName(_("Rate Mode"))
@@ -390,11 +559,30 @@ class SettingsDialog(wx.Dialog):
         self.combo_depth.SetName(_("Bit Depth"))
         self.combo_comp.SetName(_("Compression"))
         self.chk_normalize_streaming.SetName(_("Normalize for streaming"))
-        if hasattr(self, 'combo_crf'):
+        if self.has_video_controls:
+            self.combo_video_preset.SetName(_("Video Preset"))
             self.combo_crf.SetName(_("Video quality CRF"))
+            self.combo_video_encoder_preset.SetName(_("Encoder Preset"))
+            self.combo_video_profile.SetName(_("H.264 Profile"))
+            self.combo_video_pixel_format.SetName(_("Pixel Format"))
 
     def _focus_primary_audio_control(self):
-        for ctrl in [self.combo_sr, self.combo_ch, self.combo_rate_mode, self.combo_bitrate, self.combo_quality, self.combo_depth, self.combo_comp, self.chk_normalize_streaming]:
+        ordered_controls = []
+        if self.combo_audio_codec:
+            ordered_controls.append(self.combo_audio_codec)
+        ordered_controls.extend(
+            [
+                self.combo_sr,
+                self.combo_ch,
+                self.combo_rate_mode,
+                self.combo_bitrate,
+                self.combo_quality,
+                self.combo_depth,
+                self.combo_comp,
+                self.chk_normalize_streaming,
+            ]
+        )
+        for ctrl in ordered_controls:
             if ctrl.IsShown() and ctrl.IsEnabled():
                 ctrl.SetFocus()
                 return
@@ -403,22 +591,19 @@ class SettingsDialog(wx.Dialog):
         try:
             parsed = int(value)
         except (TypeError, ValueError):
-            return DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']
+            return DEFAULT_FORMAT_SETTINGS[self.format_key]['video_crf']
 
         if 0 <= parsed <= 51:
             return parsed
-        return DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']
+        return DEFAULT_FORMAT_SETTINGS[self.format_key]['video_crf']
 
     def _build_crf_choice_label(self, value, label_msgid=None, custom=False):
-        if custom:
-            label = _("Custom")
-        else:
-            label = _(label_msgid or "Balanced - Recommended")
+        label = _("Custom") if custom else _(label_msgid or "Balanced - Recommended")
         return _("CRF {value} ({label})").format(value=value, label=label)
 
     def _populate_crf_combo(self, current_value):
         value = self._coerce_video_crf_value(current_value)
-        preset_values = {preset_value for preset_value, _ in VIDEO_CRF_PRESET_OPTIONS}
+        preset_values = {preset_value for preset_value, _label_msgid in VIDEO_CRF_PRESET_OPTIONS}
         custom_value = value if value not in preset_values else None
 
         self.video_crf_values = []
@@ -439,49 +624,145 @@ class SettingsDialog(wx.Dialog):
             choices.append(self._build_crf_choice_label(custom_value, custom=True))
 
         self.combo_crf.Set(choices)
-        selected_value = value if value in self.video_crf_values else DEFAULT_FORMAT_SETTINGS['mp4']['video_crf']
+        selected_value = value if value in self.video_crf_values else DEFAULT_FORMAT_SETTINGS[self.format_key]["video_crf"]
         self.combo_crf.SetSelection(self.video_crf_values.index(selected_value))
 
+    def _refresh_video_preset_choices(self, selected_key):
+        keys = [key for key, _msgid in VIDEO_PRESET_OPTIONS]
+        if selected_key == "custom":
+            keys.append("custom")
+
+        choice_map = dict(VIDEO_PRESET_OPTIONS)
+        choices = []
+        for key in keys:
+            choices.append(_("Custom") if key == "custom" else _(choice_map[key]))
+
+        self.video_preset_choice_keys = keys
+        self.combo_video_preset.Set(choices)
+        self.combo_video_preset.SetSelection(self.video_preset_choice_keys.index(selected_key))
+
+    def _get_selected_video_preset_key(self):
+        selection = self.combo_video_preset.GetSelection()
+        if selection == wx.NOT_FOUND or not self.video_preset_choice_keys:
+            return None
+        return self.video_preset_choice_keys[selection]
+
+    def _get_selected_audio_codec_key(self):
+        if not self.combo_audio_codec:
+            return None
+        selection = self.combo_audio_codec.GetSelection()
+        if selection == wx.NOT_FOUND or not self.audio_codec_keys:
+            return DEFAULT_FORMAT_SETTINGS[self.format_key]["audio_codec"]
+        return self.audio_codec_keys[selection]
+
+    def _get_active_audio_codec_key(self):
+        if self.format_key in VIDEO_CONTAINER_FORMAT_KEYS:
+            return self._get_selected_audio_codec_key()
+        return self.format_key
+
+    def _get_selected_video_encoder_preset_key(self):
+        selection = self.combo_video_encoder_preset.GetSelection()
+        if selection == wx.NOT_FOUND:
+            return DEFAULT_FORMAT_SETTINGS[self.format_key]["video_encoder_preset"]
+        return self.video_encoder_preset_keys[selection]
+
+    def _get_selected_video_profile_key(self):
+        selection = self.combo_video_profile.GetSelection()
+        if selection == wx.NOT_FOUND:
+            return DEFAULT_FORMAT_SETTINGS[self.format_key]["video_profile"]
+        return self.video_profile_keys[selection]
+
+    def _get_selected_video_pixel_format_key(self):
+        selection = self.combo_video_pixel_format.GetSelection()
+        if selection == wx.NOT_FOUND:
+            return DEFAULT_FORMAT_SETTINGS[self.format_key]["video_pixel_format"]
+        return self.video_pixel_format_keys[selection]
+
+    def _get_current_video_advanced_settings(self):
+        selected_crf_index = self.combo_crf.GetSelection()
+        if selected_crf_index == wx.NOT_FOUND:
+            video_crf = DEFAULT_FORMAT_SETTINGS[self.format_key]["video_crf"]
+        else:
+            video_crf = self.video_crf_values[selected_crf_index]
+
+        return {
+            "video_crf": video_crf,
+            "video_encoder_preset": self._get_selected_video_encoder_preset_key(),
+            "video_profile": self._get_selected_video_profile_key(),
+            "video_pixel_format": self._get_selected_video_pixel_format_key(),
+        }
+
+    def _apply_video_preset_to_controls(self, preset_key):
+        preset_settings = VIDEO_PRESET_PROFILE_SETTINGS.get(preset_key)
+        if not preset_settings:
+            return
+
+        self._populate_crf_combo(preset_settings["video_crf"])
+        self.combo_video_encoder_preset.SetSelection(
+            self.video_encoder_preset_keys.index(preset_settings["video_encoder_preset"])
+        )
+        self.combo_video_profile.SetSelection(self.video_profile_keys.index(preset_settings["video_profile"]))
+        self.combo_video_pixel_format.SetSelection(
+            self.video_pixel_format_keys.index(preset_settings["video_pixel_format"])
+        )
+
+    def _sync_video_preset_selection_from_values(self, requested_key=None):
+        matched_key = get_matching_video_preset_profile(self._get_current_video_advanced_settings())
+        if matched_key:
+            self._refresh_video_preset_choices(matched_key)
+            return
+
+        requested_key = str(requested_key or "").strip()
+        if requested_key == "custom" or requested_key in VIDEO_PRESET_PROFILE_SETTINGS:
+            self._refresh_video_preset_choices("custom")
+            return
+
+        self._refresh_video_preset_choices("custom")
+
     def get_settings(self):
-        s = {}
-        s['audio_mode'] = 'copy' if self.rb_copy.GetValue() else 'convert'
+        settings = dict(self.current_settings)
+        settings['audio_mode'] = 'copy' if self.rb_copy.GetValue() else 'convert'
+
         sr_vals = ['original', '44100', '48000', '96000', '22050']
-        s['audio_sample_rate'] = sr_vals[self.combo_sr.GetSelection()]
+        settings['audio_sample_rate'] = sr_vals[self.combo_sr.GetSelection()]
+
         ch_vals = ['2', '1', 'original']
-        s['audio_channels'] = ch_vals[self.combo_ch.GetSelection()]
-        
-        if self.format_key == 'wma': s['rate_mode'] = 'cbr'
-        else: s['rate_mode'] = 'vbr' if self.combo_rate_mode.GetSelection() == 1 else 'cbr'
-        
+        settings['audio_channels'] = ch_vals[self.combo_ch.GetSelection()]
+
+        settings['rate_mode'] = 'vbr' if self.combo_rate_mode.GetSelection() == 1 else 'cbr'
+
         br_vals = ['320k', '256k', '192k', '160k', '128k', '96k', '64k']
-        s['audio_bitrate'] = br_vals[self.combo_bitrate.GetSelection()]
-        
+        settings['audio_bitrate'] = br_vals[self.combo_bitrate.GetSelection()]
+
         qual_idx = self.combo_quality.GetSelection()
         if qual_idx == wx.NOT_FOUND:
             qual_idx = int(
                 self.current_settings.get(
                     'audio_qscale',
-                    DEFAULT_FORMAT_SETTINGS.get(self.format_key, DEFAULT_FORMAT_SETTINGS['mp3']).get('audio_qscale', 0)
+                    DEFAULT_FORMAT_SETTINGS.get(self._get_active_audio_codec_key(), DEFAULT_FORMAT_SETTINGS['mp3']).get(
+                        'audio_qscale',
+                        0,
+                    ),
                 )
             )
-        if self.format_key == 'aac': s['audio_qscale'] = qual_idx + 1
-        else: s['audio_qscale'] = qual_idx
-        
+
+        active_codec = self._get_active_audio_codec_key()
+        settings['audio_qscale'] = qual_idx + 1 if active_codec == 'aac' else qual_idx
+
         d_vals = ['original', '16', '24', '32']
-        s['audio_bit_depth'] = d_vals[self.combo_depth.GetSelection()]
-        
-        s['flac_compression'] = self.combo_comp.GetSelection()
-        s['audio_normalize_streaming'] = self.chk_normalize_streaming.GetValue()
+        settings['audio_bit_depth'] = d_vals[self.combo_depth.GetSelection()]
+        settings['flac_compression'] = self.combo_comp.GetSelection()
+        settings['audio_normalize_streaming'] = self.chk_normalize_streaming.GetValue()
 
-        if hasattr(self, 'rb_v_convert'):
-            s['video_mode'] = 'copy' if self.rb_v_copy.GetValue() else 'convert'
-            selected_index = self.combo_crf.GetSelection()
-            if selected_index == wx.NOT_FOUND:
-                s['video_crf'] = self._coerce_video_crf_value(
-                    self.current_settings.get('video_crf', DEFAULT_FORMAT_SETTINGS['mp4']['video_crf'])
-                )
-            else:
-                s['video_crf'] = self.video_crf_values[selected_index]
+        if self.combo_audio_codec:
+            settings["audio_codec"] = self._get_selected_audio_codec_key()
 
-        s['summary'] = build_format_summary(self.format_key, s)
-        return s
+        if self.has_video_controls:
+            settings['video_mode'] = 'copy' if self.rb_v_copy.GetValue() else 'convert'
+            video_settings = self._get_current_video_advanced_settings()
+            settings.update(video_settings)
+            matched_preset = get_matching_video_preset_profile(video_settings)
+            settings["video_preset_profile"] = matched_preset or "custom"
+
+        settings['summary'] = build_format_summary(self.format_key, settings)
+        return settings
