@@ -213,6 +213,9 @@ msgstr "Une nouvelle version de {app_name} est disponible."
 msgid "Current version:"
 msgstr "Version actuelle :"
 
+msgid "Version"
+msgstr "Version"
+
 msgid "Available version:"
 msgstr "Version disponible :"
 

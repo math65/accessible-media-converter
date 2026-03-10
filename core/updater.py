@@ -1,3 +1,4 @@
+import builtins
 import json
 import os
 import subprocess
@@ -9,7 +10,7 @@ from urllib import error, request
 
 from core.app_info import (
     APP_EXE_NAME,
-    APP_GITHUB_RELEASES_API_LATEST,
+    APP_GITHUB_RELEASES_API,
     APP_GITHUB_RELEASES_PAGE,
     APP_INSTALLER_BASENAME,
     APP_VERSION,
@@ -43,6 +44,13 @@ class ReleaseInfo:
     body: str
     asset_name: str
     asset_url: str
+
+
+def _translate(msgid):
+    translator = builtins.__dict__.get("_")
+    if callable(translator):
+        return translator(msgid)
+    return msgid
 
 
 def get_local_appdata_dir():
@@ -108,38 +116,40 @@ def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS):
         "Accept": "application/vnd.github+json",
         "User-Agent": f"{APP_EXE_NAME}/{APP_VERSION}",
     }
-    api_request = request.Request(APP_GITHUB_RELEASES_API_LATEST, headers=headers)
+    api_request = request.Request(APP_GITHUB_RELEASES_API, headers=headers)
 
     try:
         with request.urlopen(api_request, timeout=timeout) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except error.HTTPError as exc:
         raise UpdateCheckError(
-            _("GitHub update check failed with HTTP status {code}.").format(code=exc.code)
+            _translate("GitHub update check failed with HTTP status {code}.").format(code=exc.code)
         ) from exc
     except error.URLError as exc:
-        raise UpdateCheckError(_("Unable to contact GitHub to check for updates.")) from exc
+        raise UpdateCheckError(_translate("Unable to contact GitHub to check for updates.")) from exc
     except TimeoutError as exc:
-        raise UpdateCheckError(_("The update check timed out.")) from exc
+        raise UpdateCheckError(_translate("The update check timed out.")) from exc
     except json.JSONDecodeError as exc:
-        raise UpdateCheckError(_("GitHub returned an invalid update response.")) from exc
+        raise UpdateCheckError(_translate("GitHub returned an invalid update response.")) from exc
 
     return parse_release_info(payload)
 
 
 def parse_release_info(payload):
-    if not isinstance(payload, dict):
-        raise UpdateCheckError(_("GitHub returned an invalid update response."))
+    stable_releases = _extract_stable_releases(payload)
+    if not stable_releases:
+        raise UpdateCheckError(_translate("GitHub returned an invalid update response."))
 
-    tag_name = str(payload.get("tag_name") or "").strip()
+    latest_release = stable_releases[0]
+    tag_name = str(latest_release.get("tag_name") or "").strip()
     version = normalize_version(tag_name)
-    html_url = str(payload.get("html_url") or APP_GITHUB_RELEASES_PAGE).strip() or APP_GITHUB_RELEASES_PAGE
-    body = normalize_release_notes(payload.get("body"))
-    published_at = str(payload.get("published_at") or "").strip()
-    asset_name, asset_url = find_setup_asset(payload.get("assets"))
+    html_url = str(latest_release.get("html_url") or APP_GITHUB_RELEASES_PAGE).strip() or APP_GITHUB_RELEASES_PAGE
+    body = build_combined_release_notes(stable_releases)
+    published_at = str(latest_release.get("published_at") or "").strip()
+    asset_name, asset_url = find_setup_asset(latest_release.get("assets"))
 
     if not version:
-        raise UpdateCheckError(_("The GitHub release does not define a valid version tag."))
+        raise UpdateCheckError(_translate("The GitHub release does not define a valid version tag."))
 
     return ReleaseInfo(
         tag_name=tag_name,
@@ -152,16 +162,57 @@ def parse_release_info(payload):
     )
 
 
+def _extract_stable_releases(payload):
+    if not isinstance(payload, list):
+        return []
+
+    stable_releases = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        if item.get("draft") or item.get("prerelease"):
+            continue
+        stable_releases.append(item)
+    return stable_releases
+
+
+def build_combined_release_notes(releases, current_version=APP_VERSION):
+    sections = []
+    for release in releases:
+        version = normalize_version(release.get("tag_name"))
+        if not version or not is_release_newer(version, current_version):
+            continue
+
+        published_at = format_release_date(str(release.get("published_at") or "").strip())
+        body = normalize_release_notes(release.get("body"))
+        sections.append(
+            "\n".join(
+                [
+                    f"# {_translate('Version')} {version}",
+                    f"{_translate('Published:')} {published_at}",
+                    "",
+                    body,
+                ]
+            ).strip()
+        )
+
+    if sections:
+        return "\n\n".join(sections)
+
+    latest_release = releases[0] if releases else {}
+    return normalize_release_notes(latest_release.get("body"))
+
+
 def normalize_release_notes(value):
     normalized = str(value or "").replace("\r\n", "\n").strip()
     if normalized:
         return normalized
-    return _("No release notes provided.")
+    return _translate("No release notes provided.")
 
 
 def format_release_date(value):
     if not value:
-        return _("Unknown")
+        return _translate("Unknown")
 
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -172,7 +223,7 @@ def format_release_date(value):
 
 def find_setup_asset(assets):
     if not isinstance(assets, list):
-        raise UpdateCheckError(_("No installer asset was found in the GitHub release."))
+        raise UpdateCheckError(_translate("No installer asset was found in the GitHub release."))
 
     prefix = f"{APP_INSTALLER_BASENAME}-"
     for asset in assets:
@@ -186,12 +237,12 @@ def find_setup_asset(assets):
         if download_url:
             return name, download_url
 
-    raise UpdateCheckError(_("No installer asset was found in the GitHub release."))
+    raise UpdateCheckError(_translate("No installer asset was found in the GitHub release."))
 
 
 def download_release_installer(release_info, progress_callback=None, timeout=HTTP_TIMEOUT_SECONDS):
     if not isinstance(release_info, ReleaseInfo):
-        raise UpdateDownloadError(_("Invalid update information."))
+        raise UpdateDownloadError(_translate("Invalid update information."))
 
     updates_dir = ensure_updates_dir()
     final_path = updates_dir / release_info.asset_name
@@ -223,14 +274,14 @@ def download_release_installer(release_info, progress_callback=None, timeout=HTT
         return final_path
     except error.HTTPError as exc:
         raise UpdateDownloadError(
-            _("The installer download failed with HTTP status {code}.").format(code=exc.code)
+            _translate("The installer download failed with HTTP status {code}.").format(code=exc.code)
         ) from exc
     except error.URLError as exc:
-        raise UpdateDownloadError(_("Unable to download the installer from GitHub.")) from exc
+        raise UpdateDownloadError(_translate("Unable to download the installer from GitHub.")) from exc
     except TimeoutError as exc:
-        raise UpdateDownloadError(_("The installer download timed out.")) from exc
+        raise UpdateDownloadError(_translate("The installer download timed out.")) from exc
     except OSError as exc:
-        raise UpdateDownloadError(_("Unable to save the downloaded installer.")) from exc
+        raise UpdateDownloadError(_translate("Unable to save the downloaded installer.")) from exc
     finally:
         if partial_path.exists():
             partial_path.unlink(missing_ok=True)
