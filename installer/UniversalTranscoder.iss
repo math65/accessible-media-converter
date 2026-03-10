@@ -2,7 +2,7 @@
   #define AppName "Accessible Media Converter"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.6.0"
+  #define AppVersion "1.6.1"
 #endif
 #ifndef AppDistDirName
   #define AppDistDirName "AccessibleMediaConverter"
@@ -11,7 +11,7 @@
   #define AppExeName "AccessibleMediaConverter.exe"
 #endif
 #ifndef AppOutputBaseFilename
-  #define AppOutputBaseFilename "AccessibleMediaConverter-Setup-1.6.0"
+  #define AppOutputBaseFilename "AccessibleMediaConverter-Setup-1.6.1"
 #endif
 #ifndef AppId
   #define AppId "{{7E285383-842B-4F3B-8455-DF3F9F74F4F7}"
