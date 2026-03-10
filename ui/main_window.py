@@ -147,7 +147,7 @@ class MainWindow(wx.Frame):
         self.item_clear = edit_menu.Append(wx.ID_ANY, _("&Clear List") + "\tAlt+C")
         self.item_remove = edit_menu.Append(wx.ID_ANY, _("Remove &Selected") + "\tDel")
         edit_menu.AppendSeparator()
-        item_prefs = edit_menu.Append(wx.ID_PREFERENCES, _("Preferences"))
+        item_prefs = edit_menu.Append(wx.ID_PREFERENCES, _("Preferences") + "\tCtrl+,")
 
         self.debug_menu = wx.Menu()
         self.item_debug_enable = self.debug_menu.Append(wx.ID_ANY, _("Enable &Debug"))
