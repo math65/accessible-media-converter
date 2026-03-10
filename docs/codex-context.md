@@ -4,7 +4,7 @@
 
 - Produit actuel : `Accessible Media Converter`
 - Nature : application desktop Windows de transcodage media basee sur `wxPython` et `FFmpeg`
-- Version repere : `1.6.1`
+- Version repere : `1.7.0`
 - Positionnement : accessibilite forte, usage clavier, conversion media reelle pour utilisateurs NVDA et grand public Windows
 - Usage principal de ce fichier : memoire de reprise pour agents IA, tout en restant lisible humainement
 
@@ -38,13 +38,13 @@ L'application est une base v1.x deja fonctionnelle, pas un prototype. Elle couvr
 - Le centre d'orchestration UI est tres concentre dans `ui/main_window.py`.
 - Il n'y a pas de tests automatises dans le depot.
 - La fiabilite repose surtout sur la lecture du code, les builds et les tests manuels.
-- L'i18n est en pratique pilotee par le francais ; `main.py` force actuellement `preferred_lang='fr'`.
+- L'i18n repose sur `gettext`, avec anglais source et preference utilisateur `auto | fr | en`.
 - Le packaging Windows et la chaine de release sont deja presents et actifs.
-- Le depot est actuellement `ahead 1` sur `origin/master`.
+- Le depot doit etre verifie avec `git status` avant toute reprise ou release ; ne pas supposer l'etat de `origin/master`.
 
 ## Chantier actif
 
-Le chantier actif a la date de cette mise a jour est l'**internationalisation FR/EN** de l'application et de la documentation locale.
+Le chantier actif a la date de cette mise a jour est la **preparation de la release 1.7.0** apres les evolutions de traduction FR/EN et d'affinage des reglages de conversion.
 
 Direction validee :
 
@@ -88,6 +88,6 @@ Si un fil plante ou si une nouvelle conversation reprend le travail :
 
 ## Derniere mise a jour
 
-- Date : `2026-03-10`
-- Sujet actif : internationalisation FR/EN de l'interface, preference de langue utilisateur et documentation locale bilingue
-- Prochaine etape attendue : verifier manuellement le choix `auto/fr/en`, la relance apres changement de langue et l'ouverture correcte de la documentation locale FR/EN
+- Date : `2026-03-11`
+- Sujet actif : publication de la version `1.7.0` avec i18n FR/EN, documentation bilingue et reglages de sortie affines
+- Prochaine etape attendue : pousser `master`, generer le setup Windows, puis publier la release GitHub `v1.7.0`
