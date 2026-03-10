@@ -132,4 +132,4 @@ Support contact address:
 
 Current public version in the repository metadata:
 
-- `1.4.0`
+- `1.5.0`

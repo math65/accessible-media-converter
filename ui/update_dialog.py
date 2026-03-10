@@ -1,7 +1,9 @@
 import logging
+import re
 import threading
 
 import wx
+import wx.richtext as rt
 
 from core.app_info import APP_NAME, APP_VERSION
 from core.updater import (
@@ -54,14 +56,15 @@ class UpdateDialog(wx.Dialog):
         root.Add(info_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         notes_box = wx.StaticBoxSizer(wx.VERTICAL, panel, _("Release Notes"))
-        self.txt_release_notes = wx.TextCtrl(
+        self.txt_release_notes = rt.RichTextCtrl(
             panel,
-            value=self.release_info.body,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_DONTWRAP,
+            style=wx.VSCROLL | wx.HSCROLL | wx.BORDER_THEME,
         )
         self.txt_release_notes.SetMinSize((-1, 320))
         self.txt_release_notes.SetName(_("Release Notes"))
         self.txt_release_notes.SetToolTip(_("Release notes for the selected update."))
+        self.txt_release_notes.SetEditable(False)
+        self.txt_release_notes.SetCaretPosition(0)
         notes_box.Add(self.txt_release_notes, 1, wx.EXPAND | wx.ALL, 8)
         root.Add(notes_box, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
@@ -104,6 +107,128 @@ class UpdateDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.on_open_release_page, self.btn_release_page)
         self.Bind(wx.EVT_BUTTON, self.on_close_button, self.btn_close)
         self.Bind(wx.EVT_CLOSE, self.on_close_window)
+        self._render_release_notes()
+
+    def _render_release_notes(self):
+        control = self.txt_release_notes
+        control.Freeze()
+        try:
+            control.Clear()
+            control.SetEditable(True)
+            self._write_markdown_document(self.release_info.body)
+            control.ShowPosition(0)
+        except Exception:
+            logging.exception("Unable to render release notes as rich text. Falling back to plain text.")
+            control.Clear()
+            control.WriteText(self.release_info.body)
+        finally:
+            control.SetEditable(False)
+            control.Thaw()
+
+    def _write_markdown_document(self, body):
+        lines = str(body or "").replace("\r\n", "\n").split("\n")
+        paragraph = []
+        wrote_anything = False
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                if paragraph:
+                    self._write_paragraph(" ".join(paragraph))
+                    paragraph = []
+                    wrote_anything = True
+                continue
+
+            heading_level = self._get_heading_level(stripped)
+            if heading_level:
+                if paragraph:
+                    self._write_paragraph(" ".join(paragraph))
+                    paragraph = []
+                    wrote_anything = True
+                self._write_heading(stripped[heading_level + 1 :].strip(), heading_level)
+                wrote_anything = True
+                continue
+
+            if self._is_bullet_line(stripped):
+                if paragraph:
+                    self._write_paragraph(" ".join(paragraph))
+                    paragraph = []
+                    wrote_anything = True
+                self._write_bullet(stripped[2:].strip())
+                wrote_anything = True
+                continue
+
+            paragraph.append(stripped)
+
+        if paragraph:
+            self._write_paragraph(" ".join(paragraph))
+            wrote_anything = True
+
+        if not wrote_anything:
+            self._write_paragraph("")
+
+    def _get_heading_level(self, line):
+        if line.startswith("## "):
+            return 2
+        if line.startswith("# "):
+            return 1
+        return 0
+
+    def _is_bullet_line(self, line):
+        return len(line) > 2 and line[:2] in {"- ", "* "}
+
+    def _write_heading(self, text, level):
+        font_size = 13 if level == 1 else 11
+        self.txt_release_notes.BeginBold()
+        self.txt_release_notes.BeginFontSize(font_size)
+        self._write_inline_markup(text)
+        self.txt_release_notes.EndFontSize()
+        self.txt_release_notes.EndBold()
+        self.txt_release_notes.Newline()
+        self.txt_release_notes.Newline()
+
+    def _write_bullet(self, text):
+        self.txt_release_notes.BeginLeftIndent(20, -10)
+        self.txt_release_notes.WriteText(u"\u2022 ")
+        self._write_inline_markup(text)
+        self.txt_release_notes.Newline()
+        self.txt_release_notes.EndLeftIndent()
+
+    def _write_paragraph(self, text):
+        self._write_inline_markup(text)
+        self.txt_release_notes.Newline()
+        self.txt_release_notes.Newline()
+
+    def _write_inline_markup(self, text):
+        pattern = re.compile(r"(\*\*.*?\*\*|\[.*?\]\(.*?\))")
+        last_end = 0
+        for match in pattern.finditer(text):
+            if match.start() > last_end:
+                self.txt_release_notes.WriteText(self._normalize_inline_text(text[last_end:match.start()]))
+
+            token = match.group(0)
+            if token.startswith("**") and token.endswith("**"):
+                self.txt_release_notes.BeginBold()
+                self.txt_release_notes.WriteText(self._normalize_inline_text(token[2:-2]))
+                self.txt_release_notes.EndBold()
+            elif token.startswith("[") and "](" in token and token.endswith(")"):
+                label, url = token[1:-1].split("](", 1)
+                self.txt_release_notes.BeginTextColour(wx.Colour(0, 102, 204))
+                self.txt_release_notes.BeginUnderline()
+                self.txt_release_notes.WriteText(self._normalize_inline_text(label))
+                self.txt_release_notes.EndUnderline()
+                self.txt_release_notes.EndTextColour()
+                self.txt_release_notes.WriteText(f" ({url})")
+            else:
+                self.txt_release_notes.WriteText(self._normalize_inline_text(token))
+
+            last_end = match.end()
+
+        if last_end < len(text):
+            self.txt_release_notes.WriteText(self._normalize_inline_text(text[last_end:]))
+
+    def _normalize_inline_text(self, text):
+        return str(text).replace("`", "")
 
     def _set_feedback(self, message, is_error=False):
         self.lbl_feedback.SetLabel(message)
