@@ -225,8 +225,11 @@ class MainWindow(wx.Frame):
         empty_sizer = wx.BoxSizer(wx.VERTICAL)
         self.lbl_empty = wx.StaticText(self.empty_panel, label=self.empty_msg)
         self.lbl_empty.SetFont(wx.Font(14, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        self.btn_add_files_empty = wx.Button(self.empty_panel, label=_("&Add Files..."))
+        self.btn_add_files_empty.Bind(wx.EVT_BUTTON, self.on_add_files)
         empty_sizer.AddStretchSpacer()
         empty_sizer.Add(self.lbl_empty, 0, wx.ALIGN_CENTER | wx.ALL, 20)
+        empty_sizer.Add(self.btn_add_files_empty, 0, wx.ALIGN_CENTER | wx.BOTTOM, 20)
         empty_sizer.AddStretchSpacer()
         self.empty_panel.SetSizer(empty_sizer)
         
@@ -245,7 +248,10 @@ class MainWindow(wx.Frame):
         self.panel_video_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
         
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
-        
+        controls_box.GetStaticBox().SetWindowStyle(
+            controls_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL
+        )
+
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         self.lbl_fmt = wx.StaticText(self.content_panel, label=_("Convert to:"))
         self.combo_format = wx.Choice(self.content_panel)
@@ -294,6 +300,8 @@ class MainWindow(wx.Frame):
         self.notebook.SetName(_("File categories"))
         self.empty_panel.SetName(_("Empty file list panel"))
         self.lbl_empty.SetName(_("No files selected information"))
+        self.btn_add_files_empty.SetName(_("Add files"))
+        self.btn_add_files_empty.SetToolTip(_("Open a file browser to add media files."))
 
         self.lbl_fmt.SetName(_("Convert to"))
         self.combo_format.SetName(_("Convert to"))
@@ -1002,8 +1010,13 @@ class MainWindow(wx.Frame):
             self.item_select_all.Enable(False)
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
+            self.combo_format.Enable(False)
+            self.btn_settings.Enable(False)
             self._update_debug_menu_state()
             return
+
+        self.combo_format.Enable(True)
+        self.btn_settings.Enable(True)
 
         if has_files:
             self.empty_panel.Hide()
@@ -1027,7 +1040,7 @@ class MainWindow(wx.Frame):
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
             self.btn_merge.Enable(False)
-            wx.CallAfter(self.lbl_empty.SetFocus)
+            wx.CallAfter(self.btn_add_files_empty.SetFocus)
             self._set_status(_("No files loaded."))
         self.panel.Layout()
         self.Refresh()
@@ -1380,7 +1393,11 @@ class MainWindow(wx.Frame):
     def _format_batch_job_status(self, payload):
         state = payload.get('state')
         if state == JOB_STATE_RUNNING:
-            return f"{_('Converting...')} {payload.get('progress', 0)}%"
+            status = f"{_('Converting...')} {payload.get('progress', 0)}%"
+            eta = self._format_eta(payload.get('eta_seconds'))
+            if eta:
+                status += " — " + _("{eta} remaining").format(eta=eta)
+            return status
         if state == JOB_STATE_QUEUED:
             return _("Queued")
         if state == JOB_STATE_DONE:
@@ -1397,6 +1414,19 @@ class MainWindow(wx.Frame):
             return _("Skipped")
         return _("Ready")
 
+    @staticmethod
+    def _format_eta(seconds):
+        if seconds is None or seconds < 0:
+            return None
+        seconds = int(seconds)
+        if seconds < 60:
+            return f"{seconds}s"
+        m, s = divmod(seconds, 60)
+        if m < 60:
+            return f"{m}m {s:02d}s"
+        h, m = divmod(m, 60)
+        return f"{h}h {m:02d}m"
+
     def _format_batch_progress_label(self, summary):
         template = _(
             "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error"
@@ -1405,7 +1435,7 @@ class MainWindow(wx.Frame):
             template = _(
                 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} skipped / {error} error / {stopped} stopped"
             )
-        return template.format(
+        label = template.format(
             progress=summary.get('overall_progress', 0),
             running=summary.get('running', 0),
             queued=summary.get('queued', 0),
@@ -1414,6 +1444,10 @@ class MainWindow(wx.Frame):
             error=summary.get('error', 0),
             stopped=summary.get('stopped', 0),
         )
+        eta = self._format_eta(summary.get('eta_seconds'))
+        if eta:
+            label += " — " + _("{eta} remaining").format(eta=eta)
+        return label
 
     def _on_batch_job_update(self, payload):
         if not self._current_batch_list_ctrl:
@@ -1428,6 +1462,8 @@ class MainWindow(wx.Frame):
         self.gauge.SetValue(progress_value)
         progress_label = self._format_batch_progress_label(summary)
         self.lbl_progress.SetLabel(progress_label)
+        self.lbl_progress.Wrap(-1)
+        self.content_panel.Layout()
         self._set_status(progress_label)
 
     def _open_batch_output_folder_if_needed(self, summary):

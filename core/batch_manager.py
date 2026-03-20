@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 
@@ -61,6 +62,8 @@ class BatchConversionManager:
         self._active_tasks = {}
         self._controller_thread = None
         self._abort_new_jobs = False
+
+        self._start_time = None
 
         self.jobs = self._prepare_jobs()
         self.primary_output_dir = self._resolve_primary_output_dir()
@@ -135,6 +138,7 @@ class BatchConversionManager:
         return None
 
     def _run(self):
+        self._start_time = time.monotonic()
         runnable_jobs = [job for job in self.jobs if job.output_path]
         for job in self.jobs:
             self._emit_job_update(job)
@@ -226,8 +230,9 @@ class BatchConversionManager:
             if job.state != JOB_STATE_RUNNING:
                 return
             job.progress = progress
-            event = self._build_job_event(job)
             summary = self._build_summary()
+            event = self._build_job_event(job)
+            event['eta_seconds'] = summary.get('eta_seconds')
 
         self._dispatch_job_update(event)
         self._dispatch_batch_update(summary)
@@ -312,6 +317,14 @@ class BatchConversionManager:
         if total_weight > 0:
             overall_progress = int(accumulated_progress / total_weight)
 
+        eta_seconds = None
+        if self._start_time is not None and overall_progress >= 5:
+            elapsed = time.monotonic() - self._start_time
+            if elapsed >= 2.0:
+                computed = int(elapsed * (100 - overall_progress) / overall_progress)
+                if computed > 0:
+                    eta_seconds = computed
+
         return {
             "total": len(self.jobs),
             "queued": counts[JOB_STATE_QUEUED],
@@ -321,6 +334,7 @@ class BatchConversionManager:
             "error": counts[JOB_STATE_ERROR],
             "stopped": counts[JOB_STATE_STOPPED],
             "overall_progress": max(0, min(overall_progress, 100)),
+            "eta_seconds": eta_seconds,
             "primary_output_dir": self.primary_output_dir,
             "stopped_output_paths": stopped_output_paths,
         }
