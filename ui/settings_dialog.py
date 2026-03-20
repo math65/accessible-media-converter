@@ -78,9 +78,11 @@ class SettingsDialog(wx.Dialog):
         self._load_from_settings()
         self._update_visibility()
         self._set_accessibility_metadata()
+        wx.CallAfter(self._focus_primary_audio_control)
 
     def _build_audio_section(self):
         audio_box = wx.StaticBox(self, label=_("Audio Settings"))
+        audio_box.SetWindowStyle(audio_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         audio_sizer = wx.StaticBoxSizer(audio_box, wx.VERTICAL)
 
         row_mode = wx.BoxSizer(wx.HORIZONTAL)
@@ -181,6 +183,7 @@ class SettingsDialog(wx.Dialog):
 
     def _build_video_section(self):
         video_box = wx.StaticBox(self, label=_("Video Settings"))
+        video_box.SetWindowStyle(video_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         video_sizer = wx.StaticBoxSizer(video_box, wx.VERTICAL)
 
         row_vmode = wx.BoxSizer(wx.HORIZONTAL)

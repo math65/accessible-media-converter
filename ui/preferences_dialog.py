@@ -44,6 +44,7 @@ class PreferencesDialog(wx.Dialog):
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         language_box = wx.StaticBox(panel, label=_("Language"))
+        language_box.SetWindowStyle(language_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         language_sizer = wx.StaticBoxSizer(language_box, wx.VERTICAL)
 
         language_row = wx.BoxSizer(wx.HORIZONTAL)
@@ -63,6 +64,7 @@ class PreferencesDialog(wx.Dialog):
         language_sizer.Add(language_row, 0, wx.ALL, 5)
 
         output_box = wx.StaticBox(panel, label=_("Output"))
+        output_box.SetWindowStyle(output_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         output_sizer = wx.StaticBoxSizer(output_box, wx.VERTICAL)
 
         self.rb_source = wx.RadioButton(panel, label=_("Same as source file"), style=wx.RB_GROUP)
@@ -110,6 +112,7 @@ class PreferencesDialog(wx.Dialog):
         output_sizer.Add(self.chk_open_output_folder, 0, wx.ALL, 5)
 
         execution_box = wx.StaticBox(panel, label=_("Execution"))
+        execution_box.SetWindowStyle(execution_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         execution_sizer = wx.StaticBoxSizer(execution_box, wx.VERTICAL)
 
         jobs_row = wx.BoxSizer(wx.HORIZONTAL)

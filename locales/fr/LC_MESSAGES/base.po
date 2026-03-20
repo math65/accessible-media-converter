@@ -131,7 +131,7 @@ msgstr ""
 
 #: ui/support_dialog.py:129
 msgid "Support details"
-msgstr "Détails du support"
+msgstr "Détails du rapport"
 
 #: ui/support_dialog.py:156 ui/support_dialog.py:162
 msgid "Report preview"
@@ -294,11 +294,11 @@ msgstr "Télécharger l'installateur et lancer la mise à jour."
 
 #: ui/update_dialog.py:87 ui/update_dialog.py:88
 msgid "Open Release Page"
-msgstr "Ouvrir la page de la release"
+msgstr "Ouvrir la page de la version"
 
 #: ui/update_dialog.py:89
 msgid "Open the GitHub release page in your browser."
-msgstr "Ouvrir la page GitHub de la release dans votre navigateur."
+msgstr "Ouvrir la page de la version sur GitHub."
 
 #: ui/update_dialog.py:165 ui/update_dialog.py:179
 msgid "Downloading update..."
@@ -342,7 +342,7 @@ msgstr "Erreur inattendue pendant le téléchargement de la mise à jour."
 
 #: ui/update_dialog.py:254
 msgid "Unable to open the release page."
-msgstr "Impossible d'ouvrir la page de la release."
+msgstr "Impossible d'ouvrir la page de la version."
 
 #: ui/update_dialog.py:268
 msgid "Please wait for the update download to finish."
@@ -367,7 +367,7 @@ msgstr "GitHub a renvoyé une réponse de mise à jour invalide."
 
 #: core/updater.py:158
 msgid "The GitHub release does not define a valid version tag."
-msgstr "La release GitHub ne définit pas de tag de version valide."
+msgstr "La version GitHub ne définit pas de tag valide."
 
 #: core/updater.py:233 core/updater.py:236
 msgid "No release notes provided."
@@ -379,7 +379,7 @@ msgstr "Inconnu"
 
 #: core/updater.py:252 core/updater.py:264
 msgid "No installer asset was found in the GitHub release."
-msgstr "Aucun installateur n'a été trouvé dans la release GitHub."
+msgstr "Aucun installateur n'a été trouvé dans la version GitHub."
 
 #: core/updater.py:269
 msgid "Invalid update information."
@@ -562,11 +562,11 @@ msgstr "Catégories de fichiers"
 
 #: ui/main_window.py:301
 msgid "Empty file list panel"
-msgstr "Panneau de liste vide"
+msgstr "Panneau vide"
 
 #: ui/main_window.py:302
 msgid "No files selected information"
-msgstr "Information : aucun fichier sélectionné"
+msgstr "Aucun fichier chargé"
 
 # --- ONGLETS ---
 #: core/support.py:287 ui/main_window.py:953
@@ -720,7 +720,7 @@ msgstr "Prêt (+piste audio)"
 
 #: ui/main_window.py:312
 msgid "Conversion progress percentage"
-msgstr "Pourcentage d'avancement de la conversion"
+msgstr "Progression de la conversion"
 
 #: ui/main_window.py:313
 msgid "Shows conversion progress from 0 to 100 percent."
@@ -728,7 +728,7 @@ msgstr "Affiche la progression de la conversion de 0 à 100 %."
 
 #: ui/main_window.py:314
 msgid "Conversion progress details"
-msgstr "Détails d'avancement de la conversion"
+msgstr "Détails de la conversion"
 
 #: ui/main_window.py:1247
 msgid "Preparing conversion..."
@@ -984,7 +984,7 @@ msgstr "Configurer les réglages de : "
 
 #: ui/settings_dialog.py:502
 msgid "Format settings dialog"
-msgstr "Boîte de dialogue des réglages du format"
+msgstr "Réglages du format"
 
 #: ui/settings_dialog.py:83
 msgid "Audio Settings"
@@ -1008,11 +1008,11 @@ msgstr "Copie du flux (avancé)"
 
 #: ui/settings_dialog.py:506
 msgid "Audio mode re-encode"
-msgstr "Mode audio réencodage"
+msgstr "Réencodage audio"
 
 #: ui/settings_dialog.py:507
 msgid "Audio mode copy stream"
-msgstr "Mode audio copie du flux"
+msgstr "Copie du flux audio"
 
 #: ui/settings_dialog.py:508
 msgid "Re-encode audio with detailed settings."
@@ -1032,7 +1032,7 @@ msgstr ""
 
 #: ui/settings_dialog.py:533
 msgid "Copy mode warning"
-msgstr "Avertissement du mode copie"
+msgstr "Avertissement"
 
 #: ui/settings_dialog.py:117
 msgid "Sample Rate:"
@@ -1044,7 +1044,7 @@ msgstr "Fréquence d'échantillonnage"
 
 #: ui/settings_dialog.py:524
 msgid "Target sample rate."
-msgstr "Fréquence d'échantillonnage cible."
+msgstr "Fréquence d'échantillonnage de sortie."
 
 #: ui/settings_dialog.py:123
 msgid "Channels:"
@@ -1056,7 +1056,7 @@ msgstr "Canaux"
 
 #: ui/settings_dialog.py:525
 msgid "Target channel layout."
-msgstr "Disposition des canaux cible."
+msgstr "Configuration des canaux de sortie."
 
 #: ui/settings_dialog.py:122
 msgid "Stereo (Downmix)"
@@ -1236,15 +1236,15 @@ msgstr "Codec audio"
 
 #: ui/settings_dialog.py:513
 msgid "Choose the audio codec used for the container output."
-msgstr "Choisissez le codec audio utilisé pour la sortie conteneur."
+msgstr "Choisissez le codec audio utilisé pour le fichier de sortie."
 
 #: ui/settings_dialog.py:537
 msgid "Video mode re-encode"
-msgstr "Mode vidéo réencodage"
+msgstr "Réencodage vidéo"
 
 #: ui/settings_dialog.py:538
 msgid "Video mode copy stream"
-msgstr "Mode vidéo copie du flux"
+msgstr "Copie du flux vidéo"
 
 #: ui/settings_dialog.py:197
 msgid "Video Preset:"
@@ -1331,7 +1331,7 @@ msgstr "Personnalisé"
 # --- FENÊTRE DE PRÉFÉRENCES ---
 #: ui/preferences_dialog.py:22
 msgid "Preferences dialog"
-msgstr "Boîte de dialogue des préférences"
+msgstr "Préférences"
 
 #: ui/preferences_dialog.py:68
 msgid "Same as source file"
@@ -1392,7 +1392,7 @@ msgstr "Gestionnaire de pistes"
 
 #: ui/track_manager.py:395
 msgid "Track manager dialog"
-msgstr "Boîte de dialogue du gestionnaire de pistes"
+msgstr "Gestionnaire de pistes"
 
 #: ui/track_manager.py:399
 msgid "Track categories"
@@ -1426,7 +1426,7 @@ msgstr ""
 
 #: ui/track_manager.py:411
 msgid "Keyboard shortcuts hint"
-msgstr "Aide des raccourcis clavier"
+msgstr "Raccourcis clavier"
 
 #: ui/track_manager.py:146
 msgid ""
@@ -1657,7 +1657,7 @@ msgstr "Appliquer"
 
 #: ui/track_manager.py:416
 msgid "Apply track settings"
-msgstr "Appliquer les réglages des pistes"
+msgstr "Valider les réglages de piste"
 
 #: ui/preferences_dialog.py:167 ui/settings_dialog.py:229
 #: ui/support_dialog.py:186 ui/support_dialog.py:187 ui/track_manager.py:415
@@ -1667,11 +1667,11 @@ msgstr "Annuler"
 
 #: ui/track_manager.py:417
 msgid "Cancel track settings"
-msgstr "Annuler les réglages des pistes"
+msgstr "Annuler les réglages de piste"
 
 #: ui/track_manager.py:451
 msgid "Audio extract track dialog"
-msgstr "Boîte de dialogue de choix de la piste audio"
+msgstr "Choix de la piste audio"
 
 #: ui/track_manager.py:457
 msgid "Select the audio track to extract. Only one track can be kept."
@@ -1688,11 +1688,11 @@ msgstr "Sélectionnez l'unique piste audio à extraire."
 
 #: ui/track_manager.py:475
 msgid "Apply audio extraction track"
-msgstr "Appliquer la piste audio d'extraction"
+msgstr "Valider la piste audio à extraire"
 
 #: ui/track_manager.py:476
 msgid "Cancel audio extraction track"
-msgstr "Annuler le choix de la piste audio d'extraction"
+msgstr "Annuler le choix de piste audio"
 
 #: ui/main_window.py:884
 msgid "Audio extraction track selected: {track}"
@@ -1874,7 +1874,7 @@ msgstr "Problème de conversion"
 
 #: core/support.py:28
 msgid "Application crash"
-msgstr "Crash de l'application"
+msgstr "Plantage de l'application"
 
 #: core/support.py:29
 msgid "Update problem"

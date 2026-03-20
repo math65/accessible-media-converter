@@ -55,6 +55,7 @@ class UpdateDialog(wx.Dialog):
         root.Add(info_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         notes_box = wx.StaticBoxSizer(wx.VERTICAL, panel, _("Release Notes"))
+        notes_box.GetStaticBox().SetWindowStyle(notes_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_release_notes = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.VSCROLL | wx.HSCROLL,
@@ -153,6 +154,7 @@ class UpdateDialog(wx.Dialog):
         )
         self.lbl_feedback.Show()
         self.Layout()
+        wx.CallAfter(self.lbl_feedback.SetFocus)
 
     def _set_download_state(self, downloading):
         self._download_in_progress = downloading
@@ -179,6 +181,7 @@ class UpdateDialog(wx.Dialog):
             status = _("Downloading update...")
 
         self.lbl_download_status.SetLabel(status)
+        self.lbl_download_status.SetName(status)
         self.Layout()
 
     def _on_download_success(self, installer_path):

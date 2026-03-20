@@ -76,6 +76,7 @@ class SupportContactDialog(wx.Dialog):
         root.Add(form_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         message_box = wx.StaticBoxSizer(wx.VERTICAL, panel, _("Describe your issue"))
+        message_box.GetStaticBox().SetWindowStyle(message_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_user_message = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
         self.txt_user_message.SetMinSize((-1, 180))
         self.txt_user_message.SetName(_("Describe your issue"))
@@ -102,6 +103,7 @@ class SupportContactDialog(wx.Dialog):
 
         self.technical_panel = wx.Panel(panel)
         technical_sizer = wx.StaticBoxSizer(wx.VERTICAL, self.technical_panel, _("Technical information"))
+        technical_sizer.GetStaticBox().SetWindowStyle(technical_sizer.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_technical_info = wx.TextCtrl(
             self.technical_panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
@@ -127,6 +129,7 @@ class SupportContactDialog(wx.Dialog):
         fallback_root.Add(fallback_intro, 0, wx.EXPAND | wx.ALL, 8)
 
         details_box = wx.StaticBoxSizer(wx.VERTICAL, self.fallback_panel, _("Support details"))
+        details_box.GetStaticBox().SetWindowStyle(details_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         details_grid = wx.FlexGridSizer(cols=3, vgap=8, hgap=8)
         details_grid.AddGrowableCol(1, 1)
 
@@ -154,6 +157,7 @@ class SupportContactDialog(wx.Dialog):
         fallback_root.Add(details_box, 0, wx.EXPAND | wx.BOTTOM, 8)
 
         report_box = wx.StaticBoxSizer(wx.VERTICAL, self.fallback_panel, _("Report preview"))
+        report_box.GetStaticBox().SetWindowStyle(report_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_report_preview = wx.TextCtrl(
             self.fallback_panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
@@ -241,6 +245,7 @@ class SupportContactDialog(wx.Dialog):
         )
         self.lbl_feedback.Show()
         self.Layout()
+        wx.CallAfter(self.lbl_feedback.SetFocus)
 
     def _set_send_state(self, sending):
         self._send_in_progress = sending

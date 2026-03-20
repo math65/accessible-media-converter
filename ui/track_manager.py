@@ -163,6 +163,7 @@ class TrackPanel(wx.Panel):
         self.main_sizer.Add(btn_box, 0, wx.ALIGN_CENTER | wx.BOTTOM, 10)
 
         self.detail_box = wx.StaticBox(self, label=_("Track Settings"))
+        self.detail_box.SetWindowStyle(self.detail_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.detail_sizer = wx.StaticBoxSizer(self.detail_box, wx.VERTICAL)
 
         grid = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
