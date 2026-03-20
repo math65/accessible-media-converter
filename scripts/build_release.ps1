@@ -231,7 +231,7 @@ $($notesEn.Trim())
 $($notesFr.Trim())
 <!-- AMC-RELEASE-NOTES:fr:end -->
 "@
-        Set-Content -LiteralPath $notesCombinedPath -Value $combined -Encoding UTF8
+        [System.IO.File]::WriteAllText($notesCombinedPath, $combined, [System.Text.UTF8Encoding]::new($false))
         Write-Host "Combined release notes written: $notesCombinedPath"
     } elseif (Test-Path -LiteralPath (Join-Path $ProjectRoot "release-notes\v$version.md")) {
         Copy-Item -LiteralPath (Join-Path $ProjectRoot "release-notes\v$version.md") -Destination $notesCombinedPath
