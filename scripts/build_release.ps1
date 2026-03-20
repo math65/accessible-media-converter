@@ -226,7 +226,7 @@ print(output_path)
 $($notesEn.Trim())
 <!-- AMC-RELEASE-NOTES:en:end -->
 
-## Français
+## Fran$([char]231)ais
 <!-- AMC-RELEASE-NOTES:fr:start -->
 $($notesFr.Trim())
 <!-- AMC-RELEASE-NOTES:fr:end -->
