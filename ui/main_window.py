@@ -40,7 +40,7 @@ from core.formatting import (
     normalize_settings_store,
 )
 from core.merge import MergeTask
-from core.i18n import AUTO_LANGUAGE_CODE, normalize_ui_language
+from core.i18n import AUTO_LANGUAGE_CODE, get_current_language_code, normalize_ui_language
 from core.updater import (
     UpdateCheckError,
     clear_updater_state,
@@ -590,7 +590,7 @@ class MainWindow(wx.Frame):
         release_info = None
         error_message = None
         try:
-            release_info = fetch_latest_release()
+            release_info = fetch_latest_release(lang=get_current_language_code())
         except UpdateCheckError as exc:
             error_message = str(exc)
         except Exception:

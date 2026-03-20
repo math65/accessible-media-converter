@@ -75,13 +75,13 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 
 1. Verify `git status` is clean.
 2. Bump version in `core/app_info.py` and `installer/UniversalTranscoder.iss`.
-3. Create `release-notes/vX.Y.Z.md`.
-4. Run `scripts/build_release.ps1`.
+3. Create `release-notes/vX.Y.Z.en.md` and `release-notes/vX.Y.Z.fr.md`.
+4. Run `scripts/build_release.ps1` — generates `dist\release-notes.md` automatically.
 5. Verify embedded FFmpeg version in `dist\AccessibleMediaConverter\_internal\bin\ffmpeg.exe`.
 6. Commit, push, publish GitHub release with the single installer asset.
 
 ```powershell
-gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y.Z" --notes-file .\release-notes\vX.Y.Z.md
+gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y.Z" --notes-file .\dist\release-notes.md
 ```
 
 ## Upcoming: v1.8.0

@@ -1,6 +1,7 @@
 import builtins
 import json
 import os
+import re
 import subprocess
 import webbrowser
 from dataclasses import dataclass
@@ -21,6 +22,11 @@ UPDATES_DIRNAME = "updates"
 UPDATER_STATE_FILENAME = "updater-state.json"
 HTTP_TIMEOUT_SECONDS = 10
 DOWNLOAD_CHUNK_SIZE = 1024 * 256
+
+_NOTES_MARKER_RE = re.compile(
+    r'<!--\s*AMC-RELEASE-NOTES:([a-z]{2}):start\s*-->(.+?)<!--\s*AMC-RELEASE-NOTES:\1:end\s*-->',
+    re.DOTALL,
+)
 
 
 class UpdaterError(Exception):
@@ -111,7 +117,7 @@ def is_release_newer(remote_version, current_version=APP_VERSION):
     return parse_version_tuple(remote_version) > parse_version_tuple(current_version)
 
 
-def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS):
+def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS, lang=None):
     headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": f"{APP_EXE_NAME}/{APP_VERSION}",
@@ -132,10 +138,10 @@ def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS):
     except json.JSONDecodeError as exc:
         raise UpdateCheckError(_translate("GitHub returned an invalid update response.")) from exc
 
-    return parse_release_info(payload)
+    return parse_release_info(payload, lang=lang)
 
 
-def parse_release_info(payload):
+def parse_release_info(payload, lang=None):
     stable_releases = _extract_stable_releases(payload)
     if not stable_releases:
         raise UpdateCheckError(_translate("GitHub returned an invalid update response."))
@@ -144,7 +150,7 @@ def parse_release_info(payload):
     tag_name = str(latest_release.get("tag_name") or "").strip()
     version = normalize_version(tag_name)
     html_url = str(latest_release.get("html_url") or APP_GITHUB_RELEASES_PAGE).strip() or APP_GITHUB_RELEASES_PAGE
-    body = build_combined_release_notes(stable_releases)
+    body = build_combined_release_notes(stable_releases, lang=lang)
     published_at = str(latest_release.get("published_at") or "").strip()
     asset_name, asset_url = find_setup_asset(latest_release.get("assets"))
 
@@ -176,7 +182,7 @@ def _extract_stable_releases(payload):
     return stable_releases
 
 
-def build_combined_release_notes(releases, current_version=APP_VERSION):
+def build_combined_release_notes(releases, current_version=APP_VERSION, lang=None):
     sections = []
     for release in releases:
         version = normalize_version(release.get("tag_name"))
@@ -184,7 +190,7 @@ def build_combined_release_notes(releases, current_version=APP_VERSION):
             continue
 
         published_at = format_release_date(str(release.get("published_at") or "").strip())
-        body = normalize_release_notes(release.get("body"))
+        body = normalize_release_notes(release.get("body"), lang=lang)
         sections.append(
             "\n".join(
                 [
@@ -200,14 +206,34 @@ def build_combined_release_notes(releases, current_version=APP_VERSION):
         return "\n\n".join(sections)
 
     latest_release = releases[0] if releases else {}
-    return normalize_release_notes(latest_release.get("body"))
+    return normalize_release_notes(latest_release.get("body"), lang=lang)
 
 
-def normalize_release_notes(value):
+def extract_language_notes(body, lang):
+    """Extract notes for a specific language from a bilingual release body.
+
+    Falls back: requested lang -> 'en' -> 'fr' -> full body if no markers found.
+    """
+    normalized = str(body or "").replace("\r\n", "\n")
+    matches = {m.group(1): m.group(2).strip() for m in _NOTES_MARKER_RE.finditer(normalized)}
+
+    if not matches:
+        return normalized.strip()
+
+    for candidate in [lang, "en", "fr"]:
+        if candidate and candidate in matches:
+            return matches[candidate]
+
+    return normalized.strip()
+
+
+def normalize_release_notes(value, lang=None):
     normalized = str(value or "").replace("\r\n", "\n").strip()
-    if normalized:
-        return normalized
-    return _translate("No release notes provided.")
+    if not normalized:
+        return _translate("No release notes provided.")
+    if lang:
+        normalized = extract_language_notes(normalized, lang)
+    return normalized or _translate("No release notes provided.")
 
 
 def format_release_date(value):

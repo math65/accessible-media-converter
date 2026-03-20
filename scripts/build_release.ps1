@@ -211,6 +211,34 @@ print(output_path)
     $installerPath = Join-Path $DistDir $metadata.APP_INSTALLER_FILENAME
     Assert-FileExists -Path $installerPath -Label "Built installer"
     Write-Host "Installer built: $installerPath"
+
+    $version = $metadata.APP_VERSION
+    $notesEnPath = Join-Path $ProjectRoot "release-notes\v$version.en.md"
+    $notesFrPath = Join-Path $ProjectRoot "release-notes\v$version.fr.md"
+    $notesCombinedPath = Join-Path $DistDir "release-notes.md"
+
+    if ((Test-Path -LiteralPath $notesEnPath) -and (Test-Path -LiteralPath $notesFrPath)) {
+        $notesEn = Get-Content -LiteralPath $notesEnPath -Raw -Encoding UTF8
+        $notesFr = Get-Content -LiteralPath $notesFrPath -Raw -Encoding UTF8
+        $combined = @"
+## English
+<!-- AMC-RELEASE-NOTES:en:start -->
+$($notesEn.Trim())
+<!-- AMC-RELEASE-NOTES:en:end -->
+
+## Français
+<!-- AMC-RELEASE-NOTES:fr:start -->
+$($notesFr.Trim())
+<!-- AMC-RELEASE-NOTES:fr:end -->
+"@
+        Set-Content -LiteralPath $notesCombinedPath -Value $combined -Encoding UTF8
+        Write-Host "Combined release notes written: $notesCombinedPath"
+    } elseif (Test-Path -LiteralPath (Join-Path $ProjectRoot "release-notes\v$version.md")) {
+        Copy-Item -LiteralPath (Join-Path $ProjectRoot "release-notes\v$version.md") -Destination $notesCombinedPath
+        Write-Host "Release notes copied: $notesCombinedPath"
+    } else {
+        Write-Warning "No release notes found for v$version. Expected release-notes\v$version.en.md + .fr.md or release-notes\v$version.md"
+    }
 }
 finally {
     Pop-Location
