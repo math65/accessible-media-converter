@@ -68,7 +68,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 
 - `bin/ffmpeg.exe` and `bin/ffprobe.exe` are git-tracked despite appearing in `.gitignore`. GitHub will warn on push due to their size.
 - Updating `bin/` does **not** update `dist/`. Always rebuild after an FFmpeg update before publishing.
-- The updater in `core/updater.py` currently has a legacy fallback to `AccessibleMediaConverter-Setup-<version>.exe`. This is intentional until v1.8.0 removes it.
+- The updater in `core/updater.py` only accepts the exact asset `AccessibleMediaConverter-Setup.exe`. The legacy fallback to versioned asset names was removed in v1.8.0.
 - The FFmpeg update script reads the full release list from `GyanD/codexffmpeg` instead of `releases/latest`, because `latest` may not be the most recent build.
 
 ## Release workflow
@@ -78,11 +78,10 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 3. Create `release-notes/vX.Y.Z.md`.
 4. Run `scripts/build_release.ps1`.
 5. Verify embedded FFmpeg version in `dist\AccessibleMediaConverter\_internal\bin\ffmpeg.exe`.
-6. Until v1.8.0: duplicate installer as `AccessibleMediaConverter-Setup-X.Y.Z.exe`.
-7. Commit, push, publish GitHub release with both assets.
+6. Commit, push, publish GitHub release with the single installer asset.
 
 ```powershell
-gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe .\dist\AccessibleMediaConverter-Setup-X.Y.Z.exe --title "vX.Y.Z" --notes-file .\release-notes\vX.Y.Z.md
+gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y.Z" --notes-file .\release-notes\vX.Y.Z.md
 ```
 
 ## Upcoming: v1.8.0
