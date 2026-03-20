@@ -30,6 +30,7 @@ from core.debug_session import (
     update_debug_flags,
 )
 from core.documentation import open_documentation
+from core.conversion import get_output_extension
 from core.formatting import (
     AUDIO_OUTPUT_FORMAT_KEYS,
     VIDEO_CONTAINER_FORMAT_KEYS,
@@ -38,6 +39,7 @@ from core.formatting import (
     build_format_label,
     normalize_settings_store,
 )
+from core.merge import MergeTask
 from core.i18n import AUTO_LANGUAGE_CODE, normalize_ui_language
 from core.updater import (
     UpdateCheckError,
@@ -101,6 +103,7 @@ class MainWindow(wx.Frame):
         self._pending_close_after_stop = False
         self.batch_manager = None
         self._current_batch_list_ctrl = None
+        self._merge_task = None
         
         self.prober = FileProber()
         self.audio_data = [] 
@@ -262,17 +265,21 @@ class MainWindow(wx.Frame):
         controls_box.Add(self.lbl_progress, 0, wx.EXPAND | wx.TOP, 5)
         self.lbl_progress.Hide()
         
-        self.btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_sizer = wx.BoxSizer(wx.VERTICAL)
         self.btn_convert = wx.Button(self.content_panel, label=_("&Start Conversion"))
         self.btn_convert.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
+        self.btn_merge = wx.Button(self.content_panel, label=_("&Merge Files"))
+        self.btn_merge.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        self.btn_merge.Bind(wx.EVT_BUTTON, self.on_merge)
         self.btn_stop = wx.Button(self.content_panel, label=_("Stop"))
         self.btn_stop.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_stop.SetForegroundColour(wx.Colour(200, 0, 0))
         self.btn_stop.Bind(wx.EVT_BUTTON, self.on_stop)
         self.btn_stop.Hide()
-        self.btn_sizer.Add(self.btn_convert, 1, wx.EXPAND)
-        self.btn_sizer.Add(self.btn_stop, 1, wx.EXPAND)
+        self.btn_sizer.Add(self.btn_convert, 0, wx.EXPAND)
+        self.btn_sizer.Add(self.btn_merge, 0, wx.EXPAND | wx.TOP, 5)
+        self.btn_sizer.Add(self.btn_stop, 0, wx.EXPAND)
         
         controls_box.Add(self.btn_sizer, 0, wx.EXPAND | wx.TOP, 10)
         
@@ -299,6 +306,7 @@ class MainWindow(wx.Frame):
         self.lbl_progress.SetName(_("Conversion progress details"))
 
         self.btn_convert.SetName(_("Start conversion"))
+        self.btn_merge.SetName(_("Merge files"))
         self.btn_stop.SetName(_("Stop conversion"))
 
     def _update_combo_format_accessible_name(self):
@@ -1004,6 +1012,8 @@ class MainWindow(wx.Frame):
             self.item_select_all.Enable(True)
             self.item_clear.Enable(True)
             self.item_remove.Enable(True)
+            _lc, active_data = self._get_current_media_collection()
+            self.btn_merge.Enable(len(active_data) >= 2)
             self._set_status(
                 _("{audio_count} audio file(s), {video_count} video file(s) loaded.").format(
                     audio_count=len(self.audio_data),
@@ -1016,7 +1026,8 @@ class MainWindow(wx.Frame):
             self.item_select_all.Enable(False)
             self.item_clear.Enable(False)
             self.item_remove.Enable(False)
-            wx.CallAfter(self.empty_panel.SetFocus)
+            self.btn_merge.Enable(False)
+            wx.CallAfter(self.lbl_empty.SetFocus)
             self._set_status(_("No files loaded."))
         self.panel.Layout()
         self.Refresh()
@@ -1152,6 +1163,8 @@ class MainWindow(wx.Frame):
         self.stop_requested = True
         if self.batch_manager:
             self.batch_manager.stop()
+        if self._merge_task:
+            self._merge_task.stop()
         self._set_status(_("Stop requested."))
 
     def on_close_window(self, event):
@@ -1169,6 +1182,8 @@ class MainWindow(wx.Frame):
                 self.stop_requested = True
                 if self.batch_manager:
                     self.batch_manager.stop()
+                if self._merge_task:
+                    self._merge_task.stop()
                 event.Veto()
             else:
                 event.Veto()
@@ -1209,10 +1224,11 @@ class MainWindow(wx.Frame):
         self._current_batch_list_ctrl = lst
         
         self.btn_convert.Hide()
+        self.btn_merge.Hide()
         self.btn_stop.Show()
         self.btn_stop.Enable(True)
         self.btn_stop.SetLabel(_("Stop"))
-        
+
         self.gauge.SetValue(0)
         self.gauge.Show()
         self.lbl_progress.SetLabel(_("Preparing conversion..."))
@@ -1235,6 +1251,131 @@ class MainWindow(wx.Frame):
             on_batch_complete=lambda payload: wx.CallAfter(self._on_batch_complete, payload),
         )
         self.batch_manager.start()
+
+    def on_merge(self, event):
+        if self.current_tab == 'audio':
+            data = self.audio_data
+        else:
+            data = self.video_data
+
+        if len(data) < 2:
+            wx.MessageBox(
+                _("At least 2 files are required to merge."),
+                _("Info"),
+                wx.ICON_INFORMATION,
+            )
+            return
+
+        idx = self.combo_format.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return
+        fmt_key = self.current_fmt_keys_active[idx]
+        settings = dict(self.settings_store.get(fmt_key, {}))
+        settings['ffmpeg_threads'] = self.settings_store.get('ffmpeg_threads', 'auto')
+
+        output_mode = self.settings_store.get('output_mode', 'source')
+        if output_mode == 'source':
+            output_dir = os.path.dirname(data[0].full_path) or os.getcwd()
+        elif output_mode == 'custom':
+            output_dir = self.settings_store.get('custom_output_path', '')
+            if not output_dir or not os.path.exists(output_dir):
+                output_dir = os.path.dirname(data[0].full_path) or os.getcwd()
+        elif output_mode == 'ask':
+            with wx.DirDialog(self, _("Select Output Folder"), style=wx.DD_DEFAULT_STYLE) as dlg:
+                if dlg.ShowModal() == wx.ID_OK:
+                    output_dir = dlg.GetPath()
+                else:
+                    return
+        else:
+            output_dir = os.path.dirname(data[0].full_path) or os.getcwd()
+
+        ext = get_output_extension(fmt_key)
+        default_name = f"merged.{ext}"
+
+        with wx.FileDialog(
+            self,
+            _("Select Output File"),
+            defaultDir=output_dir,
+            defaultFile=default_name,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as dlg:
+            if dlg.ShowModal() == wx.ID_CANCEL:
+                return
+            output_path = dlg.GetPath()
+
+        self.is_converting = True
+        self.stop_requested = False
+
+        self.btn_convert.Hide()
+        self.btn_merge.Hide()
+        self.btn_stop.Show()
+        self.btn_stop.Enable(True)
+        self.btn_stop.SetLabel(_("Stop"))
+
+        self.gauge.SetValue(0)
+        self.gauge.Show()
+        self.lbl_progress.SetLabel(_("Merging files..."))
+        self.lbl_progress.Show()
+        self.content_panel.Layout()
+        self._set_status(_("Merging files..."))
+
+        self._update_ui_state()
+
+        self._merge_task = MergeTask(data, fmt_key, settings, output_path)
+
+        def _run():
+            success = True
+            error_msg = ""
+            try:
+                self._merge_task.run(
+                    progress_callback=lambda pct: wx.CallAfter(self._on_merge_progress, pct),
+                    stop_check_callback=lambda: self.stop_requested,
+                )
+            except Exception as exc:
+                success = False
+                error_msg = str(exc)
+            wx.CallAfter(self._on_merge_complete, success, error_msg)
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _on_merge_progress(self, percent):
+        self.gauge.SetValue(percent)
+        label = _("Merging files...") + f" {percent}%"
+        self.lbl_progress.SetLabel(label)
+        self._set_status(label)
+
+    def _on_merge_complete(self, success, error_msg):
+        should_close = self._pending_close_after_stop
+        self._pending_close_after_stop = False
+        self.is_converting = False
+        self.stop_requested = False
+        self._merge_task = None
+
+        self.btn_stop.Hide()
+        self.btn_convert.Show()
+        self.btn_merge.Show()
+        self.gauge.Hide()
+        self.lbl_progress.Hide()
+        self.content_panel.Layout()
+
+        self._update_ui_state()
+
+        if should_close:
+            self.Destroy()
+            return
+
+        if success:
+            wx.MessageBox(_("Merge complete."), _("Success"))
+            self._set_status(_("Merge complete."))
+        elif error_msg == "Stopped by user":
+            self._set_status(_("Stop requested."))
+        else:
+            wx.MessageBox(
+                _("Merge failed.") + (f"\n{error_msg}" if error_msg else ""),
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            self._set_status(_("Merge failed."))
 
     def _format_batch_job_status(self, payload):
         state = payload.get('state')
@@ -1391,10 +1532,11 @@ class MainWindow(wx.Frame):
         
         self.btn_stop.Hide()
         self.btn_convert.Show()
+        self.btn_merge.Show()
         self.gauge.Hide()
         self.lbl_progress.Hide()
         self.content_panel.Layout()
-        
+
         self._update_ui_state()
 
         if summary.get('user_stopped'):
