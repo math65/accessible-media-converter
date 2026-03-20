@@ -54,13 +54,13 @@ final class SupportReportHandler
                 return [429, $this->errorResponse('rate_limited', 'Trop de rapports ont été envoyés récemment. Veuillez réessayer plus tard.')];
             }
         } catch (Throwable) {
-            return [500, $this->errorResponse('server_error', 'Le rapport n’a pas pu être envoyé pour le moment.')];
+            return [500, $this->errorResponse('server_error', "Le rapport n'a pas pu être envoyé pour le moment.")];
         }
 
         try {
             $this->sendMail($payload);
         } catch (Throwable) {
-            return [500, $this->errorResponse('server_error', 'Le rapport n’a pas pu être envoyé pour le moment.')];
+            return [500, $this->errorResponse('server_error', "Le rapport n'a pas pu être envoyé pour le moment.")];
         }
 
         return [200, [
@@ -81,7 +81,7 @@ final class SupportReportHandler
             return 'Le formulaire de support est invalide.';
         }
         if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            return 'L’adresse email est invalide.';
+            return "L'adresse email est invalide.";
         }
         if (!array_key_exists($issueType, self::ISSUE_LABELS)) {
             return 'Le type de problème est invalide.';
@@ -107,6 +107,7 @@ final class SupportReportHandler
         $issueType = trim((string) $payload['issue_type']);
         $message = trim((string) $payload['message']);
         $technicalContext = is_array($payload['technical_context']) ? $payload['technical_context'] : [];
+        $debugLog = trim((string) ($payload['debug_log'] ?? ''));
 
         $mailer = new PHPMailer(true);
         $mailer->isSMTP();
@@ -125,6 +126,10 @@ final class SupportReportHandler
 
         $mailer->Subject = $this->buildSubject($issueType, $technicalContext);
         $mailer->Body = $this->buildBody($email, $issueType, $message, $technicalContext);
+
+        if ($debugLog !== '') {
+            $mailer->addStringAttachment($debugLog, 'debug.log', 'base64', 'text/plain');
+        }
 
         $mailer->send();
     }
@@ -148,9 +153,9 @@ final class SupportReportHandler
             $message,
             '',
             'Informations techniques :',
-            'Version de l’application : ' . $this->stringValue($technicalContext, 'app_version', 'inconnue'),
-            'Mode d’exécution : ' . $this->formatExecutionMode($technicalContext['execution_mode'] ?? 'source'),
-            'Système d’exploitation : ' . $this->stringValue($technicalContext, 'operating_system', 'inconnu'),
+            "Version de l'application : " . $this->stringValue($technicalContext, 'app_version', 'inconnue'),
+            "Mode d'exécution : " . $this->formatExecutionMode($technicalContext['execution_mode'] ?? 'source'),
+            "Système d'exploitation : " . $this->stringValue($technicalContext, 'operating_system', 'inconnu'),
             'Langue : ' . $this->stringValue($technicalContext, 'language', 'inconnue'),
             'Onglet courant : ' . $this->formatTab($technicalContext['current_tab'] ?? 'audio'),
             'Format de sortie sélectionné : ' . $this->stringValue($technicalContext, 'selected_output_format', 'non sélectionné'),

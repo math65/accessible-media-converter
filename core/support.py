@@ -11,20 +11,26 @@ from core.app_info import (
     APP_VERSION,
     SUPPORT_REPORT_API_URL,
 )
-from core.debug_session import get_debug_dir
+from core.debug_session import get_debug_dir, get_debug_log_path
 from core.formatting import build_format_label
 from core.i18n import get_current_language_code
 
 
+def N_(s):
+    """Marker for gettext extraction. Returns the string unchanged."""
+    return s
+
+
 SUPPORT_HTTP_TIMEOUT_SECONDS = 15
+SUPPORT_DEBUG_LOG_MAX_BYTES = 50 * 1024
 SUPPORT_ISSUE_TYPE_ITEMS = (
-    ("conversion_problem", "Conversion problem"),
-    ("application_crash", "Application crash"),
-    ("update_problem", "Update problem"),
-    ("accessibility_issue", "Accessibility issue"),
-    ("installation_problem", "Installation problem"),
-    ("feature_request", "Feature request"),
-    ("other", "Other"),
+    ("conversion_problem", N_("Conversion problem")),
+    ("application_crash", N_("Application crash")),
+    ("update_problem", N_("Update problem")),
+    ("accessibility_issue", N_("Accessibility issue")),
+    ("installation_problem", N_("Installation problem")),
+    ("feature_request", N_("Feature request")),
+    ("other", N_("Other")),
 )
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -76,6 +82,23 @@ def collect_support_context(window):
         "max_concurrent_jobs": max_concurrent_jobs,
         "ffmpeg_threads": window.settings_store.get("ffmpeg_threads", "auto"),
     }
+
+
+def read_debug_log(max_bytes=SUPPORT_DEBUG_LOG_MAX_BYTES):
+    log_path = get_debug_log_path()
+    try:
+        file_size = os.path.getsize(log_path)
+    except OSError:
+        return ""
+
+    try:
+        with open(log_path, "r", encoding="utf-8", errors="replace") as handle:
+            if file_size > max_bytes:
+                handle.seek(file_size - max_bytes)
+                handle.readline()
+            return handle.read()
+    except OSError:
+        return ""
 
 
 def validate_support_email(email_address):
@@ -165,12 +188,13 @@ def build_support_report(email_address, issue_type, user_message, context):
     )
 
 
-def send_support_report(email_address, issue_type, user_message, context, timeout=SUPPORT_HTTP_TIMEOUT_SECONDS):
+def send_support_report(email_address, issue_type, user_message, context, debug_log="", timeout=SUPPORT_HTTP_TIMEOUT_SECONDS):
     payload = {
         "email": str(email_address or "").strip(),
         "issue_type": issue_type,
         "message": str(user_message or "").strip(),
         "technical_context": dict(context or {}),
+        "debug_log": str(debug_log or ""),
         "honeypot": "",
     }
     body = json.dumps(payload).encode("utf-8")

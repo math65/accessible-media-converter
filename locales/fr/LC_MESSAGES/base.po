@@ -1875,23 +1875,37 @@ msgstr "Choisir le fichier de sortie"
 #~ msgid "Accessible Media Converter"
 #~ msgstr "Accessible Media Converter"
 
-#~ msgid "Conversion problem"
-#~ msgstr "Problème de conversion"
+#: core/support.py
+msgid "Conversion problem"
+msgstr "Problème de conversion"
 
-#~ msgid "Application crash"
-#~ msgstr "Crash de l'application"
+#: core/support.py
+msgid "Application crash"
+msgstr "Crash de l'application"
 
-#~ msgid "Update problem"
-#~ msgstr "Problème de mise à jour"
+#: core/support.py
+msgid "Update problem"
+msgstr "Problème de mise à jour"
 
-#~ msgid "Accessibility issue"
-#~ msgstr "Problème d'accessibilité"
+#: core/support.py
+msgid "Accessibility issue"
+msgstr "Problème d'accessibilité"
 
-#~ msgid "Installation problem"
-#~ msgstr "Problème d'installation"
+#: core/support.py
+msgid "Installation problem"
+msgstr "Problème d'installation"
 
-#~ msgid "Feature request"
-#~ msgstr "Demande de fonctionnalité"
+#: core/support.py
+msgid "Feature request"
+msgstr "Demande de fonctionnalité"
+
+#: ui/support_dialog.py
+msgid "Include debug log"
+msgstr "Inclure le journal de débogage"
+
+#: ui/support_dialog.py
+msgid "Attach the contents of the debug log to the report. This helps diagnose issues."
+msgstr "Joindre le contenu du journal de débogage au rapport. Cela aide à diagnostiquer les problèmes."
 
 #~ msgid ""
 #~ "Describe your issue below. Your mail client will open with the message "
