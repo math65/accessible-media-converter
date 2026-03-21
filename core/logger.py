@@ -16,7 +16,7 @@ def setup_logger():
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s",
         datefmt="%H:%M:%S",
-        handlers=[logging.StreamHandler(sys.stdout)],
+        handlers=[logging.StreamHandler(stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False))],
         force=True,
     )
 

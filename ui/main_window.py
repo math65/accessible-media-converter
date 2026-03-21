@@ -97,6 +97,7 @@ class MainWindow(wx.Frame):
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         self._merge_task = None
+        self._error_report_dialog = None
         
         self.prober = FileProber()
         self.audio_data = [] 
@@ -1297,8 +1298,9 @@ class MainWindow(wx.Frame):
         if payload.get('state') == JOB_STATE_ERROR:
             error_msg = payload.get('error_message', '')
             if error_msg != 'Stopped by user':
-                from ui.error_report_dialog import ErrorReportDialog
-                ErrorReportDialog(self, payload, self.settings_store)
+                if not self._error_report_dialog or not self._error_report_dialog.IsShown():
+                    from ui.error_report_dialog import ErrorReportDialog
+                    self._error_report_dialog = ErrorReportDialog(self, payload, self.settings_store)
 
     def _on_batch_progress_update(self, summary):
         progress_value = summary.get('overall_progress', 0)
