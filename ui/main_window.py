@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import threading
 
 import wx
@@ -18,16 +19,9 @@ from core.batch_manager import (
 )
 from core import FileProber
 from core.debug_session import (
-    SESSION_RESTORE_PENDING_KEY,
-    clear_debug_artifacts,
     get_config_path,
     load_raw_config,
-    load_session_snapshot,
-    open_debug_folder,
-    restart_application,
     save_raw_config,
-    save_session_snapshot,
-    update_debug_flags,
 )
 from core.documentation import open_documentation
 from core.conversion import get_output_extension
@@ -96,7 +90,6 @@ class MainWindow(wx.Frame):
         
         self.is_converting = False
         self.stop_requested = False
-        self._is_relaunching = False
         self._is_installing_update = False
         self._update_check_in_progress = False
         self._startup_update_check_scheduled = False
@@ -147,14 +140,6 @@ class MainWindow(wx.Frame):
         except Exception:
             pass
 
-    def _update_debug_menu_state(self):
-        debug_enabled = bool(self.settings_store.get('debug_enabled', False))
-        can_toggle = not self.is_converting
-        self.item_debug_enable.Enable(can_toggle and not debug_enabled)
-        self.item_debug_disable.Enable(can_toggle and debug_enabled)
-        self.item_debug_open_folder.Enable(True)
-        self.item_debug_clear.Enable(can_toggle and not debug_enabled)
-
     def _init_menu_bar(self):
         menubar = wx.MenuBar()
         file_menu = wx.Menu()
@@ -173,13 +158,6 @@ class MainWindow(wx.Frame):
         edit_menu.AppendSeparator()
         item_prefs = edit_menu.Append(wx.ID_PREFERENCES, _("Preferences") + "\tCtrl+,")
 
-        self.debug_menu = wx.Menu()
-        self.item_debug_enable = self.debug_menu.Append(wx.ID_ANY, _("Enable &Debug"))
-        self.item_debug_open_folder = self.debug_menu.Append(wx.ID_ANY, _("Show Debug &Folder"))
-        self.item_debug_disable = self.debug_menu.Append(wx.ID_ANY, _("&Disable Debug"))
-        self.debug_menu.AppendSeparator()
-        self.item_debug_clear = self.debug_menu.Append(wx.ID_ANY, _("&Clear Debug Data"))
-        
         help_menu = wx.Menu()
         item_documentation = help_menu.Append(wx.ID_ANY, _("&Documentation..."))
         help_menu.AppendSeparator()
@@ -198,10 +176,6 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_clear_list, self.item_clear)
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
         self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs)
-        self.Bind(wx.EVT_MENU, self.on_enable_debug, self.item_debug_enable)
-        self.Bind(wx.EVT_MENU, self.on_open_debug_folder, self.item_debug_open_folder)
-        self.Bind(wx.EVT_MENU, self.on_disable_debug, self.item_debug_disable)
-        self.Bind(wx.EVT_MENU, self.on_clear_debug_data, self.item_debug_clear)
         self.Bind(wx.EVT_MENU, self.on_open_documentation, item_documentation)
         self.Bind(wx.EVT_MENU, self.on_check_updates, item_check_updates)
         self.Bind(wx.EVT_MENU, self.on_contact_support, item_contact_support)
@@ -209,10 +183,8 @@ class MainWindow(wx.Frame):
 
         menubar.Append(file_menu, _("&File"))
         menubar.Append(edit_menu, _("&Edit"))
-        menubar.Append(self.debug_menu, _("&Debug"))
         menubar.Append(help_menu, _("&Help"))
         self.SetMenuBar(menubar)
-        self._update_debug_menu_state()
 
     def _init_ui(self):
         self.panel = wx.Panel(self)
@@ -376,158 +348,25 @@ class MainWindow(wx.Frame):
             if isinstance(index, int) and 0 <= index < list_ctrl.GetItemCount():
                 list_ctrl.SetItemState(index, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
 
-    def _restore_media_entry(self, entry, missing_files):
-        if not isinstance(entry, dict):
-            return
-
-        file_path = entry.get('path')
-        if not file_path or not os.path.exists(file_path):
-            if file_path:
-                missing_files.append(file_path)
-            return
-
-        meta = self.prober.analyze(file_path)
-        meta.track_settings = entry.get('track_settings')
-        meta.audio_extract_track = entry.get('audio_extract_track')
-        self._append_media_metadata(meta)
-
-    def restore_session_if_needed(self):
-        if not (
-            self.settings_store.get(SESSION_RESTORE_PENDING_KEY, False)
-            or self.settings_store.get('debug_restore_pending', False)
-        ):
-            return
-
-        snapshot = load_session_snapshot()
-        current_debug_enabled = bool(self.settings_store.get('debug_enabled', False))
-        current_ui_language = self.settings_store.get('ui_language', AUTO_LANGUAGE_CODE)
-        if not snapshot:
-            logging.warning("Session restore requested but no session snapshot was found.")
-            self.settings_store[SESSION_RESTORE_PENDING_KEY] = False
-            self.settings_store['debug_restore_pending'] = False
-            self._save_config()
-            self._update_debug_menu_state()
-            return
-
-        restored_settings = normalize_settings_store(snapshot.get('settings_store', {}))
-        restored_settings['debug_enabled'] = current_debug_enabled
-        restored_settings['ui_language'] = normalize_ui_language(current_ui_language)
-        restored_settings[SESSION_RESTORE_PENDING_KEY] = False
-        restored_settings['debug_restore_pending'] = False
-        self.settings_store = restored_settings
-
-        self.audio_data = []
-        self.video_data = []
-        self.panel_audio_list.list_ctrl.DeleteAllItems()
-        self.panel_video_list.list_ctrl.DeleteAllItems()
-
-        saved_tab = snapshot.get('current_tab', 'audio')
-        self.current_tab = saved_tab if saved_tab in ('audio', 'video') else 'audio'
-
-        missing_files = []
-        for entry in snapshot.get('audio_files', []):
-            self._restore_media_entry(entry, missing_files)
-        for entry in snapshot.get('video_files', []):
-            self._restore_media_entry(entry, missing_files)
-
-        self._update_ui_state()
-        self._restore_list_selection(self.panel_audio_list.list_ctrl, snapshot.get('selected_indices_audio', []))
-        self._restore_list_selection(self.panel_video_list.list_ctrl, snapshot.get('selected_indices_video', []))
-
-        if missing_files:
-            logging.warning("Some files could not be restored: %s", missing_files)
-
-        self._save_config()
-        self._update_debug_menu_state()
-
-    def restore_debug_session_if_needed(self):
-        self.restore_session_if_needed()
-
-    def _restart_application_with_session_restore(self, next_settings, error_message, rollback_on_failure):
-        previous_settings = dict(self.settings_store)
-        prepared_settings = normalize_settings_store(dict(next_settings))
+    def _restart_application(self, error_message):
+        import subprocess as _sp
 
         try:
-            self.settings_store = prepared_settings
-            save_session_snapshot(self)
-            self.settings_store[SESSION_RESTORE_PENDING_KEY] = True
-            self._save_config()
-            restart_application()
-            self._is_relaunching = True
+            if getattr(sys, "frozen", False):
+                args = [sys.executable, *sys.argv[1:]]
+            else:
+                args = [sys.executable, os.path.abspath(sys.argv[0]), *sys.argv[1:]]
+            kwargs = {"close_fds": True}
+            if os.name == "nt":
+                kwargs["creationflags"] = _sp.DETACHED_PROCESS | _sp.CREATE_NEW_PROCESS_GROUP
+            _sp.Popen(args, **kwargs)
             self.Close()
             return True
         except Exception:
-            if rollback_on_failure:
-                self.settings_store = previous_settings
-            else:
-                prepared_settings[SESSION_RESTORE_PENDING_KEY] = False
-                prepared_settings['debug_restore_pending'] = False
-                self.settings_store = prepared_settings
-            self._save_config()
             logging.exception("Failed to restart the application.")
-            wx.MessageBox(
-                error_message,
-                _("Error"),
-                wx.ICON_ERROR,
-            )
+            wx.MessageBox(error_message, _("Error"), wx.ICON_ERROR)
             self._set_status(error_message)
             return False
-
-    def _restart_with_debug_mode(self, enable_debug):
-        if self.is_converting:
-            wx.MessageBox(
-                _("Debug mode cannot be changed during an active conversion."),
-                _("Warning"),
-                wx.ICON_WARNING,
-            )
-            self._set_status(_("Debug mode cannot be changed during an active conversion."))
-            return
-
-        updated_settings = update_debug_flags(
-            self.settings_store,
-            enabled=enable_debug,
-            restore_pending=True,
-        )
-        self._restart_application_with_session_restore(
-            updated_settings,
-            _("Unable to restart the application in debug mode."),
-            rollback_on_failure=True,
-        )
-
-    def on_enable_debug(self, event):
-        self._restart_with_debug_mode(True)
-
-    def on_disable_debug(self, event):
-        self._restart_with_debug_mode(False)
-
-    def on_open_debug_folder(self, event):
-        try:
-            folder = open_debug_folder()
-            self._set_status(_("Debug folder opened: {path}").format(path=folder))
-        except Exception:
-            logging.exception("Failed to open debug folder.")
-            wx.MessageBox(
-                _("Unable to open the debug folder."),
-                _("Error"),
-                wx.ICON_ERROR,
-            )
-            self._set_status(_("Unable to open the debug folder."))
-
-    def on_clear_debug_data(self, event):
-        if self.settings_store.get('debug_enabled', False):
-            wx.MessageBox(
-                _("Disable debug mode before clearing debug data."),
-                _("Warning"),
-                wx.ICON_WARNING,
-            )
-            self._set_status(_("Disable debug mode before clearing debug data."))
-            return
-
-        removed = clear_debug_artifacts()
-        self.settings_store['debug_restore_pending'] = False
-        self._save_config()
-        self._update_debug_menu_state()
-        self._set_status(_("Debug data cleared ({count} file(s)).").format(count=len(removed)))
 
     def begin_install_update(self, installer_path, version):
         if self.is_converting:
@@ -928,10 +767,9 @@ class MainWindow(wx.Frame):
                         restart_dialog.Destroy()
 
                     if should_restart:
-                        self._restart_application_with_session_restore(
-                            self.settings_store,
+                        self._save_config()
+                        self._restart_application(
                             _("Unable to restart the application after changing language."),
-                            rollback_on_failure=False,
                         )
                     else:
                         self._set_status(_("Language change saved. It will be applied on next launch."))
@@ -1012,7 +850,7 @@ class MainWindow(wx.Frame):
             self.item_remove.Enable(False)
             self.combo_format.Enable(False)
             self.btn_settings.Enable(False)
-            self._update_debug_menu_state()
+
             return
 
         self.combo_format.Enable(True)
@@ -1044,7 +882,6 @@ class MainWindow(wx.Frame):
             self._set_status(_("No files loaded."))
         self.panel.Layout()
         self.Refresh()
-        self._update_debug_menu_state()
 
     def on_add_files(self, event):
         if self.is_converting: return
@@ -1181,7 +1018,7 @@ class MainWindow(wx.Frame):
         self._set_status(_("Stop requested."))
 
     def on_close_window(self, event):
-        if self._is_relaunching or self._is_installing_update:
+        if self._is_installing_update:
             event.Skip()
             return
         if self.is_converting:
@@ -1456,6 +1293,12 @@ class MainWindow(wx.Frame):
         if row_index < 0 or row_index >= self._current_batch_list_ctrl.GetItemCount():
             return
         self._current_batch_list_ctrl.SetItem(row_index, 2, self._format_batch_job_status(payload))
+
+        if payload.get('state') == JOB_STATE_ERROR:
+            error_msg = payload.get('error_message', '')
+            if error_msg != 'Stopped by user':
+                from ui.error_report_dialog import ErrorReportDialog
+                ErrorReportDialog(self, payload, self.settings_store)
 
     def _on_batch_progress_update(self, summary):
         progress_value = summary.get('overall_progress', 0)

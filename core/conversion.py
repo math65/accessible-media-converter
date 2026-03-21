@@ -63,7 +63,9 @@ class ConversionTask:
         self.output_path = output_path
         self.ffmpeg_exe = self._get_ffmpeg_path()
         self.process = None
-        
+        self.last_command = []
+        self.stderr_lines = []
+
         logging.debug(f"Tâche initialisée : {self.input_path} -> {self.target_format}") # LOG
 
     def _get_ffmpeg_path(self):
@@ -392,6 +394,7 @@ class ConversionTask:
             cmd.extend(['-threads', str(thread_count)])
 
         cmd.append(output_path)
+        self.last_command = list(cmd)
 
         # LOG DE LA COMMANDE FINALE (Crucial !)
         logging.info(f"Commande FFmpeg: {' '.join(cmd)}")
@@ -418,10 +421,12 @@ class ConversionTask:
             if not line and self.process.poll() is not None: break
             
             if line:
-                # On log chaque ligne de FFmpeg en DEBUG (ça fait beaucoup mais c'est le but)
-                # .strip() pour éviter les sauts de ligne en double
-                logging.debug(f"FFmpeg output: {line.strip()}")
-                
+                stripped = line.strip()
+                logging.debug(f"FFmpeg output: {stripped}")
+                self.stderr_lines.append(stripped)
+                if len(self.stderr_lines) > 200:
+                    self.stderr_lines.pop(0)
+
                 if progress_callback:
                     match = time_pattern.search(line)
                     if match and self.duration > 0:
@@ -436,6 +441,7 @@ class ConversionTask:
             if stop_check_callback and stop_check_callback():
                 raise Exception("Stopped by user")
             logging.error(f"FFmpeg a échoué avec le code {self.process.returncode}")
-            raise Exception("FFmpeg error")
+            tail = "\n".join(self.stderr_lines[-50:])
+            raise Exception(f"FFmpeg error (code {self.process.returncode}):\n{tail}")
         else:
             logging.info("Conversion terminée avec succès.")

@@ -11,7 +11,6 @@ from core.app_info import (
     APP_VERSION,
     SUPPORT_REPORT_API_URL,
 )
-from core.debug_session import get_debug_dir, get_debug_log_path
 from core.formatting import build_format_label
 from core.i18n import get_current_language_code
 
@@ -22,7 +21,6 @@ def N_(s):
 
 
 SUPPORT_HTTP_TIMEOUT_SECONDS = 15
-SUPPORT_DEBUG_LOG_MAX_BYTES = 50 * 1024
 SUPPORT_ISSUE_TYPE_ITEMS = (
     ("conversion_problem", N_("Conversion problem")),
     ("application_crash", N_("Application crash")),
@@ -56,7 +54,6 @@ def build_support_issue_label(issue_type):
 
 
 def collect_support_context(window):
-    debug_dir = get_debug_dir()
     try:
         max_concurrent_jobs = int(window.settings_store.get("max_concurrent_jobs", 2))
     except (TypeError, ValueError):
@@ -69,8 +66,6 @@ def collect_support_context(window):
         "language": get_current_language_code(),
         "current_tab": getattr(window, "current_tab", "audio"),
         "selected_output_format": _get_selected_format_label(window),
-        "debug_mode_enabled": bool(window.settings_store.get("debug_enabled", False)),
-        "debug_data_present": _has_debug_artifacts(debug_dir),
         "loaded_audio_files_count": len(getattr(window, "audio_data", []) or []),
         "loaded_video_files_count": len(getattr(window, "video_data", []) or []),
         "auto_update_check_enabled": bool(
@@ -82,23 +77,6 @@ def collect_support_context(window):
         "max_concurrent_jobs": max_concurrent_jobs,
         "ffmpeg_threads": window.settings_store.get("ffmpeg_threads", "auto"),
     }
-
-
-def read_debug_log(max_bytes=SUPPORT_DEBUG_LOG_MAX_BYTES):
-    log_path = get_debug_log_path()
-    try:
-        file_size = os.path.getsize(log_path)
-    except OSError:
-        return ""
-
-    try:
-        with open(log_path, "r", encoding="utf-8", errors="replace") as handle:
-            if file_size > max_bytes:
-                handle.seek(file_size - max_bytes)
-                handle.readline()
-            return handle.read()
-    except OSError:
-        return ""
 
 
 def validate_support_email(email_address):
@@ -141,12 +119,6 @@ def build_support_technical_block(context):
         ),
         _("Selected output format: {value}").format(
             value=context.get("selected_output_format") or _("Not selected")
-        ),
-        _("Debug mode: {value}").format(
-            value=_format_bool(context.get("debug_mode_enabled", False))
-        ),
-        _("Debug data present: {value}").format(
-            value=_format_bool(context.get("debug_data_present", False))
         ),
         _("Loaded audio files: {value}").format(
             value=context.get("loaded_audio_files_count", 0)
@@ -320,12 +292,3 @@ def _get_selected_format_label(window):
     return build_format_label(format_keys[selection], context=current_tab)
 
 
-def _has_debug_artifacts(debug_dir):
-    try:
-        with os.scandir(debug_dir) as entries:
-            for entry in entries:
-                if entry.is_file() or entry.is_dir():
-                    return True
-    except OSError:
-        return False
-    return False

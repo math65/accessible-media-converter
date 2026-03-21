@@ -2,7 +2,7 @@ import os
 import threading
 import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from core.conversion import ConversionTask, build_output_path
 
@@ -30,6 +30,8 @@ class BatchJob:
     progress: int = 0
     skip_reason: str | None = None
     error_message: str = ""
+    ffmpeg_command: list = field(default_factory=list)
+    ffmpeg_stderr: str = ""
 
 
 class BatchConversionManager:
@@ -210,6 +212,9 @@ class BatchConversionManager:
                 stop_check_callback=self._stop_requested.is_set,
             )
         except Exception as exc:
+            job.ffmpeg_command = list(task.last_command) if task.last_command else []
+            job.ffmpeg_stderr = "\n".join(task.stderr_lines[-50:]) if task.stderr_lines else ""
+
             if str(exc) == "Stopped by user" or self._stop_requested.is_set():
                 self._set_job_state(job, JOB_STATE_STOPPED)
                 return JOB_STATE_STOPPED
@@ -290,6 +295,11 @@ class BatchConversionManager:
             "skip_reason": job.skip_reason,
             "error_message": job.error_message,
             "output_path": job.output_path,
+            "input_path": getattr(job.meta, 'full_path', '') if job.meta else '',
+            "target_format": job.target_format,
+            "ffmpeg_command": job.ffmpeg_command,
+            "ffmpeg_stderr": job.ffmpeg_stderr,
+            "settings": job.settings,
         }
 
     def _build_summary(self):

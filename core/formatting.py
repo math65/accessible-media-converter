@@ -158,9 +158,6 @@ APP_DEFAULT_SETTINGS = {
     "continue_on_error": True,
     "check_updates_on_startup": True,
     "ui_language": AUTO_LANGUAGE_CODE,
-    "debug_enabled": False,
-    "session_restore_pending": False,
-    "debug_restore_pending": False,
 }
 
 
@@ -305,12 +302,9 @@ def normalize_settings_store(settings_store):
     normalized["ui_language"] = normalize_ui_language(
         normalized.get("ui_language", APP_DEFAULT_SETTINGS["ui_language"])
     )
-    normalized["session_restore_pending"] = bool(
-        normalized.get("session_restore_pending", APP_DEFAULT_SETTINGS["session_restore_pending"])
-    )
-    normalized["debug_restore_pending"] = bool(
-        normalized.get("debug_restore_pending", APP_DEFAULT_SETTINGS["debug_restore_pending"])
-    )
+    normalized.pop("session_restore_pending", None)
+    normalized.pop("debug_restore_pending", None)
+    normalized.pop("debug_enabled", None)
     normalized["max_concurrent_jobs"] = _normalize_concurrent_jobs(
         normalized.get("max_concurrent_jobs", APP_DEFAULT_SETTINGS["max_concurrent_jobs"])
     )

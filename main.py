@@ -3,14 +3,13 @@ import os
 import sys
 import logging
 
-from core.debug_session import get_debug_flags, load_raw_config
-# On importe notre nouveau logger
+from core.debug_session import load_raw_config
 from core.logger import setup_logger
 from core.i18n import AUTO_LANGUAGE_CODE
 from core.i18n import install_language
 from core.updater import cleanup_update_artifacts
 
-# --- CONFIGURATION LANGUE (GETTEXT) ---
+
 def init_i18n(config_data=None):
     logging.debug("Initialisation du système de traduction...")
     if getattr(sys, 'frozen', False):
@@ -31,31 +30,24 @@ def init_i18n(config_data=None):
 
 def main():
     raw_config = load_raw_config()
-    debug_flags = get_debug_flags(raw_config)
-    setup_logger(debug_enabled=debug_flags['debug_enabled'])
+    setup_logger()
     removed_update_artifacts = cleanup_update_artifacts()
     if removed_update_artifacts:
         logging.info("Updater cleanup removed %s artifact(s).", len(removed_update_artifacts))
-    
+
     try:
         init_i18n(raw_config)
-        
-        logging.info("Importation de l'interface graphique...")
-        from ui.main_window import MainWindow
-        
+
         logging.info("Démarrage de wx.App...")
         app = wx.App(False)
-        
-        logging.info("Création de la fenêtre principale...")
+
+        from ui.main_window import MainWindow
         frame = MainWindow()
-        if debug_flags['restore_pending']:
-            frame.restore_session_if_needed()
         frame.Show()
         frame.schedule_startup_update_check()
-        
-        logging.info("Entrée dans la boucle principale (MainLoop)...")
+
         app.MainLoop()
-        
+
     except Exception as e:
         logging.critical("Erreur critique dans le main :", exc_info=True)
         raise e

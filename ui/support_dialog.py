@@ -10,7 +10,6 @@ from core.support import (
     build_support_technical_block,
     collect_support_context,
     get_support_issue_type_items,
-    read_debug_log,
     send_support_report,
     validate_support_email,
     validate_support_form,
@@ -83,16 +82,6 @@ class SupportContactDialog(wx.Dialog):
         self.txt_user_message.SetToolTip(_("Describe the issue you want to report to support."))
         message_box.Add(self.txt_user_message, 1, wx.EXPAND | wx.ALL, 8)
         root.Add(message_box, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
-
-        self._debug_data_available = bool(self.support_context.get("debug_data_present", False))
-        self.chk_include_debug_log = wx.CheckBox(panel, label=_("Include debug log"))
-        self.chk_include_debug_log.SetName(_("Include debug log"))
-        self.chk_include_debug_log.SetToolTip(
-            _("Attach the contents of the debug log to the report. This helps diagnose issues.")
-        )
-        self.chk_include_debug_log.SetValue(self._debug_data_available)
-        self.chk_include_debug_log.Show(self._debug_data_available)
-        root.Add(self.chk_include_debug_log, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         details_actions = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_toggle_technical = wx.Button(panel, label=_("Show technical details"))
@@ -252,7 +241,6 @@ class SupportContactDialog(wx.Dialog):
         self.txt_email.Enable(not sending)
         self.choice_issue_type.Enable(not sending)
         self.txt_user_message.Enable(not sending)
-        self.chk_include_debug_log.Enable(not sending)
         self.btn_toggle_technical.Enable(not sending)
         self.btn_send.Enable(not sending)
         self.btn_cancel.Enable(not sending)
@@ -369,17 +357,13 @@ class SupportContactDialog(wx.Dialog):
                 self.txt_user_message.SetSelection(-1, -1)
             return
 
-        debug_log = ""
-        if self._debug_data_available and self.chk_include_debug_log.GetValue():
-            debug_log = read_debug_log()
-
         self._persist_user_email(email_address)
         self._refresh_generated_content()
         self._set_send_state(True)
 
         worker = threading.Thread(
             target=self._send_worker,
-            args=(email_address, issue_type, user_message, debug_log),
+            args=(email_address, issue_type, user_message),
             daemon=True,
         )
         worker.start()

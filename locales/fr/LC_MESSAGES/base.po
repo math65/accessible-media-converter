@@ -1832,10 +1832,6 @@ msgstr ""
 msgid "Unable to restart the application after changing language."
 msgstr "Impossible de redémarrer l'application après le changement de langue."
 
-#: ui/preferences_dialog.py:214
-msgid "Automatic (detected: {language})"
-msgstr "Automatique (détecté : {language})"
-
 #: ui/main_window.py:278
 msgid "&Merge Files"
 msgstr "&Fusionner les fichiers"
@@ -1911,6 +1907,46 @@ msgstr "Ajouter des fichiers"
 #: ui/main_window.py:304
 msgid "Open a file browser to add media files."
 msgstr "Ouvrir un explorateur pour ajouter des fichiers multimédias."
+
+#: ui/error_report_dialog.py
+msgid "Conversion Error"
+msgstr "Erreur de conversion"
+
+#: ui/error_report_dialog.py
+msgid ""
+"The conversion of {filename} to {format} failed.\n"
+"Would you like to send an error report to support?"
+msgstr ""
+"La conversion de {filename} vers {format} a échoué.\n"
+"Souhaitez-vous envoyer un rapport d'erreur au support ?"
+
+#: ui/error_report_dialog.py
+msgid "Comment (optional)"
+msgstr "Commentaire (facultatif)"
+
+#: ui/error_report_dialog.py
+msgid "Optionally describe what you were doing when the error occurred."
+msgstr "Décrivez facultativement ce que vous faisiez lorsque l'erreur s'est produite."
+
+#: ui/error_report_dialog.py
+msgid "Yes, send report"
+msgstr "Oui, envoyer le rapport"
+
+#: ui/error_report_dialog.py
+msgid "Run a diagnostic and send an error report to support."
+msgstr "Lancer un diagnostic et envoyer un rapport d'erreur au support."
+
+#: ui/error_report_dialog.py
+msgid "Running diagnostic and sending report..."
+msgstr "Diagnostic en cours et envoi du rapport..."
+
+#: ui/error_report_dialog.py
+msgid "Unable to send the error report right now."
+msgstr "Impossible d'envoyer le rapport d'erreur pour le moment."
+
+#: ui/error_report_dialog.py
+msgid "Unknown file"
+msgstr "Fichier inconnu"
 
 #~ msgid "French"
 #~ msgstr "Français"
