@@ -1,4 +1,5 @@
 import logging
+import os
 import platform
 import sys
 
@@ -16,7 +17,7 @@ def setup_logger():
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s",
         datefmt="%H:%M:%S",
-        handlers=[logging.StreamHandler(stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False))],
+        handlers=[logging.StreamHandler(stream=sys.stdout if sys.stdout is not None else open(os.devnull, 'w'))],
         force=True,
     )
 
