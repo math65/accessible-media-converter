@@ -2,12 +2,15 @@ import wx
 
 from core.formatting import (
     DEFAULT_FORMAT_SETTINGS,
+    IMAGE_OUTPUT_FORMAT_KEYS,
+    IMAGE_RESIZE_OPTIONS,
     VALID_VIDEO_ENCODER_PRESETS,
     VALID_VIDEO_PIXEL_FORMATS,
     VALID_VIDEO_PROFILES,
     VIDEO_CONTAINER_FORMAT_KEYS,
     VIDEO_PRESET_PROFILE_SETTINGS,
     build_format_summary,
+    build_image_format_summary,
     get_audio_codec_label,
     get_container_audio_codec_options,
     get_matching_video_preset_profile,
@@ -55,7 +58,9 @@ VIDEO_PIXEL_FORMAT_OPTIONS = (
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent, title_format, has_video, input_ac, current_settings, format_key):
-        super().__init__(parent, title=_("Configure settings for: ") + title_format, size=(560, 760))
+        self.is_image_format = format_key in IMAGE_OUTPUT_FORMAT_KEYS
+        dialog_size = (480, 400) if self.is_image_format else (560, 760)
+        super().__init__(parent, title=_("Configure settings for: ") + title_format, size=dialog_size)
         self.current_settings = current_settings
         self.format_key = format_key
         self.has_video_controls = bool(has_video and format_key in VIDEO_CONTAINER_FORMAT_KEYS)
@@ -66,19 +71,26 @@ class SettingsDialog(wx.Dialog):
 
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self._build_audio_section()
-        if self.has_video_controls:
-            self._build_video_section()
+        if self.is_image_format:
+            self._build_image_section()
+        else:
+            self._build_audio_section()
+            if self.has_video_controls:
+                self._build_video_section()
         self._build_buttons()
 
         self.SetSizer(self.main_sizer)
         self.Centre()
 
-        self._bind_events()
-        self._load_from_settings()
-        self._update_visibility()
-        self._set_accessibility_metadata()
-        wx.CallAfter(self._focus_primary_audio_control)
+        if self.is_image_format:
+            self._load_image_settings()
+            self._set_image_accessibility_metadata()
+        else:
+            self._bind_events()
+            self._load_from_settings()
+            self._update_visibility()
+            self._set_accessibility_metadata()
+            wx.CallAfter(self._focus_primary_audio_control)
 
     def _build_audio_section(self):
         audio_box = wx.StaticBox(self, label=_("Audio Settings"))
@@ -722,7 +734,138 @@ class SettingsDialog(wx.Dialog):
 
         self._refresh_video_preset_choices("custom")
 
+    def _build_image_section(self):
+        image_box = wx.StaticBox(self, label=_("Image Settings"))
+        image_box.SetWindowStyle(image_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        image_sizer = wx.StaticBoxSizer(image_box, wx.VERTICAL)
+
+        self.panel_image_opts = wx.Panel(self)
+        self.image_grid = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
+        self.image_grid.AddGrowableCol(1, 1)
+
+        fmt = self.format_key
+
+        self.spin_image_quality = None
+        self.spin_image_compression = None
+        self.chk_image_lossless = None
+        self.combo_tiff_compression = None
+        self.combo_image_resize = None
+
+        if fmt in ('jpeg', 'webp'):
+            self.lbl_image_quality = wx.StaticText(self.panel_image_opts, label=_("Quality (1-100):"))
+            self.spin_image_quality = wx.SpinCtrl(self.panel_image_opts, min=1, max=100, initial=85)
+            self.image_grid.Add(self.lbl_image_quality, 0, wx.ALIGN_CENTER_VERTICAL)
+            self.image_grid.Add(self.spin_image_quality, 0, wx.EXPAND)
+
+        if fmt == 'webp':
+            self.chk_image_lossless = wx.CheckBox(self.panel_image_opts, label=_("Lossless"))
+            self.image_grid.AddSpacer(0)
+            self.image_grid.Add(self.chk_image_lossless, 0)
+
+        if fmt == 'png':
+            self.lbl_image_compression = wx.StaticText(self.panel_image_opts, label=_("Compression Level (0-9):"))
+            self.spin_image_compression = wx.SpinCtrl(self.panel_image_opts, min=0, max=9, initial=6)
+            self.image_grid.Add(self.lbl_image_compression, 0, wx.ALIGN_CENTER_VERTICAL)
+            self.image_grid.Add(self.spin_image_compression, 0, wx.EXPAND)
+
+        if fmt == 'tiff':
+            self.lbl_tiff_compression = wx.StaticText(self.panel_image_opts, label=_("Compression:"))
+            tiff_choices = ["LZW", "Deflate", "PackBits", _("None")]
+            self.tiff_compression_keys = ["lzw", "deflate", "packbits", "none"]
+            self.combo_tiff_compression = wx.Choice(self.panel_image_opts, choices=tiff_choices)
+            self.image_grid.Add(self.lbl_tiff_compression, 0, wx.ALIGN_CENTER_VERTICAL)
+            self.image_grid.Add(self.combo_tiff_compression, 0, wx.EXPAND)
+
+        self.lbl_image_resize = wx.StaticText(self.panel_image_opts, label=_("Resize:"))
+        resize_labels = [label for _, label in IMAGE_RESIZE_OPTIONS]
+        self.image_resize_keys = [key for key, _ in IMAGE_RESIZE_OPTIONS]
+        self.combo_image_resize = wx.Choice(self.panel_image_opts, choices=resize_labels)
+        self.image_grid.Add(self.lbl_image_resize, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.image_grid.Add(self.combo_image_resize, 0, wx.EXPAND)
+
+        self.panel_image_opts.SetSizer(self.image_grid)
+        image_sizer.Add(self.panel_image_opts, 1, wx.EXPAND | wx.ALL, 10)
+        self.main_sizer.Add(image_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+    def _load_image_settings(self):
+        settings = self.current_settings
+        fmt = self.format_key
+
+        if self.spin_image_quality and fmt in ('jpeg', 'webp'):
+            default_q = 85 if fmt == 'jpeg' else 80
+            self.spin_image_quality.SetValue(int(settings.get('image_quality', default_q)))
+
+        if self.chk_image_lossless and fmt == 'webp':
+            self.chk_image_lossless.SetValue(bool(settings.get('image_lossless', False)))
+
+        if self.spin_image_compression and fmt == 'png':
+            self.spin_image_compression.SetValue(int(settings.get('image_compression', 6)))
+
+        if self.combo_tiff_compression and fmt == 'tiff':
+            comp = str(settings.get('image_compression', 'lzw')).lower()
+            if comp in self.tiff_compression_keys:
+                self.combo_tiff_compression.SetSelection(self.tiff_compression_keys.index(comp))
+            else:
+                self.combo_tiff_compression.SetSelection(0)
+
+        if self.combo_image_resize:
+            resize = settings.get('image_resize', 'original')
+            if resize in self.image_resize_keys:
+                self.combo_image_resize.SetSelection(self.image_resize_keys.index(resize))
+            else:
+                self.combo_image_resize.SetSelection(0)
+
+    def _set_image_accessibility_metadata(self):
+        self.SetName(_("Image format settings dialog"))
+        self.panel_image_opts.SetName(_("Image settings panel"))
+        self.panel_image_opts.SetToolTip(_("Use Tab to navigate image options."))
+
+        if self.spin_image_quality:
+            self.spin_image_quality.SetName(_("Image quality"))
+            self.spin_image_quality.SetToolTip(_("Quality from 1 (lowest) to 100 (highest)."))
+        if self.chk_image_lossless:
+            self.chk_image_lossless.SetName(_("Lossless mode"))
+            self.chk_image_lossless.SetToolTip(_("Enable lossless compression for WebP."))
+        if self.spin_image_compression:
+            self.spin_image_compression.SetName(_("Compression level"))
+            self.spin_image_compression.SetToolTip(_("PNG compression from 0 (fast) to 9 (smallest)."))
+        if self.combo_tiff_compression:
+            self.combo_tiff_compression.SetName(_("TIFF compression"))
+            self.combo_tiff_compression.SetToolTip(_("Choose the compression algorithm for TIFF."))
+        if self.combo_image_resize:
+            self.combo_image_resize.SetName(_("Resize"))
+            self.combo_image_resize.SetToolTip(_("Choose a target resolution. Aspect ratio is preserved."))
+
+    def _get_image_settings(self):
+        settings = dict(self.current_settings)
+        fmt = self.format_key
+
+        if self.spin_image_quality and fmt in ('jpeg', 'webp'):
+            settings['image_quality'] = self.spin_image_quality.GetValue()
+
+        if self.chk_image_lossless and fmt == 'webp':
+            settings['image_lossless'] = self.chk_image_lossless.GetValue()
+
+        if self.spin_image_compression and fmt == 'png':
+            settings['image_compression'] = self.spin_image_compression.GetValue()
+
+        if self.combo_tiff_compression and fmt == 'tiff':
+            sel = self.combo_tiff_compression.GetSelection()
+            if sel != wx.NOT_FOUND:
+                settings['image_compression'] = self.tiff_compression_keys[sel]
+
+        if self.combo_image_resize:
+            sel = self.combo_image_resize.GetSelection()
+            if sel != wx.NOT_FOUND:
+                settings['image_resize'] = self.image_resize_keys[sel]
+
+        settings['summary'] = build_image_format_summary(fmt, settings)
+        return settings
+
     def get_settings(self):
+        if self.is_image_format:
+            return self._get_image_settings()
+
         settings = dict(self.current_settings)
         settings['audio_mode'] = 'copy' if self.rb_copy.GetValue() else 'convert'
 

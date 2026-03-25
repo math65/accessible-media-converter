@@ -4,7 +4,7 @@ import sys
 import re
 import logging # Ajout
 
-from core.formatting import VIDEO_CONTAINER_FORMAT_KEYS, get_effective_audio_codec
+from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, VIDEO_CONTAINER_FORMAT_KEYS, get_effective_audio_codec
 from core.track_settings import get_effective_track_settings, get_kept_track_entries
 
 
@@ -26,6 +26,10 @@ STREAMING_LOUDNORM_FILTER = "loudnorm=I=-16:TP=-1:LRA=7"
 def get_output_extension(target_format):
     if target_format in ['alac', 'aac']:
         return 'm4a'
+    if target_format == 'jpeg':
+        return 'jpg'
+    if target_format == 'tiff':
+        return 'tif'
     return target_format
 
 
@@ -312,6 +316,71 @@ class ConversionTask:
 
         return mapped_entries
 
+    def _build_image_command(self, output_path):
+        cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
+
+        vf_filters = []
+        resize = self.settings.get('image_resize', 'original')
+        if resize and resize != 'original' and 'x' in resize:
+            w, h = resize.split('x', 1)
+            vf_filters.append(f"scale={w}:{h}:force_original_aspect_ratio=decrease")
+
+        if vf_filters:
+            cmd.extend(['-vf', ','.join(vf_filters)])
+
+        fmt = self.target_format
+        if fmt == 'jpeg':
+            quality = int(self.settings.get('image_quality', 85))
+            qv = max(2, 31 - int(quality * 29 / 100))
+            cmd.extend(['-q:v', str(qv)])
+        elif fmt == 'png':
+            compression = int(self.settings.get('image_compression', 6))
+            cmd.extend(['-compression_level', str(compression)])
+        elif fmt == 'webp':
+            if self.settings.get('image_lossless', False):
+                cmd.extend(['-c:v', 'libwebp', '-lossless', '1'])
+            else:
+                quality = int(self.settings.get('image_quality', 80))
+                cmd.extend(['-c:v', 'libwebp', '-quality', str(quality)])
+        elif fmt == 'tiff':
+            compression = str(self.settings.get('image_compression', 'lzw'))
+            cmd.extend(['-compression_algo', compression])
+
+        cmd.append('-an')
+
+        thread_count = self._get_ffmpeg_threads_value()
+        if thread_count is not None:
+            cmd.extend(['-threads', str(thread_count)])
+
+        cmd.append(output_path)
+        return cmd
+
+    def _run_image_conversion(self, output_path):
+        cmd = self._build_image_command(output_path)
+        self.last_command = list(cmd)
+        logging.info(f"Commande FFmpeg (image): {' '.join(cmd)}")
+
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        self.process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,
+            universal_newlines=True, encoding='utf-8', errors='ignore',
+            startupinfo=startupinfo, creationflags=subprocess.CREATE_NO_WINDOW
+        )
+
+        _, stderr_output = self.process.communicate(timeout=120)
+        if stderr_output:
+            for line in stderr_output.strip().splitlines()[-50:]:
+                self.stderr_lines.append(line.strip())
+
+        if self.process.returncode != 0:
+            logging.error(f"FFmpeg image a échoué avec le code {self.process.returncode}")
+            tail = "\n".join(self.stderr_lines[-50:])
+            raise Exception(f"FFmpeg error (code {self.process.returncode}):\n{tail}")
+
+        logging.info("Conversion image terminée avec succès.")
+
     def stop(self):
         if self.process and self.process.poll() is None:
             try:
@@ -332,6 +401,9 @@ class ConversionTask:
         output_dir = os.path.dirname(output_path) or os.getcwd()
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
+
+        if self.target_format in IMAGE_OUTPUT_FORMAT_KEYS:
+            return self._run_image_conversion(output_path)
 
         # Construction Commande
         cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]

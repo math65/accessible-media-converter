@@ -7,6 +7,14 @@ from core.i18n import AUTO_LANGUAGE_CODE, normalize_ui_language
 AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "wav", "flac", "alac", "ogg", "wma")
 VIDEO_OUTPUT_FORMAT_KEYS = ("mp4", "mkv", *AUDIO_OUTPUT_FORMAT_KEYS)
 VIDEO_CONTAINER_FORMAT_KEYS = ("mp4", "mkv")
+IMAGE_OUTPUT_FORMAT_KEYS = ("jpeg", "png", "webp", "tiff", "bmp")
+IMAGE_RESIZE_OPTIONS = (
+    ("original", "Original"),
+    ("3840x2160", "4K (3840×2160)"),
+    ("1920x1080", "Full HD (1920×1080)"),
+    ("1280x720", "HD (1280×720)"),
+    ("800x600", "800×600"),
+)
 LOSSLESS_AUDIO_FORMAT_KEYS = ("wav", "flac", "alac")
 CONTAINER_AUDIO_CODEC_OPTIONS = {
     "mp4": ("aac", "mp3"),
@@ -143,11 +151,32 @@ DEFAULT_FORMAT_SETTINGS = {
         "audio_sample_rate": "original",
         "audio_channels": "2",
     },
+    "jpeg": {
+        "image_quality": 85,
+        "image_resize": "original",
+    },
+    "png": {
+        "image_compression": 6,
+        "image_resize": "original",
+    },
+    "webp": {
+        "image_quality": 80,
+        "image_lossless": False,
+        "image_resize": "original",
+    },
+    "tiff": {
+        "image_compression": "lzw",
+        "image_resize": "original",
+    },
+    "bmp": {
+        "image_resize": "original",
+    },
 }
 
 APP_DEFAULT_SETTINGS = {
     "last_format_audio": "mp3",
     "last_format_video": "mp4",
+    "last_format_image": "jpeg",
     "output_mode": "source",
     "custom_output_path": "",
     "support_user_email": "",
@@ -172,7 +201,36 @@ def _translatef(msgid, **kwargs):
     return _translate(msgid).format(**kwargs)
 
 
+def build_image_format_label(format_key):
+    labels = {
+        "jpeg": _translate("JPEG - Image"),
+        "png":  _translate("PNG - Image (Lossless)"),
+        "webp": _translate("WebP - Image"),
+        "tiff": _translate("TIFF - Image (Lossless)"),
+        "bmp":  _translate("BMP - Image (Uncompressed)"),
+    }
+    return labels.get(format_key, format_key.upper())
+
+
+def build_image_format_summary(format_key, settings):
+    if format_key == "jpeg":
+        return _translatef("Quality {q}", q=settings.get("image_quality", 85))
+    if format_key == "png":
+        return _translatef("Compression {c}", c=settings.get("image_compression", 6))
+    if format_key == "webp":
+        if settings.get("image_lossless", False):
+            return _translate("Lossless")
+        return _translatef("Quality {q}", q=settings.get("image_quality", 80))
+    if format_key == "tiff":
+        return _translatef("Compression {c}", c=settings.get("image_compression", "lzw"))
+    if format_key == "bmp":
+        return _translate("Uncompressed")
+    return format_key.upper()
+
+
 def build_format_label(format_key, context="audio"):
+    if context == "image":
+        return build_image_format_label(format_key)
     if context == "video" and format_key in AUDIO_OUTPUT_FORMAT_KEYS:
         extraction_labels = {
             "mp3": _translate("MP3 - Audio (Extract)"),
@@ -263,6 +321,11 @@ def normalize_format_settings(format_key, settings):
     normalized = dict(DEFAULT_FORMAT_SETTINGS[format_key])
     if isinstance(settings, dict):
         normalized.update(settings)
+    if format_key in IMAGE_OUTPUT_FORMAT_KEYS:
+        if format_key == "webp":
+            normalized["image_lossless"] = bool(normalized.get("image_lossless", False))
+        normalized["summary"] = build_image_format_summary(format_key, normalized)
+        return normalized
     normalized["audio_normalize_streaming"] = bool(normalized.get("audio_normalize_streaming", False))
     if format_key in VIDEO_CONTAINER_FORMAT_KEYS:
         normalized = _normalize_container_video_settings(format_key, normalized)
@@ -285,6 +348,8 @@ def normalize_settings_store(settings_store):
         normalized["last_format_audio"] = APP_DEFAULT_SETTINGS["last_format_audio"]
     if normalized.get("last_format_video") not in VIDEO_OUTPUT_FORMAT_KEYS:
         normalized["last_format_video"] = APP_DEFAULT_SETTINGS["last_format_video"]
+    if normalized.get("last_format_image") not in IMAGE_OUTPUT_FORMAT_KEYS:
+        normalized["last_format_image"] = APP_DEFAULT_SETTINGS["last_format_image"]
     if normalized.get("output_mode") not in VALID_OUTPUT_MODES:
         normalized["output_mode"] = APP_DEFAULT_SETTINGS["output_mode"]
     if normalized.get("existing_output_policy") not in VALID_EXISTING_OUTPUT_POLICIES:
@@ -390,6 +455,8 @@ def _normalize_video_crf_value(value, default_value):
 
 
 def build_format_summary(format_key, settings):
+    if format_key in IMAGE_OUTPUT_FORMAT_KEYS:
+        return build_image_format_summary(format_key, settings)
     if format_key in VIDEO_CONTAINER_FORMAT_KEYS:
         return _build_video_summary(format_key, settings)
     return _build_audio_summary(format_key, settings, include_channels=True)

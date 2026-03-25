@@ -27,6 +27,7 @@ from core.documentation import open_documentation
 from core.conversion import get_output_extension
 from core.formatting import (
     AUDIO_OUTPUT_FORMAT_KEYS,
+    IMAGE_OUTPUT_FORMAT_KEYS,
     VIDEO_CONTAINER_FORMAT_KEYS,
     VIDEO_OUTPUT_FORMAT_KEYS,
     build_default_settings_store,
@@ -63,6 +64,14 @@ SUPPORTED_MEDIA_EXTENSIONS = {
     '.mov',
     '.wmv',
     '.webm',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.avif',
+    '.tiff',
+    '.tif',
+    '.bmp',
 }
 
 SUPPORTED_MEDIA_WILDCARD = ";".join(
@@ -100,8 +109,9 @@ class MainWindow(wx.Frame):
         self._error_report_dialog = None
         
         self.prober = FileProber()
-        self.audio_data = [] 
-        self.video_data = [] 
+        self.audio_data = []
+        self.video_data = []
+        self.image_data = [] 
         
         self.config_path = get_config_path()
         self.settings_store = self._load_config()
@@ -110,10 +120,11 @@ class MainWindow(wx.Frame):
             self._config_needs_save = False
         
         self.audio_formats_keys = list(AUDIO_OUTPUT_FORMAT_KEYS)
-        
         self.video_formats_keys = list(VIDEO_OUTPUT_FORMAT_KEYS)
-        
+        self.image_formats_keys = list(IMAGE_OUTPUT_FORMAT_KEYS)
+
         self.current_tab = "audio"
+        self._tab_order = []
         self._init_menu_bar()
         self._init_ui()
         self._init_accessibility()
@@ -214,11 +225,14 @@ class MainWindow(wx.Frame):
         
         self.panel_audio_list = FileListPanel(self.content_panel, _("Audio files list"))
         self.panel_video_list = FileListPanel(self.content_panel, _("Video files list"))
-        
+        self.panel_image_list = FileListPanel(self.content_panel, _("Image files list"))
+
         self.panel_audio_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
         self.panel_video_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
+        self.panel_image_list.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context_menu)
         self.panel_audio_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
         self.panel_video_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
+        self.panel_image_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
         
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
         controls_box.GetStaticBox().SetWindowStyle(
@@ -304,7 +318,10 @@ class MainWindow(wx.Frame):
         if not hasattr(meta, 'audio_extract_track'):
             meta.audio_extract_track = None
 
-        if meta.has_video:
+        if meta.is_image:
+            self.image_data.append(meta)
+            target_list = self.panel_image_list.list_ctrl
+        elif meta.has_video:
             self.video_data.append(meta)
             target_list = self.panel_video_list.list_ctrl
         else:
@@ -340,6 +357,8 @@ class MainWindow(wx.Frame):
     def _get_current_media_collection(self):
         if self.current_tab == 'audio':
             return self.panel_audio_list.list_ctrl, self.audio_data
+        if self.current_tab == 'image':
+            return self.panel_image_list.list_ctrl, self.image_data
         return self.panel_video_list.list_ctrl, self.video_data
 
     def _restore_list_selection(self, list_ctrl, selected_indices):
@@ -587,13 +606,13 @@ class MainWindow(wx.Frame):
         return os.path.splitext(path)[1].lower() in SUPPORTED_MEDIA_EXTENSIONS
 
     def _focus_added_media_list_item(self, tab_name, list_ctrl, index):
-        if tab_name not in ('audio', 'video'):
+        if tab_name not in ('audio', 'video', 'image'):
             return
         if index < 0 or index >= list_ctrl.GetItemCount():
             return
 
-        if self.notebook.IsShown():
-            selection = 1 if tab_name == 'video' else 0
+        if self.notebook.IsShown() and tab_name in self._tab_order:
+            selection = self._tab_order.index(tab_name)
             if hasattr(self.notebook, 'ChangeSelection'):
                 self.notebook.ChangeSelection(selection)
             else:
@@ -673,6 +692,9 @@ class MainWindow(wx.Frame):
         elif source_ctrl == self.panel_video_list.list_ctrl:
             list_ctrl = self.panel_video_list.list_ctrl
             data = self.video_data
+        elif source_ctrl == self.panel_image_list.list_ctrl:
+            list_ctrl = self.panel_image_list.list_ctrl
+            data = self.image_data
         else:
             list_ctrl, data = self._get_current_media_collection()
 
@@ -777,36 +799,44 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
 
     def _update_layout_strategy(self):
-        count_audio = len(self.audio_data)
-        count_video = len(self.video_data)
+        all_panels = [self.panel_audio_list, self.panel_video_list, self.panel_image_list]
         self.notebook.Hide()
-        self.panel_audio_list.Hide()
-        self.panel_video_list.Hide()
+        for p in all_panels:
+            p.Hide()
+            self.content_sizer.Detach(p)
         self.content_sizer.Detach(self.notebook)
-        self.content_sizer.Detach(self.panel_audio_list)
-        self.content_sizer.Detach(self.panel_video_list)
-        while self.notebook.GetPageCount() > 0: self.notebook.RemovePage(0)
-        if count_audio > 0 and count_video > 0:
-            self.panel_audio_list.Reparent(self.notebook)
-            self.panel_video_list.Reparent(self.notebook)
-            self.notebook.AddPage(self.panel_audio_list, _("Audio") + f" ({count_audio})")
-            self.notebook.AddPage(self.panel_video_list, _("Video") + f" ({count_video})")
+        while self.notebook.GetPageCount() > 0:
+            self.notebook.RemovePage(0)
+
+        categories = []
+        if len(self.audio_data) > 0:
+            categories.append(("audio", self.panel_audio_list, _("Audio") + f" ({len(self.audio_data)})"))
+        if len(self.video_data) > 0:
+            categories.append(("video", self.panel_video_list, _("Video") + f" ({len(self.video_data)})"))
+        if len(self.image_data) > 0:
+            categories.append(("image", self.panel_image_list, _("Image") + f" ({len(self.image_data)})"))
+
+        self._tab_order = [cat[0] for cat in categories]
+
+        if len(categories) >= 2:
+            for name, panel, label in categories:
+                panel.Reparent(self.notebook)
+                self.notebook.AddPage(panel, label)
+                panel.Show()
             self.notebook.Show()
-            self.panel_audio_list.Show()
-            self.panel_video_list.Show()
             self.content_sizer.Insert(0, self.notebook, 1, wx.EXPAND | wx.ALL, 5)
-            if self.current_tab == 'video': self.notebook.SetSelection(1)
-            else: self.notebook.SetSelection(0)
-        elif count_audio > 0:
-            self.current_tab = 'audio'
-            self.panel_audio_list.Reparent(self.content_panel)
-            self.panel_audio_list.Show()
-            self.content_sizer.Insert(0, self.panel_audio_list, 1, wx.EXPAND | wx.ALL, 10)
-        elif count_video > 0:
-            self.current_tab = 'video'
-            self.panel_video_list.Reparent(self.content_panel)
-            self.panel_video_list.Show()
-            self.content_sizer.Insert(0, self.panel_video_list, 1, wx.EXPAND | wx.ALL, 10)
+            if self.current_tab in self._tab_order:
+                self.notebook.SetSelection(self._tab_order.index(self.current_tab))
+            else:
+                self.notebook.SetSelection(0)
+                self.current_tab = self._tab_order[0]
+        elif len(categories) == 1:
+            name, panel, label = categories[0]
+            self.current_tab = name
+            panel.Reparent(self.content_panel)
+            panel.Show()
+            self.content_sizer.Insert(0, panel, 1, wx.EXPAND | wx.ALL, 10)
+
         self.content_panel.Layout()
         self._update_formats_dropdown()
 
@@ -814,6 +844,9 @@ class MainWindow(wx.Frame):
         if self.current_tab == 'audio':
             keys = self.audio_formats_keys
             last_used = self.settings_store.get('last_format_audio', 'mp3')
+        elif self.current_tab == 'image':
+            keys = self.image_formats_keys
+            last_used = self.settings_store.get('last_format_image', 'jpeg')
         else:
             keys = self.video_formats_keys
             last_used = self.settings_store.get('last_format_video', 'mp4')
@@ -834,17 +867,16 @@ class MainWindow(wx.Frame):
 
     def on_tab_changed(self, event):
         sel = self.notebook.GetSelection()
-        if sel == 0: self.current_tab = 'audio'
-        else: self.current_tab = 'video'
+        if 0 <= sel < len(self._tab_order):
+            self.current_tab = self._tab_order[sel]
         self._update_formats_dropdown()
-        if self.current_tab == 'audio':
-            self._set_status(_("Audio tab selected."))
-        else:
-            self._set_status(_("Video tab selected."))
+        tab_labels = {'audio': _("Audio"), 'video': _("Video"), 'image': _("Image")}
+        label = tab_labels.get(self.current_tab, self.current_tab)
+        self._set_status(_("{tab} tab selected.").format(tab=label))
         event.Skip()
 
     def _update_ui_state(self):
-        has_files = (len(self.audio_data) + len(self.video_data)) > 0
+        has_files = (len(self.audio_data) + len(self.video_data) + len(self.image_data)) > 0
         if self.is_converting:
             self.item_select_all.Enable(False)
             self.item_clear.Enable(False)
@@ -865,11 +897,12 @@ class MainWindow(wx.Frame):
             self.item_clear.Enable(True)
             self.item_remove.Enable(True)
             _lc, active_data = self._get_current_media_collection()
-            self.btn_merge.Enable(len(active_data) >= 2)
+            self.btn_merge.Enable(self.current_tab != 'image' and len(active_data) >= 2)
             self._set_status(
-                _("{audio_count} audio file(s), {video_count} video file(s) loaded.").format(
+                _("{audio_count} audio, {video_count} video, {image_count} image file(s) loaded.").format(
                     audio_count=len(self.audio_data),
                     video_count=len(self.video_data),
+                    image_count=len(self.image_data),
                 )
             )
         else:
@@ -903,7 +936,9 @@ class MainWindow(wx.Frame):
             meta.track_settings = None 
             index = self._append_media_metadata(meta)
             if first_added_target is None:
-                if meta.has_video:
+                if meta.is_image:
+                    first_added_target = ('image', self.panel_image_list.list_ctrl, index)
+                elif meta.has_video:
                     first_added_target = ('video', self.panel_video_list.list_ctrl, index)
                 else:
                     first_added_target = ('audio', self.panel_audio_list.list_ctrl, index)
@@ -921,8 +956,10 @@ class MainWindow(wx.Frame):
         if self.is_converting: return
         self.audio_data = []
         self.video_data = []
+        self.image_data = []
         self.panel_audio_list.list_ctrl.DeleteAllItems()
         self.panel_video_list.list_ctrl.DeleteAllItems()
+        self.panel_image_list.list_ctrl.DeleteAllItems()
         self._update_ui_state()
         self._set_status(_("List cleared."))
 
@@ -932,10 +969,13 @@ class MainWindow(wx.Frame):
         if self.current_tab == 'audio':
             lst = self.panel_audio_list.list_ctrl
             data = self.audio_data
+        elif self.current_tab == 'image':
+            lst = self.panel_image_list.list_ctrl
+            data = self.image_data
         else:
             lst = self.panel_video_list.list_ctrl
             data = self.video_data
-            
+
         # GetNextSelected loop
         selected_indices = []
         idx = lst.GetFirstSelected()
@@ -982,6 +1022,7 @@ class MainWindow(wx.Frame):
         if idx == wx.NOT_FOUND: return
         fmt_key = self.current_fmt_keys_active[idx]
         if self.current_tab == 'audio': self.settings_store['last_format_audio'] = fmt_key
+        elif self.current_tab == 'image': self.settings_store['last_format_image'] = fmt_key
         else: self.settings_store['last_format_video'] = fmt_key
         self._save_config()
         self._update_combo_format_accessible_name()
@@ -997,6 +1038,7 @@ class MainWindow(wx.Frame):
         input_has_vid = (self.current_tab == 'video')
         if self.current_tab == 'audio' and self.audio_data: input_ac = self.audio_data[0].audio_codec
         elif self.current_tab == 'video' and self.video_data: input_ac = self.video_data[0].audio_codec
+        elif self.current_tab == 'image': input_ac = ""
         current_saved = self.settings_store.get(fmt_key, {})
         
         # Passage du fmt_key pour la logique interne
@@ -1045,6 +1087,9 @@ class MainWindow(wx.Frame):
         if self.current_tab == 'audio':
             data = self.audio_data
             lst = self.panel_audio_list.list_ctrl
+        elif self.current_tab == 'image':
+            data = self.image_data
+            lst = self.panel_image_list.list_ctrl
         else:
             data = self.video_data
             lst = self.panel_video_list.list_ctrl

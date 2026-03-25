@@ -51,7 +51,8 @@ class MediaMetadata:
         self.audio_codec = ""
         self.width = 0
         self.height = 0
-        self.has_video = False 
+        self.has_video = False
+        self.is_image = False
         self.track_settings = None
         self.audio_extract_track = None
 
@@ -82,19 +83,27 @@ class MediaMetadata:
         return self.get_default_audio_track()
 
     def get_summary(self):
+        if self.is_image:
+            parts = []
+            if self.width and self.height:
+                parts.append(f"{self.width}x{self.height}")
+            if self.video_codec:
+                parts.append(self.video_codec.upper())
+            return " / ".join(parts) if parts else _translate("Image")
+
         v_info = ""
         if self.video_tracks:
             v = self.video_tracks[0]
             v_info = f"{v.codec_name.upper()}"
             if self.width and self.height: v_info += f" ({self.width}x{self.height})"
-        
+
         a_info = ""
         count_a = len(self.audio_tracks)
         if count_a > 0:
             a = self.audio_tracks[0]
             if count_a > 1: a_info = _translatef("{count}x Audio", count=count_a)
             else: a_info = a.codec_name.upper()
-        
+
         s_info = ""
         count_s = len(self.subtitle_tracks)
         if count_s > 0: s_info = _translatef("{count}x Subtitles", count=count_s)
@@ -189,10 +198,27 @@ class FileProber:
                     else:
                         meta.subtitle_tracks.append(track)
 
+            meta.is_image = self._detect_image(meta, fmt)
+            if meta.is_image:
+                meta.has_video = False
+
         except Exception as e:
             logging.error(f"Erreur fatale probing {file_path}", exc_info=True) # LOG CRITIQUE
-            
+
         return meta
+
+    def _detect_image(self, meta, fmt_data):
+        IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.avif', '.tiff', '.tif', '.bmp'}
+        IMAGE_FORMAT_NAMES = {'image2', 'jpeg_pipe', 'png_pipe', 'webp_pipe', 'bmp_pipe', 'tiff_pipe', 'avif'}
+        ext = os.path.splitext(meta.filename)[1].lower()
+        if ext in IMAGE_EXTENSIONS:
+            return True
+        format_name = str(fmt_data.get('format_name', '')).lower()
+        if any(img_fmt in format_name for img_fmt in IMAGE_FORMAT_NAMES):
+            return True
+        if meta.video_tracks and not meta.audio_tracks and meta.duration <= 0:
+            return True
+        return False
 
     def _get_startup_info(self):
         if os.name == 'nt':
