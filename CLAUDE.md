@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.7.1`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.9.1`.
 
 ## Running and building
 
@@ -52,10 +52,10 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 
 ### Key data flow
 
-1. User adds files → `FileProber` (wraps `ffprobe`) extracts `MediaMetadata`.
-2. User selects format/settings → `formatting.py` provides codec presets and validation.
+1. User adds files → `FileProber` (wraps `ffprobe`) extracts `MediaMetadata`. Images are detected via extension, ffprobe format name, or heuristic and routed to a dedicated image tab.
+2. User selects format/settings → `formatting.py` provides codec presets and validation for audio, video, and image formats.
 3. User starts conversion → `BatchConversionManager` (`core/batch_manager.py`) spawns parallel `ConversionTask` threads.
-4. Each `ConversionTask` builds and executes an FFmpeg command line via `core/conversion.py`.
+4. Each `ConversionTask` builds and executes an FFmpeg command line via `core/conversion.py`. Image conversion uses a dedicated code path (`_build_image_command` / `_run_image_conversion`).
 5. Config and session state persisted to `%APPDATA%\AccessibleMediaConverter`.
 
 ### Version and release metadata
@@ -70,6 +70,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 - Updating `bin/` does **not** update `dist/`. Always rebuild after an FFmpeg update before publishing.
 - The updater in `core/updater.py` only accepts the exact asset `AccessibleMediaConverter-Setup.exe`. The legacy fallback to versioned asset names was removed in v1.8.0.
 - The FFmpeg update script reads the full release list from `GyanD/codexffmpeg` instead of `releases/latest`, because `latest` may not be the most recent build.
+- Python 3.14+ detects `_` variable shadowing in function scope. Never use `_` as a throwaway variable in functions that call `_()` for gettext — use explicit names like `label` or index access like `item[0]`.
 
 ## Release workflow
 
@@ -84,10 +85,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y.Z" --notes-file .\dist\release-notes.md
 ```
 
-## Upcoming: v1.8.0
+## Recent changes
 
-- Remove legacy updater fallback to versioned asset name (single `AccessibleMediaConverter-Setup.exe` only)
-- Bilingual release notes in a single GitHub release body with per-language extraction
-- Fix i18n in support dialog
-
-See `docs/plans/v1.8-updater-release-notes.md` for the detailed plan.
+- **v1.9.1** — Image conversion support (JPEG, PNG, WebP, TIFF, BMP) with dedicated UI tab, format-specific settings dialog, resize with aspect ratio preservation, and French translations. Auto error report dialog. Logger crash fix for exe without console.
+- **v1.8.0** — Removed legacy updater fallback. Bilingual release notes. Fixed i18n in support dialog. Accessibility improvements (StaticBox tab order, keyboard navigation, estimated time remaining).

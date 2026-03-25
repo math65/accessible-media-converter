@@ -322,28 +322,36 @@ class ConversionTask:
         vf_filters = []
         resize = self.settings.get('image_resize', 'original')
         if resize and resize != 'original' and 'x' in resize:
-            w, h = resize.split('x', 1)
-            vf_filters.append(f"scale={w}:{h}:force_original_aspect_ratio=decrease")
+            parts = resize.split('x', 1)
+            try:
+                w, h = int(parts[0]), int(parts[1])
+                if w > 0 and h > 0:
+                    vf_filters.append(f"scale={w}:{h}:force_original_aspect_ratio=decrease")
+            except (ValueError, IndexError):
+                logging.warning("Valeur de resize invalide ignorée: %s", resize)
 
         if vf_filters:
             cmd.extend(['-vf', ','.join(vf_filters)])
 
         fmt = self.target_format
         if fmt == 'jpeg':
-            quality = int(self.settings.get('image_quality', 85))
-            qv = max(2, 31 - int(quality * 29 / 100))
+            quality = max(1, min(100, int(self.settings.get('image_quality', 85))))
+            qv = max(2, min(31, 31 - int((quality - 1) * 29 / 99)))
             cmd.extend(['-q:v', str(qv)])
         elif fmt == 'png':
-            compression = int(self.settings.get('image_compression', 6))
+            compression = max(0, min(9, int(self.settings.get('image_compression', 6))))
             cmd.extend(['-compression_level', str(compression)])
         elif fmt == 'webp':
             if self.settings.get('image_lossless', False):
                 cmd.extend(['-c:v', 'libwebp', '-lossless', '1'])
             else:
-                quality = int(self.settings.get('image_quality', 80))
+                quality = max(0, min(100, int(self.settings.get('image_quality', 80))))
                 cmd.extend(['-c:v', 'libwebp', '-quality', str(quality)])
         elif fmt == 'tiff':
-            compression = str(self.settings.get('image_compression', 'lzw'))
+            valid_tiff = ('lzw', 'deflate', 'packbits', 'none')
+            compression = str(self.settings.get('image_compression', 'lzw')).lower()
+            if compression not in valid_tiff:
+                compression = 'lzw'
             cmd.extend(['-compression_algo', compression])
 
         cmd.append('-an')

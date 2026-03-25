@@ -322,8 +322,19 @@ def normalize_format_settings(format_key, settings):
     if isinstance(settings, dict):
         normalized.update(settings)
     if format_key in IMAGE_OUTPUT_FORMAT_KEYS:
+        if format_key in ("jpeg", "webp"):
+            normalized["image_quality"] = max(1, min(100, int(normalized.get("image_quality", 85 if format_key == "jpeg" else 80))))
+        if format_key == "png":
+            normalized["image_compression"] = max(0, min(9, int(normalized.get("image_compression", 6))))
         if format_key == "webp":
             normalized["image_lossless"] = bool(normalized.get("image_lossless", False))
+        if format_key == "tiff":
+            comp = str(normalized.get("image_compression", "lzw")).lower()
+            if comp not in ("lzw", "deflate", "packbits", "none"):
+                comp = "lzw"
+            normalized["image_compression"] = comp
+        if normalized.get("image_resize", "original") not in [k for k, _ in IMAGE_RESIZE_OPTIONS]:
+            normalized["image_resize"] = "original"
         normalized["summary"] = build_image_format_summary(format_key, normalized)
         return normalized
     normalized["audio_normalize_streaming"] = bool(normalized.get("audio_normalize_streaming", False))

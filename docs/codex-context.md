@@ -4,7 +4,7 @@
 
 - Produit actuel : `Accessible Media Converter`
 - Nature : application desktop Windows de transcodage media basee sur `wxPython` et `FFmpeg`
-- Version repere actuelle : `1.7.1`
+- Version repere actuelle : `1.9.1`
 - Positionnement : accessibilite forte, usage clavier, conversion media reelle pour utilisateurs NVDA et grand public Windows
 - Usage principal de ce fichier : memoire de reprise pour agents IA, lisible humainement, suffisante pour reprendre une maintenance release sans dependre du chat precedent
 
@@ -26,11 +26,11 @@ L'application est une base v1.x deja fonctionnelle, pas un prototype. Elle couvr
 - conversion audio vers audio
 - conversion video vers video `MP4` / `MKV`
 - extraction audio depuis video
+- conversion d'images (`JPEG`, `PNG`, `WebP`, `TIFF`, `BMP`) avec reglages par format, redimensionnement et onglet dedie
 - gestion explicite des pistes video, audio et sous-titres
 - conversions par lot avec parallelisme configurable
 - mise a jour applicative via GitHub
-- contact support integre
-- mode debug avec restauration de session
+- contact support integre avec rapport d'erreur automatique
 - packaging Windows avec PyInstaller et Inno Setup
 - preference de langue utilisateur avec `auto`, `fr`, `en`
 - documentation locale utilisateur FR et EN integree localement
@@ -49,17 +49,14 @@ L'application est une base v1.x deja fonctionnelle, pas un prototype. Elle couvr
 
 ## Etat reel au dernier controle
 
-- Date du dernier controle complet : `2026-03-11`
-- Commit de reference du dernier controle stable : `6a12c2a`
-- Version applicative courante : `1.7.1`
-- Release GitHub publique courante : `v1.7.1`
-- URL release GitHub : `https://github.com/math65/accessible-media-converter/releases/tag/v1.7.1`
-- Asset canonique publie : `AccessibleMediaConverter-Setup.exe`
-- Asset versionne encore publie pour compatibilite updater avant `1.8.0` : `AccessibleMediaConverter-Setup-1.7.1.exe`
-- FFmpeg embarque dans `bin/` au dernier controle : `2026-03-09-git-9b7439c31b-essentials_build`
-- FFmpeg embarque dans le `dist/` regenere pour `1.7.1` au dernier controle : `2026-03-09-git-9b7439c31b-essentials_build`
-- Le module updater applicatif a ete smoke-teste apres publication de `v1.7.1` : il resolvait bien `1.7.1`, l'asset canonique `AccessibleMediaConverter-Setup.exe`, la date de publication et les notes de release.
-- Le dernier controle stable a eu lieu apres commit, build, push et publication de `v1.7.1`.
+- Date du dernier controle complet : `2026-03-25`
+- Version applicative courante : `1.9.1`
+- Changements majeurs depuis `1.7.1` :
+  - `1.8.0` : suppression fallback updater, release notes bilingues, fix i18n support, accessibilite amelioree
+  - `1.8.1` : correctifs build
+  - `1.9.0` : dialogue rapport d'erreur automatique, suppression mode debug
+  - `1.9.1` : fix logger crash exe sans console, **support conversion d'images** (JPEG, PNG, WebP, TIFF, BMP)
+- Asset canonique unique depuis `1.8.0` : `AccessibleMediaConverter-Setup.exe` (plus de fallback versionne)
 - Attention critique : ne jamais recopier "depot propre" dans ce fichier sans reexecuter `git status`.
 - Attention critique : si ce fichier vient d'etre modifie dans le fil courant et n'est pas encore committe, le depot n'est plus propre.
 
@@ -172,7 +169,7 @@ Sorties attendues apres succes :
 
 ## Workflow release GitHub
 
-Procedure de maintenance release type `1.7.1` :
+Procedure de maintenance release :
 
 1. Verifier `git status`.
 2. Confirmer la version de `bin/ffmpeg.exe` et `bin/ffprobe.exe`.
@@ -182,31 +179,17 @@ Procedure de maintenance release type `1.7.1` :
 6. Executer `scripts/build_release.ps1`.
 7. Verifier que `dist\AccessibleMediaConverter\_internal\bin\ffmpeg.exe` embarque bien la version voulue.
 8. Verifier que `dist\AccessibleMediaConverter-Setup.exe` existe.
-9. Tant que `1.8.0` n'a pas supprime la compatibilite legacy, dupliquer l'installateur canonique en `AccessibleMediaConverter-Setup-<version>.exe`.
-10. Commit.
-11. Push.
-12. Publier la release GitHub.
-
-Commandes operatoires de reference :
-
-Duplication de l'asset versionne avant `1.8.0` :
-
-```powershell
-Copy-Item .\dist\AccessibleMediaConverter-Setup.exe .\dist\AccessibleMediaConverter-Setup-X.Y.Z.exe -Force
-```
+9. Commit.
+10. Push.
+11. Publier la release GitHub.
 
 Publication GitHub :
 
 ```powershell
-gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe .\dist\AccessibleMediaConverter-Setup-X.Y.Z.exe --title "vX.Y.Z" --notes-file .\release-notes\vX.Y.Z.md
+gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y.Z" --notes-file .\dist\release-notes.md
 ```
 
-Comportement attendu avant `1.8.0` :
-
-- publier les deux assets setup
-- l'updater actuel choisit d'abord `AccessibleMediaConverter-Setup.exe`
-- l'updater garde encore un fallback vers `AccessibleMediaConverter-Setup-<version>.exe`
-- cette compatibilite legacy est volontaire en `1.7.1` et n'a pas encore ete retiree dans `core/updater.py`
+Depuis `1.8.0` : asset unique `AccessibleMediaConverter-Setup.exe`, plus de fallback versionne.
 
 ## Verification post-build / post-release
 
@@ -241,7 +224,7 @@ Commande de verification GitHub :
 gh release view vX.Y.Z --json tagName,name,isDraft,isPrerelease,publishedAt,assets,url
 ```
 
-Smoke check updater deja valide en `1.7.1` :
+Smoke check updater :
 
 ```powershell
 @'
@@ -273,25 +256,14 @@ Verifier a minima :
 - le script FFmpeg doit donc lire la liste des releases publiees
 - le contexte ne doit pas annoncer "depot propre" sans verification terminale immediate
 - le contexte ne doit pas deriver en manuel complet du code, mais il doit couvrir les workflows de reprise necessaires
+- Python 3.14+ detecte le shadowing de `_` dans le scope d'une fonction : ne jamais utiliser `_` comme variable jetable dans les fonctions qui appellent `_()` pour gettext
 
 ## Chantier actif et prochaine version
 
-- Le chantier `1.7.1` est termine.
+- `1.8.0` et `1.9.x` sont termines et publies.
+- Feature image (JPEG, PNG, WebP, TIFF, BMP) ajoutee en `1.9.1` : detection, conversion FFmpeg, onglet UI dedie, dialogue de reglages, traductions FR.
+- AVIF est exclu pour l'instant (pas de libaom-av1 dans le FFmpeg embarque). Peut etre ajoute plus tard.
 - Il n'y a pas de feature en cours a reprendre automatiquement sans nouvelle consigne utilisateur.
-- La prochaine etape produit deja cadree est `v1.8.0`, documentee dans `docs/plans/v1.8-updater-release-notes.md`.
-
-Points figes pour `1.8.0` :
-
-- suppression du fallback updater vers `AccessibleMediaConverter-Setup-<version>.exe`
-- asset unique `AccessibleMediaConverter-Setup.exe`
-- release notes GitHub bilingues dans un seul `body`
-- extraction des notes par langue
-- correction i18n de la fenetre support
-
-Rappel important :
-
-- `1.7.1` a volontairement garde la compatibilite des assets versionnes
-- cette compatibilite n'a pas encore ete retiree de `core/updater.py`
 
 ## Convention de handoff
 
@@ -317,6 +289,6 @@ Si un fil plante ou si une nouvelle conversation reprend le travail :
 
 ## Derniere mise a jour
 
-- Date : `2026-03-11`
-- Sujet actif : etat stable apres publication de `v1.7.1`, avec plan `v1.8.0` toujours fige pour updater + release notes
-- Prochaine etape attendue : attendre la prochaine consigne produit ; pour `1.8.0`, appliquer le plan updater / release notes, retirer le fallback asset versionne et corriger l'i18n de la fenetre support
+- Date : `2026-03-25`
+- Sujet actif : support conversion d'images ajoute en `1.9.1`, docs et code mis a jour
+- Prochaine etape attendue : attendre la prochaine consigne produit

@@ -10,11 +10,12 @@ The project is designed with accessibility and keyboard-driven workflows in mind
 - Application language preference with automatic system detection
 - Audio-to-audio and video-to-audio conversion
 - Video-to-video conversion for `MP4` and `MKV`
+- Image conversion (`JPEG`, `PNG`, `WebP`, `TIFF`, `BMP`) with quality/compression controls and resize
 - Explicit track selection for video, audio, and subtitles
 - Audio extraction track selection for multi-audio video files
 - Batch conversion with configurable parallel jobs
 - Optional streaming normalization at `-16 LUFS`
-- Debug mode with session snapshot and user-facing debug folder
+- Auto error report dialog with session context
 - Built-in support contact flow
 - PHP support-report backend for direct email delivery
 - Installer-based Windows release pipeline
@@ -25,11 +26,13 @@ Input support depends on `FFmpeg` / `ffprobe`, but the application currently tar
 
 - Audio: `MP3`, `WAV`, `FLAC`, `AAC`, `OGG`, `WMA`, `M4A`
 - Video: `MP4`, `MKV`, `AVI`, `MOV`, `WMV`, `WEBM`
+- Image: `JPEG`, `PNG`, `WebP`, `AVIF`, `TIFF`, `BMP`
 
 Current output formats:
 
 - Audio: `MP3`, `AAC`, `WAV`, `FLAC`, `ALAC`, `OGG`, `WMA`
 - Video: `MP4`, `MKV`
+- Image: `JPEG`, `PNG`, `WebP`, `TIFF`, `BMP`
 
 ## Main features
 
@@ -150,4 +153,4 @@ Support contact address:
 
 Current public version in the repository metadata:
 
-- `1.7.1`
+- `1.9.1`
