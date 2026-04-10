@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Run from source:**
 ```powershell
-python main.py
+.venv\Scripts\python.exe main.py
 ```
 
 **Full release build** (compiles translations, PyInstaller, Inno Setup):
@@ -32,10 +32,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1
 
 **Translation management:**
 ```powershell
-python .\scripts\manage_i18n.py extract
-python .\scripts\manage_i18n.py update --lang fr
-python .\scripts\manage_i18n.py init --lang es
+.venv\Scripts\python.exe .\scripts\manage_i18n.py extract
+.venv\Scripts\python.exe .\scripts\manage_i18n.py update --lang fr
+.venv\Scripts\python.exe .\scripts\manage_i18n.py init --lang es
 ```
+
+In development, `core/i18n.py` loads `.po` files directly via `polib` — no need to compile `.mo` files while iterating on translations.
 
 There is no automated test suite. Validation is manual (smoke test the built exe, run updater smoke check).
 
@@ -44,7 +46,18 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 ### Layers
 
 - **`main.py`** — Entry point: loads config, installs gettext translation, cleans update artifacts, launches wxPython `MainLoop`.
-- **`core/`** — All business logic: conversion, probing, batch management, formatting presets, track settings, i18n, auto-updater, support contact, debug/session state. Public API exported via `core/__init__.py`: `ConversionTask`, `FileProber`, `MediaMetadata`.
+- **`core/`** — All business logic. Key modules:
+  - `conversion.py` — `ConversionTask`: builds and runs FFmpeg commands (audio/video/image paths).
+  - `probe.py` — `FileProber` / `MediaMetadata` / `MediaTrack`: wraps `ffprobe` to extract stream info.
+  - `batch_manager.py` — `BatchConversionManager`: spawns parallel `ConversionTask` threads.
+  - `merge.py` — `MergeTask`: concatenates multiple files into one output via FFmpeg concat demuxer.
+  - `formatting.py` — codec presets, format/codec constants, and settings validation.
+  - `track_settings.py` — per-file track selection overrides (which audio/video/subtitle streams to keep or map).
+  - `i18n.py` — gettext installation, language resolution, `.po`→`.mo` fallback.
+  - `debug_session.py` — config and session persistence to `%APPDATA%\AccessibleMediaConverter`.
+  - `error_report.py` — re-runs failed FFmpeg commands with `-loglevel verbose` for diagnostic reports.
+  - `updater.py`, `support.py`, `documentation.py`, `app_info.py`, `logger.py` — auto-updater, support email, local HTML docs, version info, logging setup.
+  - Public API exported via `core/__init__.py`: `ConversionTask`, `FileProber`, `MediaMetadata`.
 - **`ui/`** — wxPython UI. `ui/main_window.py` is the central orchestrator (large file by design). It handles file input, probing, dialog management, batch initiation, progress, and session restore. Separate dialog files for settings, preferences, track manager, support, and update.
 - **`scripts/`** — PowerShell release tooling and Python i18n tooling.
 - **`locales/`** — Gettext catalogs. English is the source language; French (`locales/fr/`) is the only shipped translation.
@@ -63,6 +76,20 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 - Application version is defined in `core/app_info.py`.
 - Installer version is in `installer/UniversalTranscoder.iss` (`AppVersion` default).
 - Both must be kept in sync on version bumps.
+
+### i18n in `core/` modules
+
+`core/` modules are imported before `main.py` calls `install_language()`, so they cannot call `_()` directly at import time. They use a lazy helper instead:
+
+```python
+def _translate(msgid):
+    translator = builtins.__dict__.get('_')
+    if callable(translator):
+        return translator(msgid)
+    return msgid
+```
+
+Call `_translate()` / `_translatef()` inside functions, never at module level.
 
 ## Critical gotchas
 

@@ -156,7 +156,7 @@ class FileProber:
 
             fmt = data.get('format', {})
             try: meta.duration = float(fmt.get('duration', 0))
-            except: meta.duration = 0
+            except (TypeError, ValueError): meta.duration = 0
 
             streams = data.get('streams', [])
             logging.debug(f"Nombre de flux trouvés : {len(streams)}") # LOG

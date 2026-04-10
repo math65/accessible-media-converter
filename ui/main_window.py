@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 import threading
 
@@ -556,6 +557,19 @@ class MainWindow(wx.Frame):
                 return
             self.on_select_all(None)
             return
+        # EVT_CHAR_HOOK on a wx.Frame intercepts Alt+key before Windows mnemonic
+        # processing (IsDialogMessage) sees them, so button & mnemonics never fire.
+        # We resolve them manually from the translated button label.
+        if event.AltDown() and not event.ControlDown() and not event.ShiftDown():
+            for btn, handler in (
+                (self.btn_convert, self.on_convert),
+                (self.btn_merge, self.on_merge),
+            ):
+                if btn.IsShown() and btn.IsEnabled():
+                    m = re.search(r'&(.)', btn.GetLabel())
+                    if m and ord(m.group(1).upper()) == key_code:
+                        handler(None)
+                        return
         event.Skip()
 
     def _get_paths_from_clipboard(self):
@@ -1518,15 +1532,8 @@ class MainWindow(wx.Frame):
 
     def on_contact_support(self, e):
         dlg = SupportContactDialog(self)
-        result = dlg.ShowModal()
+        dlg.ShowModal()
         dlg.Destroy()
-        if result == wx.ID_OK:
-            wx.MessageBox(
-                _("Your report has been sent successfully."),
-                _("Contact Support"),
-                wx.OK | wx.ICON_INFORMATION,
-                self,
-            )
 
     def on_about(self, e):
         message = f"{APP_NAME} {APP_VERSION}\n{_(APP_ABOUT_TAGLINE)}"

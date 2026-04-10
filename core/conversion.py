@@ -377,7 +377,13 @@ class ConversionTask:
             startupinfo=startupinfo, creationflags=subprocess.CREATE_NO_WINDOW
         )
 
-        _, stderr_output = self.process.communicate(timeout=120)
+        try:
+            _, stderr_output = self.process.communicate(timeout=120)
+        except subprocess.TimeoutExpired:
+            self.process.kill()
+            self.process.communicate()
+            raise Exception("FFmpeg image conversion timed out after 120 seconds")
+
         if stderr_output:
             for line in stderr_output.strip().splitlines()[-50:]:
                 self.stderr_lines.append(line.strip())
@@ -515,7 +521,8 @@ class ConversionTask:
                             current_seconds = int(h) * 3600 + int(m) * 60 + float(s)
                             percent = int((current_seconds / self.duration) * 100)
                             progress_callback(min(max(percent, 0), 100))
-                        except: pass
+                        except (ValueError, TypeError):
+                            pass
 
         if self.process.returncode != 0:
             if stop_check_callback and stop_check_callback():

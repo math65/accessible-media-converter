@@ -116,7 +116,7 @@ class MergeTask:
         try:
             with os.fdopen(list_fd, 'w', encoding='utf-8') as f:
                 for meta in self.input_list:
-                    path = meta.full_path.replace('\\', '/')
+                    path = meta.full_path.replace('\\', '/').replace("'", "\\'")
                     f.write(f"file '{path}'\n")
 
             cmd = [self.ffmpeg_exe, '-y', '-f', 'concat', '-safe', '0', '-i', list_path]
@@ -133,9 +133,17 @@ class MergeTask:
                     if pixel_format == 'yuv420p':
                         video_profile = str(self.settings.get('video_profile', 'high') or 'high')
                         cmd.extend(['-profile:v', video_profile])
-                self._apply_audio_codec_settings(cmd)
+                audio_mode = self.settings.get('audio_mode', 'convert')
+                if audio_mode == 'copy':
+                    cmd.extend(['-c:a', 'copy'])
+                else:
+                    self._apply_audio_codec_settings(cmd)
             else:
-                self._apply_audio_codec_settings(cmd)
+                audio_mode = self.settings.get('audio_mode', 'convert')
+                if audio_mode == 'copy':
+                    cmd.extend(['-c:a', 'copy'])
+                else:
+                    self._apply_audio_codec_settings(cmd)
                 cmd.append('-vn')
 
             thread_count = self._get_ffmpeg_threads_value()
