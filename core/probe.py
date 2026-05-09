@@ -1,10 +1,10 @@
 import os
-import sys
 import subprocess
 import json
 import logging
 import builtins
 
+from core.ffmpeg_helpers import get_ffprobe_path
 from core.track_settings import is_ui_track_visible
 
 FFPROBE_TIMEOUT_SECONDS = 30
@@ -117,16 +117,6 @@ class FileProber:
     def __init__(self):
         pass
 
-    def _get_ffprobe_path(self):
-        if getattr(sys, 'frozen', False):
-            base_path = sys._MEIPASS
-        else:
-            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        
-        probe_path = os.path.join(base_path, 'bin', 'ffprobe.exe')
-        if os.path.exists(probe_path): return probe_path
-        return "ffprobe"
-
     def analyze(self, file_path):
         meta = MediaMetadata(file_path)
 
@@ -135,7 +125,7 @@ class FileProber:
             return meta
 
         meta.size_bytes = os.path.getsize(file_path)
-        ffprobe = self._get_ffprobe_path()
+        ffprobe = get_ffprobe_path()
 
         cmd = [
             ffprobe,

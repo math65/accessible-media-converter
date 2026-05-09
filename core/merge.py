@@ -2,13 +2,17 @@ import logging
 import os
 import re
 import subprocess
-import sys
 import tempfile
 
-from core.conversion import STREAMING_LOUDNORM_FILTER
+from core.ffmpeg_helpers import (
+    STREAMING_LOUDNORM_FILTER,
+    VIDEO_CONTAINER_OUTPUTS,
+    apply_audio_codec_args,
+    apply_common_audio_options,
+    get_ffmpeg_path,
+    parse_ffmpeg_threads,
+)
 from core.formatting import get_effective_audio_codec
-
-MERGE_VIDEO_CONTAINERS = ('mp4', 'mkv', 'mov')
 
 
 class MergeTask:
@@ -17,23 +21,12 @@ class MergeTask:
         self.target_format = target_format
         self.settings = settings
         self.output_path = output_path
-        self.ffmpeg_exe = self._get_ffmpeg_path()
+        self.ffmpeg_exe = get_ffmpeg_path()
         self.process = None
         self.stderr_lines = []
         self.total_duration = sum(
             float(getattr(m, 'duration', 0) or 0) for m in input_list
         )
-
-    def _get_ffmpeg_path(self):
-        if getattr(sys, 'frozen', False):
-            base_path = sys._MEIPASS
-        else:
-            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        ffmpeg_path = os.path.join(base_path, 'bin', 'ffmpeg.exe')
-        if not os.path.exists(ffmpeg_path):
-            logging.warning("ffmpeg.exe non trouvé dans bin/, utilisation du PATH système")
-            return "ffmpeg"
-        return ffmpeg_path
 
     def stop(self):
         if self.process and self.process.poll() is None:
@@ -43,70 +36,14 @@ class MergeTask:
             except Exception:
                 logging.exception("Impossible d'interrompre FFmpeg (fusion).")
 
-    def _get_ffmpeg_threads_value(self):
-        value = self.settings.get("ffmpeg_threads", "auto")
-        if isinstance(value, str) and value.lower() == "auto":
-            return None
-        try:
-            parsed = int(value)
-        except (TypeError, ValueError):
-            return None
-        return max(1, parsed)
-
-    def _apply_common_audio_options(self, cmd):
-        sample_rate = self.settings.get('audio_sample_rate', 'original')
-        if sample_rate != 'original':
-            cmd.extend(['-ar', sample_rate])
-        channels = self.settings.get('audio_channels', 'original')
-        if channels == '2':
-            cmd.extend(['-ac', '2'])
-        elif channels == '1':
-            cmd.extend(['-ac', '1'])
-
     def _apply_audio_codec_settings(self, cmd):
-        if self.target_format in MERGE_VIDEO_CONTAINERS:
+        if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             codec_key = get_effective_audio_codec(self.target_format, self.settings)
         else:
             codec_key = self.target_format
 
-        self._apply_common_audio_options(cmd)
-
-        if codec_key == 'mp3':
-            cmd.extend(['-c:a', 'libmp3lame'])
-            if self.settings.get('rate_mode', 'cbr') == 'cbr':
-                cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
-            else:
-                cmd.extend(['-q:a', str(self.settings.get('audio_qscale', 0))])
-        elif codec_key == 'aac':
-            cmd.extend(['-c:a', 'aac'])
-            if self.settings.get('rate_mode', 'cbr') == 'cbr':
-                cmd.extend(['-b:a', self.settings.get('audio_bitrate', '192k')])
-            else:
-                cmd.extend(['-q:a', str(self.settings.get('audio_qscale', 3))])
-        elif codec_key == 'opus':
-            cmd.extend(['-c:a', 'libopus', '-b:a', self.settings.get('audio_bitrate', '192k')])
-        elif codec_key == 'ogg':
-            cmd.extend(['-c:a', 'libvorbis', '-q:a', str(self.settings.get('audio_qscale', 6))])
-        elif codec_key == 'wma':
-            cmd.extend(['-c:a', 'wmav2', '-b:a', self.settings.get('audio_bitrate', '128k')])
-        elif codec_key == 'wav':
-            depth = self.settings.get('audio_bit_depth', 'original')
-            codec_map = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
-            cmd.extend(['-c:a', codec_map.get(str(depth), 'pcm_s16le')])
-        elif codec_key == 'flac':
-            cmd.extend(['-c:a', 'flac', '-compression_level', str(self.settings.get('flac_compression', 5))])
-            depth = self.settings.get('audio_bit_depth', 'original')
-            if depth == '16':
-                cmd.extend(['-sample_fmt', 's16'])
-            elif depth == '24':
-                cmd.extend(['-sample_fmt', 's32'])
-        elif codec_key == 'alac':
-            cmd.extend(['-c:a', 'alac'])
-            depth = self.settings.get('audio_bit_depth', 'original')
-            if depth == '16':
-                cmd.extend(['-sample_fmt', 's16p'])
-            elif depth == '24':
-                cmd.extend(['-sample_fmt', 's32p'])
+        apply_common_audio_options(cmd, self.settings)
+        apply_audio_codec_args(cmd, codec_key, self.settings)
 
         if (
             self.settings.get("audio_normalize_streaming", False)
@@ -124,7 +61,7 @@ class MergeTask:
 
             cmd = [self.ffmpeg_exe, '-y', '-f', 'concat', '-safe', '0', '-i', list_path]
 
-            if self.target_format in MERGE_VIDEO_CONTAINERS:
+            if self.target_format in VIDEO_CONTAINER_OUTPUTS:
                 video_mode = self.settings.get('video_mode', 'convert')
                 if video_mode == 'copy':
                     cmd.extend(['-c:v', 'copy'])
@@ -149,7 +86,7 @@ class MergeTask:
                     self._apply_audio_codec_settings(cmd)
                 cmd.append('-vn')
 
-            thread_count = self._get_ffmpeg_threads_value()
+            thread_count = parse_ffmpeg_threads(self.settings)
             if thread_count is not None:
                 cmd.extend(['-threads', str(thread_count)])
 
