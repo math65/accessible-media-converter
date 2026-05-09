@@ -84,7 +84,6 @@ class FileListPanel(wx.Panel):
     def __init__(self, parent, list_name):
         super().__init__(parent)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        # CORRECTION A03 : Suppression de wx.LC_SINGLE_SEL pour permettre la sélection multiple
         self.list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.BORDER_SUNKEN)
         self.list_ctrl.InsertColumn(0, _("Filename"), width=300)
         self.list_ctrl.InsertColumn(1, _("Details (Codec/Bitrate)"), width=250)
@@ -151,13 +150,12 @@ class MainWindow(wx.Frame):
         try:
             save_raw_config(self.settings_store)
         except Exception:
-            pass
+            logging.exception("Unable to save configuration to %s", self.config_path)
 
     def _init_menu_bar(self):
         menubar = wx.MenuBar()
         file_menu = wx.Menu()
         item_add = file_menu.Append(wx.ID_OPEN, _("&Add Files...") + "\tCtrl+O")
-        # CORRECTION A02 : On garde la référence pour le bind
         item_add_folder = file_menu.Append(wx.ID_ANY, _("Add &Folder..."))
         file_menu.AppendSeparator()
         item_exit = file_menu.Append(wx.ID_EXIT, _("E&xit") + "\tAlt+F4")
@@ -181,7 +179,6 @@ class MainWindow(wx.Frame):
         item_about = help_menu.Append(wx.ID_ABOUT, _("&About"))
 
         self.Bind(wx.EVT_MENU, self.on_add_files, item_add)
-        # CORRECTION A02 : Le Bind manquant !
         self.Bind(wx.EVT_MENU, self.on_add_folder, item_add_folder)
         self.Bind(wx.EVT_MENU, self.on_exit, item_exit)
         self.Bind(wx.EVT_MENU, self.on_paste_files, item_paste)
@@ -504,7 +501,6 @@ class MainWindow(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
-    # --- CORRECTION A02 : AJOUT DE LA FONCTION ---
     def on_add_folder(self, event):
         if self.is_converting: return
         with wx.DirDialog(self, _("Select a folder to add"), style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dlg:
@@ -977,7 +973,6 @@ class MainWindow(wx.Frame):
         self._update_ui_state()
         self._set_status(_("List cleared."))
 
-    # CORRECTION A03 : Support de la sélection multiple
     def on_remove_selected(self, event):
         if self.is_converting: return
         if self.current_tab == 'audio':
@@ -1346,6 +1341,16 @@ class MainWindow(wx.Frame):
             label += " — " + _("{eta} remaining").format(eta=eta)
         return label
 
+    def _is_error_report_dialog_alive(self):
+        dlg = self._error_report_dialog
+        if dlg is None:
+            return False
+        try:
+            return bool(dlg.IsShown())
+        except RuntimeError:
+            self._error_report_dialog = None
+            return False
+
     def _on_batch_job_update(self, payload):
         if not self._current_batch_list_ctrl:
             return
@@ -1356,10 +1361,9 @@ class MainWindow(wx.Frame):
 
         if payload.get('state') == JOB_STATE_ERROR:
             error_msg = payload.get('error_message', '')
-            if error_msg != 'Stopped by user':
-                if not self._error_report_dialog or not self._error_report_dialog.IsShown():
-                    from ui.error_report_dialog import ErrorReportDialog
-                    self._error_report_dialog = ErrorReportDialog(self, payload, self.settings_store)
+            if error_msg != 'Stopped by user' and not self._is_error_report_dialog_alive():
+                from ui.error_report_dialog import ErrorReportDialog
+                self._error_report_dialog = ErrorReportDialog(self, payload, self.settings_store)
 
     def _on_batch_progress_update(self, summary):
         progress_value = summary.get('overall_progress', 0)

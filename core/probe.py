@@ -2,10 +2,12 @@ import os
 import sys
 import subprocess
 import json
-import logging # Ajout
+import logging
 import builtins
 
 from core.track_settings import is_ui_track_visible
+
+FFPROBE_TIMEOUT_SECONDS = 30
 
 
 def _translate(msgid):
@@ -126,42 +128,39 @@ class FileProber:
         return "ffprobe"
 
     def analyze(self, file_path):
-        logging.debug(f"Analyse demandée pour : {file_path}") # LOG
         meta = MediaMetadata(file_path)
-        
+
         if not os.path.exists(file_path):
-            logging.error(f"Fichier introuvable : {file_path}") # LOG
+            logging.error("Fichier introuvable : %s", file_path)
             return meta
-            
+
         meta.size_bytes = os.path.getsize(file_path)
         ffprobe = self._get_ffprobe_path()
-        logging.debug(f"Utilisation de ffprobe : {ffprobe}") # LOG
 
         cmd = [
-            ffprobe, 
-            '-v', 'quiet', 
-            '-print_format', 'json', 
-            '-show_format', 
-            '-show_streams', 
-            file_path
+            ffprobe,
+            '-v', 'quiet',
+            '-print_format', 'json',
+            '-show_format',
+            '-show_streams',
+            file_path,
         ]
-        
+
         try:
-            logging.debug("Exécution commande ffprobe...")
-            output = subprocess.check_output(cmd, startupinfo=self._get_startup_info())
+            output = subprocess.check_output(
+                cmd,
+                startupinfo=self._get_startup_info(),
+                timeout=FFPROBE_TIMEOUT_SECONDS,
+            )
             data = json.loads(output)
-            
-            # LOG DU JSON BRUT (Pour comprendre pourquoi il rate des trucs)
-            logging.debug(f"JSON ffprobe reçu (tronqué) : {str(data)[:500]}...") 
 
             fmt = data.get('format', {})
-            try: meta.duration = float(fmt.get('duration', 0))
-            except (TypeError, ValueError): meta.duration = 0
+            try:
+                meta.duration = float(fmt.get('duration', 0))
+            except (TypeError, ValueError):
+                meta.duration = 0
 
-            streams = data.get('streams', [])
-            logging.debug(f"Nombre de flux trouvés : {len(streams)}") # LOG
-
-            for stream in streams:
+            for stream in data.get('streams', []):
                 idx = stream.get('index')
                 c_type = stream.get('codec_type')
                 c_name = stream.get('codec_name', 'unknown')
@@ -169,41 +168,36 @@ class FileProber:
                 lang = tags.get('language', 'und')
                 title = tags.get('title', None)
                 disposition = stream.get('disposition', {})
-                
+
                 track = MediaTrack(idx, c_type, c_name, lang, title, disposition)
-                
-                logging.debug(f"Stream #{idx}: Type={c_type}, Codec={c_name}, Flags={disposition}") # LOG
 
                 if c_type == 'video':
-                    if track.is_hidden_from_ui():
-                        logging.debug(" -> Flux vidéo ignoré (hors UI)")
-                    else:
+                    if not track.is_hidden_from_ui():
                         meta.video_tracks.append(track)
                         meta.has_video = True
                         if meta.width == 0:
                             meta.width = stream.get('width', 0)
                             meta.height = stream.get('height', 0)
                             meta.video_codec = c_name
-                        
+
                 elif c_type == 'audio':
-                    if track.is_hidden_from_ui():
-                        logging.debug(" -> Flux audio ignoré (hors UI)")
-                    else:
+                    if not track.is_hidden_from_ui():
                         meta.audio_tracks.append(track)
-                        if not meta.audio_codec: meta.audio_codec = c_name
-                    
+                        if not meta.audio_codec:
+                            meta.audio_codec = c_name
+
                 elif c_type == 'subtitle':
-                    if track.is_hidden_from_ui():
-                        logging.debug(" -> Flux de sous-titres ignoré (hors UI)")
-                    else:
+                    if not track.is_hidden_from_ui():
                         meta.subtitle_tracks.append(track)
 
             meta.is_image = self._detect_image(meta, fmt)
             if meta.is_image:
                 meta.has_video = False
 
-        except Exception as e:
-            logging.error(f"Erreur fatale probing {file_path}", exc_info=True) # LOG CRITIQUE
+        except subprocess.TimeoutExpired:
+            logging.error("ffprobe timeout (%ss) on %s", FFPROBE_TIMEOUT_SECONDS, file_path)
+        except Exception:
+            logging.exception("Erreur fatale probing %s", file_path)
 
         return meta
 

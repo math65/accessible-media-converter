@@ -6,7 +6,9 @@ import sys
 import tempfile
 
 from core.conversion import STREAMING_LOUDNORM_FILTER
-from core.formatting import VIDEO_CONTAINER_FORMAT_KEYS, get_effective_audio_codec
+from core.formatting import get_effective_audio_codec
+
+MERGE_VIDEO_CONTAINERS = ('mp4', 'mkv', 'mov')
 
 
 class MergeTask:
@@ -17,6 +19,7 @@ class MergeTask:
         self.output_path = output_path
         self.ffmpeg_exe = self._get_ffmpeg_path()
         self.process = None
+        self.stderr_lines = []
         self.total_duration = sum(
             float(getattr(m, 'duration', 0) or 0) for m in input_list
         )
@@ -61,7 +64,7 @@ class MergeTask:
             cmd.extend(['-ac', '1'])
 
     def _apply_audio_codec_settings(self, cmd):
-        if self.target_format in VIDEO_CONTAINER_FORMAT_KEYS:
+        if self.target_format in MERGE_VIDEO_CONTAINERS:
             codec_key = get_effective_audio_codec(self.target_format, self.settings)
         else:
             codec_key = self.target_format
@@ -121,7 +124,7 @@ class MergeTask:
 
             cmd = [self.ffmpeg_exe, '-y', '-f', 'concat', '-safe', '0', '-i', list_path]
 
-            if self.target_format in VIDEO_CONTAINER_FORMAT_KEYS:
+            if self.target_format in MERGE_VIDEO_CONTAINERS:
                 video_mode = self.settings.get('video_mode', 'convert')
                 if video_mode == 'copy':
                     cmd.extend(['-c:v', 'copy'])
@@ -182,7 +185,12 @@ class MergeTask:
                     break
 
                 if line:
-                    logging.debug("FFmpeg (merge): %s", line.strip())
+                    stripped = line.strip()
+                    logging.debug("FFmpeg (merge): %s", stripped)
+                    self.stderr_lines.append(stripped)
+                    if len(self.stderr_lines) > 200:
+                        self.stderr_lines.pop(0)
+
                     if progress_callback and self.total_duration > 0:
                         match = time_pattern.search(line)
                         if match:
@@ -191,14 +199,15 @@ class MergeTask:
                                 current_seconds = int(h) * 3600 + int(m) * 60 + float(s)
                                 percent = int((current_seconds / self.total_duration) * 100)
                                 progress_callback(min(max(percent, 0), 100))
-                            except Exception:
+                            except (ValueError, TypeError):
                                 pass
 
             if self.process.returncode != 0:
                 if stop_check_callback and stop_check_callback():
                     raise Exception("Stopped by user")
                 logging.error("FFmpeg (fusion) a échoué avec le code %s", self.process.returncode)
-                raise Exception("FFmpeg merge error")
+                tail = "\n".join(self.stderr_lines[-50:])
+                raise Exception(f"FFmpeg merge error (code {self.process.returncode}):\n{tail}")
 
             logging.info("Fusion terminée avec succès.")
 

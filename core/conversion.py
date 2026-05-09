@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 import re
-import logging # Ajout
+import logging
 
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, VIDEO_CONTAINER_FORMAT_KEYS, get_effective_audio_codec
 from core.track_settings import get_effective_track_settings, get_kept_track_entries
@@ -70,7 +70,7 @@ class ConversionTask:
         self.last_command = []
         self.stderr_lines = []
 
-        logging.debug(f"Tâche initialisée : {self.input_path} -> {self.target_format}") # LOG
+        logging.debug("Tâche initialisée : %s -> %s", self.input_path, self.target_format)
 
     def _get_ffmpeg_path(self):
         if getattr(sys, 'frozen', False):
@@ -294,8 +294,8 @@ class ConversionTask:
         effective_track_settings = get_effective_track_settings(self.meta)
         kept_video_tracks = get_kept_track_entries(effective_track_settings, "video")
         if not kept_video_tracks:
-            logging.error("Aucune piste vidéo conservée pour la sortie vidéo.")
-            raise Exception("No video track selected")
+            logging.error("Aucune piste vidéo conservée pour la sortie vidéo (%s)", self.input_path)
+            raise Exception(f"No video track selected for {os.path.basename(self.input_path)}")
 
         mapping_used = "personnalise" if getattr(self.meta, "track_settings", None) else "par defaut"
         logging.info("Utilisation du mapping vidéo explicite (%s).", mapping_used)
@@ -419,7 +419,6 @@ class ConversionTask:
         if self.target_format in IMAGE_OUTPUT_FORMAT_KEYS:
             return self._run_image_conversion(output_path)
 
-        # Construction Commande
         cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
         mapped_container_tracks = None
 
@@ -441,7 +440,6 @@ class ConversionTask:
             else:
                 logging.warning("Aucune piste audio explicite n'a pu être sélectionnée pour l'extraction.")
 
-        # --- REGLAGES ---
         audio_mode = self.settings.get('audio_mode', 'convert')
         if audio_mode == 'copy':
             cmd.extend(['-c:a', 'copy'])
@@ -482,8 +480,7 @@ class ConversionTask:
         cmd.append(output_path)
         self.last_command = list(cmd)
 
-        # LOG DE LA COMMANDE FINALE (Crucial !)
-        logging.info(f"Commande FFmpeg: {' '.join(cmd)}")
+        logging.info("Commande FFmpeg: %s", ' '.join(cmd))
 
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -495,8 +492,7 @@ class ConversionTask:
         )
 
         time_pattern = re.compile(r'time=(\d{2}):(\d{2}):(\d{2}\.\d+)')
-        
-        # Lecture ligne par ligne pour logger
+
         while True:
             if stop_check_callback and stop_check_callback():
                 logging.info("Interruption demandée par l'utilisateur.")
