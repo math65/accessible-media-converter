@@ -6,7 +6,7 @@ import threading
 
 import wx
 
-from core.app_info import APP_ABOUT_TAGLINE, APP_NAME, APP_VERSION
+from core.app_info import APP_ABOUT_TAGLINE, APP_GITHUB_REPOSITORY_URL, APP_NAME, APP_VERSION
 from core.batch_manager import (
     JOB_STATE_DONE,
     JOB_STATE_ERROR,
@@ -43,6 +43,7 @@ from core.updater import (
     fetch_latest_release,
     is_release_newer,
     launch_installer_after_exit,
+    open_release_page,
     save_updater_state,
 )
 from ui.settings_dialog import SettingsDialog
@@ -171,6 +172,7 @@ class MainWindow(wx.Frame):
 
         help_menu = wx.Menu()
         item_documentation = help_menu.Append(wx.ID_ANY, _("&Documentation..."))
+        item_github = help_menu.Append(wx.ID_ANY, _("View on &GitHub..."))
         help_menu.AppendSeparator()
         item_check_updates = help_menu.Append(wx.ID_ANY, _("Check for &Updates..."))
         help_menu.AppendSeparator()
@@ -187,6 +189,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_remove_selected, self.item_remove)
         self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs)
         self.Bind(wx.EVT_MENU, self.on_open_documentation, item_documentation)
+        self.Bind(wx.EVT_MENU, self.on_open_github, item_github)
         self.Bind(wx.EVT_MENU, self.on_check_updates, item_check_updates)
         self.Bind(wx.EVT_MENU, self.on_contact_support, item_contact_support)
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
@@ -1530,6 +1533,18 @@ class MainWindow(wx.Frame):
             ).format(path=doc_path)
 
         wx.MessageBox(message, _("Documentation"), wx.OK | wx.ICON_ERROR, self)
+
+    def on_open_github(self, e):
+        try:
+            open_release_page(APP_GITHUB_REPOSITORY_URL)
+        except Exception:
+            logging.exception("Unable to open the GitHub repository page.")
+            wx.MessageBox(
+                _("Unable to open the GitHub repository page."),
+                _("Error"),
+                wx.ICON_ERROR,
+                self,
+            )
 
     def on_check_updates(self, e):
         self._start_update_check(interactive=True)

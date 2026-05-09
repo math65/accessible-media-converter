@@ -1643,6 +1643,12 @@ msgstr "Au moins une piste vidéo doit être conservée."
 msgid "&Documentation..."
 msgstr "&Documentation..."
 
+msgid "View on &GitHub..."
+msgstr "Voir sur &GitHub..."
+
+msgid "Unable to open the GitHub repository page."
+msgstr "Impossible d'ouvrir la page GitHub du dépôt."
+
 #: ui/main_window.py:1514
 msgid "Documentation"
 msgstr "Documentation"
