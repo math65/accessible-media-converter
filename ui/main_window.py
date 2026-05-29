@@ -1298,6 +1298,8 @@ class MainWindow(wx.Frame):
         if state == JOB_STATE_DONE:
             return _("Done")
         if state == JOB_STATE_ERROR:
+            if payload.get('error_kind') == 'input_missing':
+                return _("Error (file not found)")
             return _("Error")
         if state == JOB_STATE_STOPPED:
             return _("Stopped by user")
@@ -1364,7 +1366,13 @@ class MainWindow(wx.Frame):
 
         if payload.get('state') == JOB_STATE_ERROR:
             error_msg = payload.get('error_message', '')
-            if error_msg != 'Stopped by user' and not self._is_error_report_dialog_alive():
+            if error_msg == 'Stopped by user':
+                return
+            # A missing input file is a user-side issue (file moved/deleted after import),
+            # not an FFmpeg failure worth reporting. The clear message shows in the list row.
+            if payload.get('error_kind') == 'input_missing':
+                return
+            if not self._is_error_report_dialog_alive():
                 from ui.error_report_dialog import ErrorReportDialog
                 self._error_report_dialog = ErrorReportDialog(self, payload, self.settings_store)
 

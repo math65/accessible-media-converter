@@ -30,6 +30,7 @@ class BatchJob:
     progress: int = 0
     skip_reason: str | None = None
     error_message: str = ""
+    error_kind: str = ""
     ffmpeg_command: list = field(default_factory=list)
     ffmpeg_stderr: str = ""
 
@@ -219,6 +220,8 @@ class BatchConversionManager:
                 self._set_job_state(job, JOB_STATE_STOPPED)
                 return JOB_STATE_STOPPED
 
+            if isinstance(exc, FileNotFoundError):
+                job.error_kind = "input_missing"
             self._set_job_state(job, JOB_STATE_ERROR, error_message=str(exc))
             return JOB_STATE_ERROR
         finally:
@@ -294,6 +297,7 @@ class BatchConversionManager:
             "progress": job.progress,
             "skip_reason": job.skip_reason,
             "error_message": job.error_message,
+            "error_kind": job.error_kind,
             "output_path": job.output_path,
             "input_path": getattr(job.meta, 'full_path', '') if job.meta else '',
             "target_format": job.target_format,

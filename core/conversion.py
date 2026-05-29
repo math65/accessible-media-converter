@@ -2,6 +2,7 @@ import os
 import subprocess
 import re
 import logging
+import builtins
 
 from core.ffmpeg_helpers import (
     STREAMING_LOUDNORM_FILTER,
@@ -13,6 +14,17 @@ from core.ffmpeg_helpers import (
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
 from core.track_settings import get_effective_track_settings, get_kept_track_entries
+
+
+def _translate(msgid):
+    translator = builtins.__dict__.get('_')
+    if callable(translator):
+        return translator(msgid)
+    return msgid
+
+
+def _translatef(msgid, **kwargs):
+    return _translate(msgid).format(**kwargs)
 
 
 MP4_TEXT_SUBTITLE_CODECS = frozenset(
@@ -336,6 +348,15 @@ class ConversionTask:
                 logging.exception("Impossible d'interrompre FFmpeg pour: %s", self.input_path)
 
     def run(self, progress_callback=None, stop_check_callback=None):
+        if not os.path.isfile(self.input_path):
+            logging.error("Fichier d'entrée introuvable au moment de la conversion : %s", self.input_path)
+            raise FileNotFoundError(
+                _translatef(
+                    "File not found (it may have been moved or deleted): {name}",
+                    name=os.path.basename(self.input_path),
+                )
+            )
+
         output_path = self.output_path
         if not output_path:
             output_path = build_output_path(

@@ -1,3 +1,4 @@
+import builtins
 import logging
 import os
 import re
@@ -13,6 +14,17 @@ from core.ffmpeg_helpers import (
     parse_ffmpeg_threads,
 )
 from core.formatting import get_effective_audio_codec
+
+
+def _translate(msgid):
+    translator = builtins.__dict__.get('_')
+    if callable(translator):
+        return translator(msgid)
+    return msgid
+
+
+def _translatef(msgid, **kwargs):
+    return _translate(msgid).format(**kwargs)
 
 
 class MergeTask:
@@ -52,6 +64,16 @@ class MergeTask:
             cmd.extend(['-filter:a', STREAMING_LOUDNORM_FILTER])
 
     def run(self, progress_callback=None, stop_check_callback=None):
+        for meta in self.input_list:
+            if not os.path.isfile(meta.full_path):
+                logging.error("Fichier d'entrée introuvable au moment de la fusion : %s", meta.full_path)
+                raise FileNotFoundError(
+                    _translatef(
+                        "File not found (it may have been moved or deleted): {name}",
+                        name=os.path.basename(meta.full_path),
+                    )
+                )
+
         list_fd, list_path = tempfile.mkstemp(suffix='.txt', prefix='amc_concat_')
         try:
             with os.fdopen(list_fd, 'w', encoding='utf-8') as f:
