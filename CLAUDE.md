@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.9.1`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.9.3`.
 
 ## Running and building
 
@@ -51,6 +51,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
   - `probe.py` — `FileProber` / `MediaMetadata` / `MediaTrack`: wraps `ffprobe` to extract stream info.
   - `batch_manager.py` — `BatchConversionManager`: spawns parallel `ConversionTask` threads.
   - `merge.py` — `MergeTask`: concatenates multiple files into one output via FFmpeg concat demuxer.
+  - `ffmpeg_helpers.py` — shared FFmpeg helpers (binary path resolution, thread parsing, audio codec/sample-rate args) used by `ConversionTask`, `MergeTask`, and `FileProber`.
   - `formatting.py` — codec presets, format/codec constants, and settings validation.
   - `track_settings.py` — per-file track selection overrides (which audio/video/subtitle streams to keep or map).
   - `i18n.py` — gettext installation, language resolution, `.po`→`.mo` fallback.
@@ -114,5 +115,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.9.3** — Embedded FFmpeg update; 'View on GitHub' entry in the Help menu.
+- **v1.9.2** — Bugfix pass (merge paths, conversion timeout, audio copy, bare except, duplicate messages) and shared FFmpeg helper extraction into `core/ffmpeg_helpers.py`.
 - **v1.9.1** — Image conversion support (JPEG, PNG, WebP, TIFF, BMP) with dedicated UI tab, format-specific settings dialog, resize with aspect ratio preservation, and French translations. Auto error report dialog. Logger crash fix for exe without console.
 - **v1.8.0** — Removed legacy updater fallback. Bilingual release notes. Fixed i18n in support dialog. Accessibility improvements (StaticBox tab order, keyboard navigation, estimated time remaining).
