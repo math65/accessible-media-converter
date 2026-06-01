@@ -174,6 +174,17 @@ function Get-UpdateDecision {
         [pscustomobject]$Latest
     )
 
+    # The GyanD release tag (e.g. 2026-05-28-git-7b46c6a2a3) is the exact build
+    # token, and the embedded ffmpeg -version line starts with that same token.
+    # Comparing them directly is more reliable than date heuristics and needs no
+    # download — so we can answer "already up to date" purely from API metadata.
+    if ($Current.Token -and $Latest.TagName -and $Current.Token.StartsWith($Latest.TagName)) {
+        return [pscustomobject]@{
+            ShouldDownload = $false
+            Reason = "Embedded FFmpeg already matches the latest GitHub release $($Latest.TagName)."
+        }
+    }
+
     if ($Current.SemanticTuple -and $Latest.SemanticTuple) {
         $semanticComparison = Compare-VersionTuples -Left $Current.SemanticTuple -Right $Latest.SemanticTuple
         if ($semanticComparison -gt 0) {
@@ -372,6 +383,15 @@ if (-not $decision.ShouldDownload) {
     return
 }
 
+# A dry run only needs to know whether an update exists. The release tag already
+# tells us that, so report it and stop before downloading the ~80 MB archive.
+if ($CheckOnly) {
+    Write-Host "An embedded FFmpeg update is available: $($release.tag_name)"
+    Write-Host "Run without -CheckOnly to download, verify, and install it."
+    Write-Host "Release page: $($release.html_url)"
+    return
+}
+
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("amc-ffmpeg-update-" + [Guid]::NewGuid().ToString("N"))
 $downloadPath = Join-Path $tempRoot $asset.name
 $extractRoot = Join-Path $tempRoot "extract"
@@ -408,12 +428,6 @@ try {
 
     if ($candidateFfmpegVersion -eq $currentFfmpegVersion -and $candidateFfprobeVersion -eq $currentFfprobeVersion) {
         Write-Host "Embedded FFmpeg binaries are already up to date."
-        return
-    }
-
-    if ($CheckOnly) {
-        Write-Host "An embedded FFmpeg update is available, but no files were changed because -CheckOnly was used."
-        Write-Host "Release page: $($release.html_url)"
         return
     }
 
