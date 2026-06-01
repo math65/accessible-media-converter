@@ -94,6 +94,7 @@ class BatchConversionManager:
             resolved_output_path, skip_reason = self._reserve_output_path(
                 base_output_path,
                 reserved_paths,
+                meta.full_path,
             )
             job = BatchJob(
                 index=index,
@@ -110,23 +111,28 @@ class BatchConversionManager:
             jobs.append(job)
         return jobs
 
-    def _reserve_output_path(self, base_output_path, reserved_paths):
+    def _reserve_output_path(self, base_output_path, reserved_paths, input_path):
         candidate_path = base_output_path
         suffix = 1
+        input_key = self._path_key(input_path)
 
         while True:
-            reserved_collision = self._path_key(candidate_path) in reserved_paths
+            candidate_key = self._path_key(candidate_path)
+            collides_with_input = candidate_key == input_key
+            reserved_collision = candidate_key in reserved_paths
             file_exists = os.path.exists(candidate_path)
 
-            if not reserved_collision:
+            if not reserved_collision and not collides_with_input:
                 if self.output_policy == "overwrite":
-                    reserved_paths.add(self._path_key(candidate_path))
+                    reserved_paths.add(candidate_key)
                     return candidate_path, None
                 if not file_exists:
-                    reserved_paths.add(self._path_key(candidate_path))
+                    reserved_paths.add(candidate_key)
                     return candidate_path, None
 
-            if self.output_policy == "skip":
+            # On ne « skippe » jamais à cause du fichier source lui-même :
+            # dans ce cas on force un renommage pour produire une copie sûre.
+            if self.output_policy == "skip" and not collides_with_input:
                 return None, SKIP_REASON_EXISTS
 
             candidate_path = self._append_suffix(base_output_path, suffix)
