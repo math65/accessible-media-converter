@@ -5,10 +5,12 @@ import logging
 import builtins
 
 from core.ffmpeg_helpers import (
+    COVER_ART_AUDIO_OUTPUTS,
     STREAMING_LOUDNORM_FILTER,
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
     apply_common_audio_options,
+    apply_metadata_preservation,
     get_ffmpeg_path,
     parse_ffmpeg_threads,
 )
@@ -393,6 +395,8 @@ class ConversionTask:
             else:
                 logging.warning("Aucune piste audio explicite n'a pu être sélectionnée pour l'extraction.")
 
+        preserve_metadata = apply_metadata_preservation(cmd, self.settings)
+
         audio_mode = self.settings.get('audio_mode', 'convert')
         if audio_mode == 'copy':
             cmd.extend(['-c:a', 'copy'])
@@ -424,7 +428,16 @@ class ConversionTask:
                 elif self.target_format == 'mkv':
                     cmd.extend(['-c:s', 'copy'])
         else:
-            cmd.append('-vn')
+            if (
+                preserve_metadata
+                and self.target_format in COVER_ART_AUDIO_OUTPUTS
+                and not self._is_video_to_audio_conversion()
+            ):
+                # Source sans vraie piste vidéo : copier la pochette attached_pic
+                # via la sélection de flux par défaut au lieu de la supprimer (-vn).
+                cmd.extend(['-c:v', 'copy'])
+            else:
+                cmd.append('-vn')
 
         thread_count = parse_ffmpeg_threads(self.settings)
         if thread_count is not None:

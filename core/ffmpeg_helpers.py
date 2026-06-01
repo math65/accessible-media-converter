@@ -9,6 +9,9 @@ STREAMING_LOUDNORM_FILTER = "loudnorm=I=-16:TP=-1:LRA=7"
 
 VIDEO_CONTAINER_OUTPUTS = ('mp4', 'mkv', 'mov')
 
+# Formats audio dont le conteneur sait embarquer une pochette (attached_pic).
+COVER_ART_AUDIO_OUTPUTS = ('mp3', 'aac', 'alac', 'flac')
+
 _WAV_DEPTH_TO_CODEC = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
 
 
@@ -44,6 +47,18 @@ def parse_ffmpeg_threads(settings):
     except (TypeError, ValueError):
         return None
     return max(1, parsed)
+
+
+def apply_metadata_preservation(cmd, settings):
+    """Ajoute les drapeaux conservant tags globaux et chapitres si l'option est active.
+
+    Renvoie True si la conservation est demandée, pour permettre à l'appelant
+    de décider en plus du sort de la pochette (attached_pic).
+    """
+    if settings.get('preserve_metadata', False):
+        cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
+        return True
+    return False
 
 
 def apply_common_audio_options(cmd, settings):

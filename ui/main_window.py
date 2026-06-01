@@ -1113,7 +1113,8 @@ class MainWindow(wx.Frame):
         fmt_key = self.current_fmt_keys_active[idx]
         settings = dict(self.settings_store.get(fmt_key, {}))
         settings['ffmpeg_threads'] = self.settings_store.get('ffmpeg_threads', 'auto')
-        
+        settings['preserve_metadata'] = self.settings_store.get('preserve_metadata', False)
+
         output_mode = self.settings_store.get('output_mode', 'source')
         custom_out = None
         if output_mode == 'source': custom_out = None
@@ -1180,6 +1181,7 @@ class MainWindow(wx.Frame):
         fmt_key = self.current_fmt_keys_active[idx]
         settings = dict(self.settings_store.get(fmt_key, {}))
         settings['ffmpeg_threads'] = self.settings_store.get('ffmpeg_threads', 'auto')
+        settings['preserve_metadata'] = self.settings_store.get('preserve_metadata', False)
 
         output_mode = self.settings_store.get('output_mode', 'source')
         if output_mode == 'source':
