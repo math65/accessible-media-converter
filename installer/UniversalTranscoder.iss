@@ -41,6 +41,10 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ShowLanguageDialog=yes
+; Permet à une mise à jour silencieuse (/SILENT, lancée par l'updater) de fermer
+; proprement l'app et de remplacer les fichiers même si une instance traîne encore.
+CloseApplications=yes
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

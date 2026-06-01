@@ -417,7 +417,12 @@ def launch_installer_after_exit(installer_path):
         return resolved_path
 
     escaped_path = resolved_path.replace("'", "''")
-    command = f"Start-Sleep -Milliseconds 800; Start-Process -FilePath '{escaped_path}'"
+    # Mode silencieux Inno : barre de progression seule, sans assistant à cliquer.
+    command = (
+        f"Start-Sleep -Milliseconds 800; "
+        f"Start-Process -FilePath '{escaped_path}' "
+        f"-ArgumentList '/SILENT','/SUPPRESSMSGBOXES','/NORESTART'"
+    )
     kwargs = {"close_fds": True}
     if hasattr(subprocess, "CREATE_NO_WINDOW"):
         kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
