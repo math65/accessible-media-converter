@@ -57,6 +57,10 @@ class MediaMetadata:
         self.is_image = False
         self.track_settings = None
         self.audio_extract_track = None
+        self.format_tags = {}
+        self.has_cover_art = False
+        self.metadata_overrides = None
+        self.source_format_name = ""
 
     @property
     def has_audio(self): return len(self.audio_tracks) > 0
@@ -150,6 +154,13 @@ class FileProber:
             except (TypeError, ValueError):
                 meta.duration = 0
 
+            meta.source_format_name = str(fmt.get('format_name', '') or '')
+            format_tags = fmt.get('tags', {})
+            if isinstance(format_tags, dict):
+                meta.format_tags = {
+                    str(key).lower(): value for key, value in format_tags.items()
+                }
+
             for stream in data.get('streams', []):
                 idx = stream.get('index')
                 c_type = stream.get('codec_type')
@@ -160,6 +171,9 @@ class FileProber:
                 disposition = stream.get('disposition', {})
 
                 track = MediaTrack(idx, c_type, c_name, lang, title, disposition)
+
+                if c_type == 'video' and disposition.get('attached_pic', 0) == 1:
+                    meta.has_cover_art = True
 
                 if c_type == 'video':
                     if not track.is_hidden_from_ui():

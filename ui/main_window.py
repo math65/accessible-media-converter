@@ -46,6 +46,9 @@ from core.updater import (
     open_release_page,
     save_updater_state,
 )
+from core.metadata_edit import has_metadata_overrides
+from core.metadata_retag import MetadataRetagTask
+from ui.metadata_editor import MetadataEditorDialog
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
 from ui.support_dialog import SupportContactDialog
@@ -318,6 +321,8 @@ class MainWindow(wx.Frame):
             meta.track_settings = None
         if not hasattr(meta, 'audio_extract_track'):
             meta.audio_extract_track = None
+        if not hasattr(meta, 'metadata_overrides'):
+            meta.metadata_overrides = None
 
         if meta.is_image:
             self.image_data.append(meta)
@@ -336,10 +341,15 @@ class MainWindow(wx.Frame):
         return index
 
     def _get_media_status_label(self, meta):
+        suffixes = []
         if getattr(meta, 'track_settings', None):
-            return _("Ready (+Tracks)")
+            suffixes.append(_("Tracks"))
         if getattr(meta, 'audio_extract_track', None):
-            return _("Ready (+Audio Track)")
+            suffixes.append(_("Audio Track"))
+        if has_metadata_overrides(meta):
+            suffixes.append(_("Metadata"))
+        if suffixes:
+            return _("Ready") + " (+" + ", ".join(suffixes) + ")"
         return _("Ready")
 
     def _describe_audio_extract_track(self, track_data):
@@ -670,6 +680,17 @@ class MainWindow(wx.Frame):
             item_audio_track = menu.Append(wx.ID_ANY, _("Choose Audio Track..."))
             self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index), item_audio_track)
 
+        if self.current_tab in ('audio', 'video'):
+            metadata_indices = self._resolve_metadata_target_indices(index)
+            if menu.GetMenuItemCount() > 0:
+                menu.AppendSeparator()
+            if len(metadata_indices) > 1:
+                label = _("Edit Metadata ({count} files)...").format(count=len(metadata_indices))
+            else:
+                label = _("Edit Metadata...")
+            item_metadata = menu.Append(wx.ID_ANY, label)
+            self.Bind(wx.EVT_MENU, lambda e: self.on_edit_metadata(metadata_indices), item_metadata)
+
         if menu.GetMenuItemCount() == 0:
             menu.Destroy()
             return
@@ -682,6 +703,15 @@ class MainWindow(wx.Frame):
 
     def on_list_item_right_click(self, event):
         list_ctrl = event.GetEventObject()
+        # Capturer la sélection multiple AVANT de la réduire à un seul élément,
+        # afin de permettre l'édition de métadonnées par lot.
+        selected = []
+        current = list_ctrl.GetFirstSelected()
+        while current != -1:
+            selected.append(current)
+            current = list_ctrl.GetNextSelected(current)
+        self._context_selected_indices = selected
+
         index = event.GetIndex()
         if index != -1:
             self._focus_single_list_item(list_ctrl, index)
@@ -761,6 +791,85 @@ class MainWindow(wx.Frame):
                     )
                 )
         dlg.Destroy()
+
+    def _resolve_metadata_target_indices(self, index):
+        snapshot = getattr(self, '_context_selected_indices', None) or []
+        if len(snapshot) > 1 and index in snapshot:
+            return sorted(snapshot)
+        return [index]
+
+    def on_edit_metadata(self, indices):
+        if self.is_converting:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        metas = [data[i] for i in indices if 0 <= i < len(data)]
+        if not metas:
+            return
+
+        idx_fmt = self.combo_format.GetSelection()
+        fmt_key = self.current_fmt_keys_active[idx_fmt] if idx_fmt != wx.NOT_FOUND else ''
+
+        dlg = MetadataEditorDialog(self, metas, fmt_key)
+        result = dlg.get_result() if dlg.ShowModal() == wx.ID_OK else None
+        dlg.Destroy()
+        if result is None:
+            return
+
+        overrides, target = result
+        if target == 'inplace':
+            self._start_inplace_retag(metas, overrides, indices, list_ctrl, data)
+            return
+
+        for meta in metas:
+            meta.metadata_overrides = overrides
+        for list_index in indices:
+            if 0 <= list_index < len(data):
+                list_ctrl.SetItem(list_index, 2, self._get_media_status_label(data[list_index]))
+        self._set_status(_("Metadata will be applied during conversion."))
+
+    def _start_inplace_retag(self, metas, overrides, indices, list_ctrl, data):
+        self._set_status(_("Rewriting metadata..."))
+        worker = threading.Thread(
+            target=self._inplace_retag_worker,
+            args=(metas, overrides, indices, list_ctrl, data),
+            daemon=True,
+        )
+        worker.start()
+
+    def _inplace_retag_worker(self, metas, overrides, indices, list_ctrl, data):
+        errors = []
+        for meta in metas:
+            try:
+                MetadataRetagTask(meta, overrides).run()
+            except Exception as exc:
+                logging.exception("Échec du re-tag in-place : %s", getattr(meta, 'full_path', ''))
+                errors.append((getattr(meta, 'filename', ''), str(exc)))
+        wx.CallAfter(self._finish_inplace_retag, metas, indices, list_ctrl, data, errors)
+
+    def _finish_inplace_retag(self, metas, indices, list_ctrl, data, errors):
+        for meta in metas:
+            try:
+                fresh = self.prober.analyze(meta.full_path)
+                meta.format_tags = fresh.format_tags
+                meta.has_cover_art = fresh.has_cover_art
+            except Exception:
+                logging.exception("Re-probe après re-tag impossible : %s", getattr(meta, 'full_path', ''))
+            meta.metadata_overrides = None
+
+        for list_index in indices:
+            if 0 <= list_index < len(data):
+                list_ctrl.SetItem(list_index, 2, self._get_media_status_label(data[list_index]))
+
+        if errors:
+            details = "\n".join(f"{name}: {message}" for name, message in errors)
+            wx.MessageBox(
+                _("Some files could not be re-tagged:") + "\n" + details,
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            self._set_status(_("Metadata rewrite finished with errors."))
+        else:
+            self._set_status(_("Metadata rewritten on the original file(s)."))
 
     def on_preferences(self, event):
         dlg = PreferencesDialog(self, self.settings_store)

@@ -15,6 +15,12 @@ from core.ffmpeg_helpers import (
     parse_ffmpeg_threads,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
+from core.metadata_edit import (
+    build_tag_metadata_args,
+    cover_stream_args,
+    get_metadata_overrides,
+    overrides_are_effective,
+)
 from core.track_settings import get_effective_track_settings, get_kept_track_entries
 
 
@@ -374,7 +380,20 @@ class ConversionTask:
         if self.target_format in IMAGE_OUTPUT_FORMAT_KEYS:
             return self._run_image_conversion(output_path)
 
+        overrides = get_metadata_overrides(self.meta) if self.meta is not None else {}
+        override_tags = overrides.get('tags', {}) if overrides else {}
+        cover = overrides.get('cover', {}) if overrides else {}
+        cover_action = cover.get('action', 'keep')
+
+        audio_output = self.target_format not in VIDEO_CONTAINER_OUTPUTS
+        cover_capable = self.target_format in COVER_ART_AUDIO_OUTPUTS
+        cover_replace = cover_action == 'replace' and audio_output and cover_capable
+        cover_remove = cover_action == 'remove' and audio_output
+        cover_path = cover.get('path') if cover_replace else None
+
         cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
+        if cover_replace and cover_path:
+            cmd.extend(['-i', cover_path])  # 2e entrée = nouvelle pochette (index 1)
         mapped_container_tracks = None
 
         if self.target_format in VIDEO_CONTAINER_OUTPUTS and self.meta is not None:
@@ -395,7 +414,21 @@ class ConversionTask:
             else:
                 logging.warning("Aucune piste audio explicite n'a pu être sélectionnée pour l'extraction.")
 
+        if cover_replace and cover_path:
+            # Une fois la pochette mappée, la sélection auto est désactivée :
+            # mapper explicitement l'audio (sauf si déjà fait pour l'extraction).
+            if not self._is_video_to_audio_conversion():
+                cmd.extend(['-map', '0:a'])
+            cmd.extend(['-map', '1:0'])
+
         preserve_metadata = apply_metadata_preservation(cmd, self.settings)
+
+        if overrides_are_effective(overrides):
+            # L'édition conserve les tags non modifiés, puis surcharge les champs édités.
+            if not preserve_metadata:
+                cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
+                preserve_metadata = True
+            cmd.extend(build_tag_metadata_args(override_tags))
 
         audio_mode = self.settings.get('audio_mode', 'convert')
         if audio_mode == 'copy':
@@ -428,7 +461,13 @@ class ConversionTask:
                 elif self.target_format == 'mkv':
                     cmd.extend(['-c:s', 'copy'])
         else:
-            if (
+            if cover_replace and cover_path:
+                # Nouvelle pochette : copier le flux image et le marquer attached_pic.
+                cmd.extend(['-c:v', 'copy'])
+                cmd.extend(cover_stream_args(0))
+            elif cover_remove:
+                cmd.append('-vn')
+            elif (
                 preserve_metadata
                 and self.target_format in COVER_ART_AUDIO_OUTPUTS
                 and not self._is_video_to_audio_conversion()
