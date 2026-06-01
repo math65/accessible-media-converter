@@ -10,6 +10,7 @@ from core.ffmpeg_helpers import (
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
     apply_common_audio_options,
+    apply_metadata_preservation,
     get_ffmpeg_path,
     parse_ffmpeg_threads,
 )
@@ -107,6 +108,10 @@ class MergeTask:
                 else:
                     self._apply_audio_codec_settings(cmd)
                 cmd.append('-vn')
+
+            # Conserve tags et chapitres du premier fichier fusionné si demandé
+            # (la pochette n'est pas gérée pour les fusions concat).
+            apply_metadata_preservation(cmd, self.settings)
 
             thread_count = parse_ffmpeg_threads(self.settings)
             if thread_count is not None:

@@ -33,6 +33,7 @@ class PreferencesDialog(wx.Dialog):
         self.ffmpeg_threads = self.settings.get('ffmpeg_threads', DEFAULT_FFMPEG_THREADS)
         self.continue_on_error = bool(self.settings.get('continue_on_error', True))
         self.check_updates_on_startup = bool(self.settings.get('check_updates_on_startup', True))
+        self.preserve_metadata = bool(self.settings.get('preserve_metadata', False))
         self.detected_cpu_threads = get_detected_cpu_threads()
         self.ffmpeg_thread_values = (DEFAULT_FFMPEG_THREADS, *get_ffmpeg_thread_values())
 
@@ -110,6 +111,16 @@ class PreferencesDialog(wx.Dialog):
         self.chk_open_output_folder = wx.CheckBox(panel, label=_("Open output folder when done"))
         self.chk_open_output_folder.SetName(_("Open output folder when done"))
         output_sizer.Add(self.chk_open_output_folder, 0, wx.ALL, 5)
+
+        self.chk_preserve_metadata = wx.CheckBox(
+            panel,
+            label=_("Preserve original metadata (tags, chapters, cover art)"),
+        )
+        self.chk_preserve_metadata.SetName(_("Preserve original metadata"))
+        self.chk_preserve_metadata.SetToolTip(
+            _("Keep tags, chapters and embedded cover art from the source file when possible.")
+        )
+        output_sizer.Add(self.chk_preserve_metadata, 0, wx.ALL, 5)
 
         execution_box = wx.StaticBox(panel, label=_("Execution"))
         execution_box.SetWindowStyle(execution_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
@@ -195,6 +206,7 @@ class PreferencesDialog(wx.Dialog):
         self.chk_open_output_folder.SetValue(self.open_output_folder_after_batch)
         self.chk_continue_on_error.SetValue(self.continue_on_error)
         self.chk_check_updates_on_startup.SetValue(self.check_updates_on_startup)
+        self.chk_preserve_metadata.SetValue(self.preserve_metadata)
         self._update_controls()
 
     def _init_existing_output_policy(self):
@@ -278,4 +290,5 @@ class PreferencesDialog(wx.Dialog):
             'ffmpeg_threads': self.ffmpeg_thread_values[self.choice_ffmpeg_threads.GetSelection()],
             'continue_on_error': self.chk_continue_on_error.GetValue(),
             'check_updates_on_startup': self.chk_check_updates_on_startup.GetValue(),
+            'preserve_metadata': self.chk_preserve_metadata.GetValue(),
         }

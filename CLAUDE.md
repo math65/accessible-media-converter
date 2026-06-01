@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.9.3`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.9.4`.
 
 ## Running and building
 
@@ -20,7 +20,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_release.ps1
 
 Expected outputs: `dist\AccessibleMediaConverter\AccessibleMediaConverter.exe` and `dist\AccessibleMediaConverter-Setup.exe`
 
-**Check embedded FFmpeg version:**
+**Check embedded FFmpeg version** (dry run — compares the GitHub release tag, no download):
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1 -CheckOnly
 ```
@@ -97,7 +97,7 @@ Call `_translate()` / `_translatef()` inside functions, never at module level.
 - `bin/ffmpeg.exe` and `bin/ffprobe.exe` are git-tracked despite appearing in `.gitignore`. GitHub will warn on push due to their size.
 - Updating `bin/` does **not** update `dist/`. Always rebuild after an FFmpeg update before publishing.
 - The updater in `core/updater.py` only accepts the exact asset `AccessibleMediaConverter-Setup.exe`. The legacy fallback to versioned asset names was removed in v1.8.0.
-- The FFmpeg update script reads the full release list from `GyanD/codexffmpeg` instead of `releases/latest`, because `latest` may not be the most recent build.
+- The FFmpeg update script reads the full release list from `GyanD/codexffmpeg` instead of `releases/latest`, because `latest` may not be the most recent build. It decides whether an update is needed by comparing the GyanD release **tag** (which is the exact build token) against the embedded `ffmpeg -version` string, so `-CheckOnly` answers from API metadata alone and downloads nothing.
 - Python 3.14+ detects `_` variable shadowing in function scope. Never use `_` as a throwaway variable in functions that call `_()` for gettext — use explicit names like `label` or index access like `item[0]`.
 
 ## Release workflow
@@ -115,6 +115,8 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **Unreleased (post-v1.9.4)** — New global preference "Preserve original metadata" (opt-in, off by default): adds `-map_metadata 0 -map_chapters 0` to audio/video conversions and merges, and preserves embedded cover art for audio outputs (mp3/aac/alac/flac) by copying the `attached_pic` stream (`-c:v copy` instead of `-vn`) when the source is not a real video. Shared via `apply_metadata_preservation()` in `core/ffmpeg_helpers.py`. Embedded FFmpeg bumped to `2026-05-28-git-7b46c6a2a3`. `update_embedded_ffmpeg.ps1` now compares the GitHub release tag directly (download-free `-CheckOnly`), and the `/update-ffmpeg` skill gained post-update, already-up-to-date, and error-handling guidance.
+- **v1.9.4** — Clear error for a missing input file instead of a cryptic FFmpeg failure. Added `/release` and `/update-ffmpeg` skills.
 - **v1.9.3** — Embedded FFmpeg update; 'View on GitHub' entry in the Help menu.
 - **v1.9.2** — Bugfix pass (merge paths, conversion timeout, audio copy, bare except, duplicate messages) and shared FFmpeg helper extraction into `core/ffmpeg_helpers.py`.
 - **v1.9.1** — Image conversion support (JPEG, PNG, WebP, TIFF, BMP) with dedicated UI tab, format-specific settings dialog, resize with aspect ratio preservation, and French translations. Auto error report dialog. Logger crash fix for exe without console.

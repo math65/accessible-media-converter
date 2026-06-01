@@ -186,6 +186,7 @@ APP_DEFAULT_SETTINGS = {
     "ffmpeg_threads": DEFAULT_FFMPEG_THREADS,
     "continue_on_error": True,
     "check_updates_on_startup": True,
+    "preserve_metadata": False,
     "ui_language": AUTO_LANGUAGE_CODE,
 }
 
@@ -374,6 +375,9 @@ def normalize_settings_store(settings_store):
     )
     normalized["check_updates_on_startup"] = bool(
         normalized.get("check_updates_on_startup", APP_DEFAULT_SETTINGS["check_updates_on_startup"])
+    )
+    normalized["preserve_metadata"] = bool(
+        normalized.get("preserve_metadata", APP_DEFAULT_SETTINGS["preserve_metadata"])
     )
     normalized["ui_language"] = normalize_ui_language(
         normalized.get("ui_language", APP_DEFAULT_SETTINGS["ui_language"])
