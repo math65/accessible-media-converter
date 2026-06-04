@@ -45,6 +45,7 @@ def main():
         frame = MainWindow()
         frame.Show()
         frame.schedule_startup_update_check()
+        frame.check_announcement_at_startup()
 
         app.MainLoop()
 

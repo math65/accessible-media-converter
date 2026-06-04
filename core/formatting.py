@@ -188,6 +188,8 @@ APP_DEFAULT_SETTINGS = {
     "check_updates_on_startup": True,
     "preserve_metadata": False,
     "ui_language": AUTO_LANGUAGE_CODE,
+    "install_id": "",              # identifiant anonyme d'installation (généré au 1er lancement)
+    "seen_announcements": [],      # ids des annonces "once" déjà affichées
 }
 
 
@@ -382,6 +384,10 @@ def normalize_settings_store(settings_store):
     normalized["ui_language"] = normalize_ui_language(
         normalized.get("ui_language", APP_DEFAULT_SETTINGS["ui_language"])
     )
+    normalized["install_id"] = str(normalized.get("install_id") or "")
+    # Fresh list (avoid aliasing the shared default) and keep only string ids.
+    seen = normalized.get("seen_announcements")
+    normalized["seen_announcements"] = [str(x) for x in seen] if isinstance(seen, list) else []
     normalized.pop("session_restore_pending", None)
     normalized.pop("debug_restore_pending", None)
     normalized.pop("debug_enabled", None)

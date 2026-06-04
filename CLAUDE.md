@@ -140,6 +140,15 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.10.2 (announcements)** — Startup announcement client (mirrors DownAccess). `core/announce.py`
+  polls the shared backend `POST /api/announce/check` (Bearer, reuses `_APP_ID`/`_BEARER` from
+  `core/support.py`) at launch; an active announcement is shown via `wx.MessageBox` (icon from
+  `style`), then confirmed with `/api/announce/ack`. A per-install `install_id` (uuid, generated on
+  first launch) and a `seen_announcements` list (for `mode: once` dedup) live in `settings_store`
+  (`core/formatting.py` defaults + normalization). Wired in `ui/main_window.py`
+  (`check_announcement_at_startup` / `_on_announcement_received`) and called from `main.py` after the
+  update check. The check is silent: any network error is ignored. Announcements are created in the
+  web admin (`/api/admin`) targeting `amc` (or `*`).
 - **v1.10.2** — Support form migrated from the legacy `/api/support-report` (honeypot)
   to the generic `/api/feedback/report` endpoint (Bearer auth, multipart `report` JSON +
   `log_file`), matching the DownAccess client. `core/support.py` now builds the technical

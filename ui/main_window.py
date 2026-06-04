@@ -3,9 +3,11 @@ import os
 import re
 import sys
 import threading
+import uuid
 
 import wx
 
+from core import announce
 from core.app_info import APP_ABOUT_TAGLINE, APP_GITHUB_REPOSITORY_URL, APP_NAME, APP_VERSION
 from core.batch_manager import (
     JOB_STATE_DONE,
@@ -439,6 +441,41 @@ class MainWindow(wx.Frame):
 
         self._startup_update_check_scheduled = True
         wx.CallLater(1200, lambda: self._start_update_check(interactive=False))
+
+    def check_announcement_at_startup(self):
+        """Vérification silencieuse d'une annonce serveur au démarrage."""
+        install_id = self.settings_store.get("install_id", "")
+        if not install_id:
+            install_id = uuid.uuid4().hex
+            self.settings_store["install_id"] = install_id
+            self._save_config()
+        announce.check_announcement(
+            install_id,
+            on_done=lambda ann: wx.CallAfter(self._on_announcement_received, ann),
+        )
+
+    def _on_announcement_received(self, ann):
+        if not ann:
+            return
+        title = ann.get("title") or _(APP_NAME)
+        body = ann.get("body") or ""
+        ann_id = ann.get("id") or ""
+        mode = ann.get("mode") or "every"
+
+        seen = self.settings_store.get("seen_announcements", [])
+        if mode == "once" and ann_id in seen:
+            return
+
+        icon = wx.ICON_WARNING if ann.get("style") == "warning" else wx.ICON_INFORMATION
+        wx.MessageBox(body, title, wx.OK | icon, self)
+
+        if mode == "once" and ann_id:
+            seen = self.settings_store.setdefault("seen_announcements", [])
+            if ann_id not in seen:
+                seen.append(ann_id)
+                self._save_config()
+        if ann_id:
+            announce.ack_announcement(self.settings_store.get("install_id", ""), ann_id)
 
     def _start_update_check(self, interactive):
         if self._update_check_in_progress:
