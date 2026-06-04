@@ -66,27 +66,28 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 
 ### Support / feedback backend
 
-The support form (`core/support.py`) posts to `https://mathieumartin.ovh/api/support-report`.
-**Since 2026-06-04 this endpoint is served by a separate shared platform repo,
-`app-backend` (`C:\Users\mathi\dev\app-backend`) — a single **Go** binary (stdlib,
-no dependencies) deployed to `/opt/app-backend-go/`, which handles all `/api/*` for
-every app.**
+The support form (`core/support.py`) posts to `https://mathieumartin.ovh/api/feedback/report`,
+the **generic multi-app endpoint** of the shared platform repo `app-backend`
+(`C:\Users\mathi\dev\app-backend`) — a single **Go** binary (stdlib, no dependencies)
+deployed to `/opt/app-backend-go/`, which handles all `/api/*` for every app.
 
-- The route and the JSON payload are **unchanged** — `app-backend` reproduces the
-  old `/api/support-report` contract exactly (honeypot auth, plain-text email,
-  curated `technical_context` formatting) through a legacy adapter, so the
-  shipped client keeps working with **no migration required**.
-- `server/support-report/` in *this* repo is now **dormant**: kept for history
-  and rollback, but no longer deployed. Don't edit it for live changes — work in
-  the `app-backend` repo instead.
+- **Client contract (since v1.10.2)**: multipart `report` (JSON) + optional `log_file`,
+  authenticated with `Authorization: Bearer <AMC_BEARER_SECRET>`. The JSON payload carries
+  `{"app": "amc", "email", "summary", "subject_hint", "sections"}`. The technical context is
+  built client-side as a French key/value section (`sections["Informations techniques"]`,
+  hardcoded French in `_build_support_fr_section` — the email goes to the developer, so it
+  must not follow the UI language). `summary` becomes the red "Message d'erreur" section the
+  service auto-adds. Same shape as the DownAccess client (`dl/app/core/error_reporter.py`).
+- **Legacy route still live**: the old `/api/support-report` (honeypot auth, plain-text
+  email, server-side formatting via `internal/legacy/amc_support.go`) is **kept alive** on
+  the server for AMC installs older than v1.10.2. Never remove it while old clients exist
+  (RÈGLE D'OR). `server/support-report/` in *this* repo stays **dormant** (history/rollback).
 - Server facts: a single static **Go** binary behind Caddy
   (`reverse_proxy 127.0.0.1:8787`), run by **systemd** (`app-backend`, ~10 MB RAM,
   user `www-data`). Secrets in `/etc/app-backend/env` (root:600, injected by
-  systemd): SMTP password `APPCLAVIER_SMTP_PASS`. The old PHP backend
-  (`/var/www/app-backend`, PHP-FPM) is **dormant**, kept for rollback.
-- Future: migrate the client to the generic `/api/feedback/report` endpoint
-  (payload carries `"app": "amc"`); that path will need an `AMC_BEARER_SECRET`
-  env var on the server (not created yet — the legacy honeypot route needs none).
+  systemd): SMTP password `APPCLAVIER_SMTP_PASS`, and **`AMC_BEARER_SECRET`** (the
+  per-app Bearer for the generic route — must be present in the env file). The old PHP
+  backend (`/var/www/app-backend`, PHP-FPM) is **dormant**, kept for rollback.
 
 ### Key data flow
 
@@ -139,6 +140,14 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.10.2** — Support form migrated from the legacy `/api/support-report` (honeypot)
+  to the generic `/api/feedback/report` endpoint (Bearer auth, multipart `report` JSON +
+  `log_file`), matching the DownAccess client. `core/support.py` now builds the technical
+  block as a hardcoded-French key/value section and sends it with `Authorization: Bearer
+  <AMC_BEARER_SECRET>`; `SUPPORT_REPORT_API_URL` was removed from `core/app_info.py`. The
+  legacy route stays live server-side for older installs (no removal). Requires
+  `AMC_BEARER_SECRET` in the server env (`/etc/app-backend/env`). See "Support / feedback
+  backend".
 - **2026-06-04 (backend)** — The `/api/support-report` endpoint moved to a new
   shared platform repo, `app-backend` (serves `/api/*` for all apps), which was
   then rewritten from PHP to **Go** (single static binary behind Caddy, ~10 MB RAM).

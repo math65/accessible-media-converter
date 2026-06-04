@@ -1,15 +1,15 @@
+import io
 import json
-import os
 import platform
-import re
 import sys
+import uuid
+import re
 from urllib import error, request
 
 from core.app_info import (
     APP_EXE_NAME,
     APP_NAME,
     APP_VERSION,
-    SUPPORT_REPORT_API_URL,
 )
 from core.formatting import build_format_label
 from core.i18n import get_current_language_code
@@ -19,6 +19,15 @@ def N_(s):
     """Marker for gettext extraction. Returns the string unchanged."""
     return s
 
+
+# Report backend — generic multi-app endpoint on the shared app-backend (Go).
+# Auth is a per-app Bearer secret (the legacy /api/support-report honeypot route
+# stays alive server-side for already-installed versions). Same contract as the
+# DownAccess client (dl/app/core/error_reporter.py).
+FEEDBACK_REPORT_URL = "https://mathieumartin.ovh/api/feedback/report"
+_BEARER = "87839057e3607f647838b39997f78c6c63d9b02776fef77734cdd4826c998584"
+_APP_ID = "amc"
+_MAX_SUMMARY = 100_000
 
 SUPPORT_HTTP_TIMEOUT_SECONDS = 15
 SUPPORT_ISSUE_TYPE_ITEMS = (
@@ -161,22 +170,43 @@ def build_support_report(email_address, issue_type, user_message, context):
 
 
 def send_support_report(email_address, issue_type, user_message, context, debug_log="", timeout=SUPPORT_HTTP_TIMEOUT_SECONDS):
-    payload = {
-        "email": str(email_address or "").strip(),
-        "issue_type": issue_type,
-        "message": str(user_message or "").strip(),
-        "technical_context": dict(context or {}),
-        "debug_log": str(debug_log or ""),
-        "honeypot": "",
+    """Send a support report to the generic /api/feedback/report endpoint.
+
+    Multipart `report` (JSON) + optional `log_file`, authenticated with the per-app
+    Bearer secret. The technical block is built here as a French key/value section
+    (hardcoded — the email goes to the developer, not the user, so it must not
+    follow the UI language). Mirrors the DownAccess client.
+    """
+    email = str(email_address or "").strip()
+    summary = str(user_message or "").strip()
+    context = dict(context or {})
+    version = str(context.get("app_version") or APP_VERSION)
+
+    report = {
+        "app": _APP_ID,
+        "email": email[:200],
+        "summary": summary[:_MAX_SUMMARY],
+        "subject_hint": f"{_fr_issue_label(issue_type)} — v{version}",
+        "sections": {
+            "Informations techniques": _build_support_fr_section(issue_type, context),
+        },
     }
-    body = json.dumps(payload).encode("utf-8")
+
+    fields = {"report": json.dumps(report, ensure_ascii=False)}
+    files = {}
+    debug_log = str(debug_log or "")
+    if debug_log:
+        files["log_file"] = ("debug.log", debug_log)
+    data, content_type = _make_multipart(fields, files)
+
     api_request = request.Request(
-        SUPPORT_REPORT_API_URL,
-        data=body,
+        FEEDBACK_REPORT_URL,
+        data=data,
         method="POST",
         headers={
             "Accept": "application/json",
-            "Content-Type": "application/json; charset=utf-8",
+            "Content-Type": content_type,
+            "Authorization": f"Bearer {_BEARER}",
             "User-Agent": f"{APP_EXE_NAME}/{APP_VERSION}",
         },
     )
@@ -245,10 +275,111 @@ def _build_support_send_error(exc):
 def _map_support_error_message(error_code, fallback_message):
     mapping = {
         "validation_error": _("Please review the support form fields and try again."),
+        "invalid_json": _("Please review the support form fields and try again."),
+        "unauthorized": _("Unable to send the support report right now."),
         "rate_limited": _("Too many reports have been sent recently. Please try again later."),
         "server_error": _("Unable to send the support report right now."),
     }
     return mapping.get(error_code) or fallback_message or mapping["server_error"]
+
+
+def _make_multipart(fields, files):
+    """Build a multipart/form-data body, return (body_bytes, content_type)."""
+    boundary = uuid.uuid4().hex
+    body = io.BytesIO()
+
+    for name, value in fields.items():
+        body.write(f"--{boundary}\r\n".encode("utf-8"))
+        body.write(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        body.write(f"{value}\r\n".encode("utf-8"))
+
+    for name, (filename, content) in files.items():
+        body.write(f"--{boundary}\r\n".encode("utf-8"))
+        body.write(
+            f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'
+            f"Content-Type: text/plain; charset=utf-8\r\n\r\n".encode("utf-8")
+        )
+        body.write(content if isinstance(content, bytes) else content.encode("utf-8"))
+        body.write(b"\r\n")
+
+    body.write(f"--{boundary}--\r\n".encode("utf-8"))
+    return body.getvalue(), f"multipart/form-data; boundary={boundary}"
+
+
+# --- French technical section (hardcoded) ------------------------------------
+# The report email goes to the developer, so its technical block is built in
+# French regardless of the UI language. Reproduces the labels and value
+# formatting of the legacy server adapter (app-backend internal/legacy/
+# amc_support.go buildAmcBody). Kept separate from the translated _format_*
+# helpers above, which still feed the in-app preview.
+
+_FR_ISSUE_LABELS = {
+    "conversion_problem": "Problème de conversion",
+    "application_crash": "Crash de l'application",
+    "update_problem": "Problème de mise à jour",
+    "accessibility_issue": "Problème d'accessibilité",
+    "installation_problem": "Problème d'installation",
+    "feature_request": "Demande de fonctionnalité",
+    "other": "Autre",
+}
+
+
+def _fr_issue_label(issue_type):
+    return _FR_ISSUE_LABELS.get(issue_type, _FR_ISSUE_LABELS["other"])
+
+
+def _build_support_fr_section(issue_type, context):
+    """Ordered key/value dict of the technical context, in hardcoded French."""
+    return {
+        "Type de demande": _fr_issue_label(issue_type),
+        "Version de l'application": _fr_str(context, "app_version", "inconnue"),
+        "Mode d'exécution": _fr_execution_mode(context.get("execution_mode", "source")),
+        "Système d'exploitation": _fr_str(context, "operating_system", "inconnu"),
+        "Langue": _fr_str(context, "language", "inconnue"),
+        "Onglet courant": _fr_tab(context.get("current_tab", "audio")),
+        "Format de sortie sélectionné": _fr_str(context, "selected_output_format", "non sélectionné"),
+        "Fichiers audio chargés": _fr_str(context, "loaded_audio_files_count", "0"),
+        "Fichiers vidéo chargés": _fr_str(context, "loaded_video_files_count", "0"),
+        "Vérification auto des mises à jour": _fr_bool(context.get("auto_update_check_enabled", False)),
+        "Politique de sortie existante": _fr_existing_output_policy(context.get("existing_output_policy", "rename")),
+        "Conversions simultanées max": _fr_str(context, "max_concurrent_jobs", "0"),
+        "Threads FFmpeg": _fr_ffmpeg_threads(context.get("ffmpeg_threads", "auto")),
+    }
+
+
+def _fr_str(context, key, fallback):
+    value = context.get(key)
+    if value is None or value == "":
+        return fallback
+    return str(value).strip()
+
+
+def _fr_execution_mode(value):
+    return "packagé" if value == "packaged" else "source"
+
+
+def _fr_tab(value):
+    return "vidéo" if value == "video" else "audio"
+
+
+def _fr_bool(value):
+    if isinstance(value, str):
+        return "oui" if value.strip().lower() in ("1", "true", "on", "yes") else "non"
+    return "oui" if bool(value) else "non"
+
+
+def _fr_existing_output_policy(value):
+    labels = {
+        "overwrite": "écraser le fichier existant",
+        "skip": "ignorer le fichier existant",
+    }
+    return labels.get(str(value), "renommer automatiquement")
+
+
+def _fr_ffmpeg_threads(value):
+    if isinstance(value, str) and value.strip().lower() == "auto":
+        return "automatique"
+    return str(value).strip()
 
 
 def _format_execution_mode(value):
