@@ -54,9 +54,9 @@ class SupportContactDialog(wx.Dialog):
         form_grid = wx.FlexGridSizer(cols=2, vgap=8, hgap=10)
         form_grid.AddGrowableCol(1, 1)
 
-        lbl_email = wx.StaticText(panel, label=_("Your email"))
+        lbl_email = wx.StaticText(panel, label=_("Your email (required)"))
         self.txt_email = wx.TextCtrl(panel)
-        self.txt_email.SetName(_("Your email"))
+        self.txt_email.SetName(_("Your email (required)"))
         self.txt_email.SetToolTip(_("Enter the email address that support should reply to."))
 
         lbl_issue = wx.StaticText(panel, label=_("Issue type"))

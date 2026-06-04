@@ -108,6 +108,8 @@ class MainWindow(wx.Frame):
         self._is_installing_update = False
         self._update_check_in_progress = False
         self._startup_update_check_scheduled = False
+        self._report_gate_in_progress = False
+        self._report_gate_busy = None
         self._pending_close_after_stop = False
         self.batch_manager = None
         self._current_batch_list_ctrl = None
@@ -550,6 +552,62 @@ class MainWindow(wx.Frame):
         dlg = UpdateDialog(self, release_info)
         dlg.ShowModal()
         dlg.Destroy()
+
+    def _check_update_then(self, on_up_to_date):
+        """Hard update gate before reporting a problem.
+
+        Runs a fresh update check; if a newer version is available, blocks with a
+        mandatory-update prompt and does NOT call on_up_to_date. When the app is up
+        to date — or the check cannot complete (offline) — on_up_to_date() runs, so a
+        network hiccup never traps a user who is trying to report an issue.
+        """
+        if self._report_gate_in_progress:
+            return
+        if self.is_converting:
+            # A conversion is running; an update install would be blocked anyway,
+            # so don't gate — let the report proceed.
+            on_up_to_date()
+            return
+
+        self._report_gate_in_progress = True
+        self._set_status(_("Checking for updates..."))
+        self._report_gate_busy = wx.BusyCursor()
+
+        def worker():
+            release_info = None
+            try:
+                release_info = fetch_latest_release(lang=get_current_language_code())
+            except Exception:
+                logging.info("Update gate: update check failed; allowing the report.")
+                release_info = None
+            wx.CallAfter(self._finish_report_gate, release_info, on_up_to_date)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finish_report_gate(self, release_info, on_up_to_date):
+        self._report_gate_in_progress = False
+        self._report_gate_busy = None  # destroys the BusyCursor before any dialog
+
+        if release_info and is_release_newer(release_info.version, APP_VERSION):
+            self._set_status(_("Update available: {version}").format(version=release_info.version))
+            message = _(
+                "A new version ({version}) is available. Your problem may already be "
+                "fixed in it, so please update before sending a report."
+            ).format(version=release_info.version)
+            dlg = wx.MessageDialog(self, message, _("Update required"), wx.YES_NO | wx.ICON_INFORMATION)
+            dlg.SetYesNoLabels(_("Update now"), _("Cancel"))
+            choice = dlg.ShowModal()
+            dlg.Destroy()
+            if choice == wx.ID_YES:
+                update_dlg = UpdateDialog(self, release_info)
+                update_dlg.ShowModal()
+                update_dlg.Destroy()
+            else:
+                self._set_status(_("Please update before reporting a problem."))
+            return
+
+        self._set_status(_("Ready. Add files to begin."))
+        on_up_to_date()
 
     def on_add_folder(self, event):
         if self.is_converting: return
@@ -1521,8 +1579,15 @@ class MainWindow(wx.Frame):
             if payload.get('error_kind') == 'input_missing':
                 return
             if not self._is_error_report_dialog_alive():
-                from ui.error_report_dialog import ErrorReportDialog
-                self._error_report_dialog = ErrorReportDialog(self, payload, self.settings_store)
+                # Hard update gate: if a newer version exists, require updating
+                # before the error report can be written (the bug may be fixed).
+                self._check_update_then(lambda: self._open_error_report_dialog(payload))
+
+    def _open_error_report_dialog(self, payload):
+        if self._is_error_report_dialog_alive():
+            return
+        from ui.error_report_dialog import ErrorReportDialog
+        self._error_report_dialog = ErrorReportDialog(self, payload, self.settings_store)
 
     def _on_batch_progress_update(self, summary):
         progress_value = summary.get('overall_progress', 0)
@@ -1706,6 +1771,9 @@ class MainWindow(wx.Frame):
         self._start_update_check(interactive=True)
 
     def on_contact_support(self, e):
+        self._check_update_then(self._open_support_dialog)
+
+    def _open_support_dialog(self):
         dlg = SupportContactDialog(self)
         dlg.ShowModal()
         dlg.Destroy()
