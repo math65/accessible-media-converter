@@ -2,7 +2,7 @@
   #define AppName "Accessible Media Converter"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.10.0"
+  #define AppVersion "1.10.1"
 #endif
 #ifndef AppDistDirName
   #define AppDistDirName "AccessibleMediaConverter"
@@ -59,3 +59,9 @@ Source: "..\dist\{#AppDistDirName}\*"; DestDir: "{app}"; Flags: ignoreversion re
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+
+[Run]
+; Relancer l'application après une mise à jour silencieuse (lancée par l'updater).
+; runasoriginaluser : l'installeur tourne en admin (UAC), on relance l'app sous
+; l'utilisateur courant et non élevé.
+Filename: "{app}\{#AppExeName}"; Flags: nowait runasoriginaluser; Check: WizardSilent
