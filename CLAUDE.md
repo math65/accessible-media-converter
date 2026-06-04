@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.9.4`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.10.2`.
 
 ## Running and building
 
@@ -140,6 +140,15 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.10.2 (report gate)** — Reporting a problem now requires an up-to-date app and a valid email.
+  Before opening the support form (Help → Contact Support) **or** the automatic conversion-error
+  dialog, `ui/main_window.py` runs a fresh GitHub update check (`_check_update_then` /
+  `_finish_report_gate`, reusing `fetch_latest_release`/`is_release_newer`/`UpdateDialog`). If a newer
+  version exists it **hard-blocks** with an "Update now / Cancel" prompt and the report does not open
+  (the bug may already be fixed); when up to date — or the check fails offline — the report opens.
+  Short-circuited during a conversion (an update can't install anyway). The email field is now
+  labelled "(required)" in both dialogs (sending without a valid email was already rejected). Embedded
+  FFmpeg bumped to `2026-06-04-git-c27a3b12e3`.
 - **v1.10.2 (announcements)** — Startup announcement client (mirrors DownAccess). `core/announce.py`
   polls the shared backend `POST /api/announce/check` (Bearer, reuses `_APP_ID`/`_BEARER` from
   `core/support.py`) at launch; an active announcement is shown via `wx.MessageBox` (icon from
