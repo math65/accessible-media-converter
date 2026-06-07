@@ -13,6 +13,7 @@ import threading
 import urllib.error
 import urllib.request
 
+from core import i18n
 from core.support import _APP_ID, _BEARER
 
 log = logging.getLogger("amc.announce")
@@ -40,7 +41,9 @@ def check_announcement(install_id, on_done):
     """
     def _run():
         try:
-            body = _post(CHECK_URL, {"app": _APP_ID, "install_id": install_id}, timeout=8)
+            lang = i18n.get_current_language_code()
+            payload = {"app": _APP_ID, "install_id": install_id, "lang": lang}
+            body = _post(CHECK_URL, payload, timeout=8)
             ann = body.get("announcement")
             on_done(ann if isinstance(ann, dict) else None)
         except (urllib.error.URLError, OSError, ValueError) as exc:
