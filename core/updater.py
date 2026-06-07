@@ -1,4 +1,5 @@
 import builtins
+import hashlib
 import json
 import os
 import re
@@ -50,6 +51,7 @@ class ReleaseInfo:
     body: str
     asset_name: str
     asset_url: str
+    asset_digest: str = ""
 
 
 def _translate(msgid):
@@ -152,7 +154,7 @@ def parse_release_info(payload, lang=None):
     html_url = str(latest_release.get("html_url") or APP_GITHUB_RELEASES_PAGE).strip() or APP_GITHUB_RELEASES_PAGE
     body = build_combined_release_notes(stable_releases, lang=lang)
     published_at = str(latest_release.get("published_at") or "").strip()
-    asset_name, asset_url = find_setup_asset(latest_release.get("assets"))
+    asset_name, asset_url, asset_digest = find_setup_asset(latest_release.get("assets"))
 
     if not version:
         raise UpdateCheckError(_translate("The GitHub release does not define a valid version tag."))
@@ -165,6 +167,7 @@ def parse_release_info(payload, lang=None):
         body=body,
         asset_name=asset_name,
         asset_url=asset_url,
+        asset_digest=asset_digest,
     )
 
 
@@ -259,9 +262,26 @@ def find_setup_asset(assets):
         if name.lower() == exact_name:
             download_url = str(asset.get("browser_download_url") or "").strip()
             if download_url:
-                return name, download_url
+                digest = str(asset.get("digest") or "").strip()
+                return name, download_url, digest
 
     raise UpdateCheckError(_translate("No installer asset was found in the GitHub release."))
+
+
+def parse_expected_sha256(digest):
+    """Return the lowercase hex SHA-256 from a GitHub asset ``digest`` field.
+
+    GitHub formats it as ``sha256:<hex>``. Returns None when the field is
+    absent or uses an algorithm we do not verify (forward-compatible: we never
+    fail an update just because GitHub introduced a new digest format).
+    """
+    normalized = str(digest or "").strip().lower()
+    if not normalized.startswith("sha256:"):
+        return None
+    hex_digest = normalized[len("sha256:"):].strip()
+    if len(hex_digest) != 64 or any(char not in "0123456789abcdef" for char in hex_digest):
+        return None
+    return hex_digest
 
 
 def download_release_installer(release_info, progress_callback=None, timeout=HTTP_TIMEOUT_SECONDS):
@@ -278,19 +298,33 @@ def download_release_installer(release_info, progress_callback=None, timeout=HTT
     headers = {"User-Agent": f"{APP_EXE_NAME}/{APP_VERSION}"}
     asset_request = request.Request(release_info.asset_url, headers=headers)
 
+    expected_sha256 = parse_expected_sha256(release_info.asset_digest)
+
     try:
         with request.urlopen(asset_request, timeout=timeout) as response:
             total_size = int(response.headers.get("Content-Length", "0") or "0")
             downloaded = 0
+            hasher = hashlib.sha256()
             with open(partial_path, "wb") as handle:
                 while True:
                     chunk = response.read(DOWNLOAD_CHUNK_SIZE)
                     if not chunk:
                         break
                     handle.write(chunk)
+                    hasher.update(chunk)
                     downloaded += len(chunk)
                     if progress_callback is not None:
                         progress_callback(downloaded, total_size)
+
+        # Refuse a truncated download (connection dropped without raising).
+        if total_size and downloaded != total_size:
+            raise UpdateDownloadError(_translate("The installer download was incomplete. Please try again."))
+
+        # Verify integrity against the SHA-256 GitHub publishes for the asset.
+        if expected_sha256 and hasher.hexdigest() != expected_sha256:
+            raise UpdateDownloadError(
+                _translate("The installer failed its integrity check and was not installed.")
+            )
 
         if final_path.exists():
             final_path.unlink()
