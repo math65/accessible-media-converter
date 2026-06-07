@@ -157,7 +157,9 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   (`core/formatting.py` defaults + normalization). Wired in `ui/main_window.py`
   (`check_announcement_at_startup` / `_on_announcement_received`) and called from `main.py` after the
   update check. The check is silent: any network error is ignored. Announcements are created in the
-  web admin (`/api/admin`) targeting `amc` (or `*`).
+  web admin (`/api/admin`) targeting `amc` (or `*`). The check now sends the **UI language**
+  (`lang` = `i18n.get_current_language_code()`, `fr`/`en`): the backend returns the localized
+  title/body (announcements are bilingual; English falls back to French when no English overlay).
 - **v1.10.2** — Support form migrated from the legacy `/api/support-report` (honeypot)
   to the generic `/api/feedback/report` endpoint (Bearer auth, multipart `report` JSON +
   `log_file`), matching the DownAccess client. `core/support.py` now builds the technical
