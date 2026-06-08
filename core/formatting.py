@@ -4,7 +4,10 @@ import os
 from core.i18n import AUTO_LANGUAGE_CODE, normalize_ui_language
 
 
-AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "wav", "flac", "alac", "ogg", "wma")
+AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "m4b", "wav", "flac", "alac", "ogg", "wma")
+# Modes de nommage des chapitres générés pour un M4B (fusion).
+M4B_CHAPTER_NAMING_MODES = ("title_or_number", "title_or_filename", "numbered")
+DEFAULT_M4B_CHAPTER_NAMING = "title_or_number"
 VIDEO_OUTPUT_FORMAT_KEYS = ("mp4", "mkv", *AUDIO_OUTPUT_FORMAT_KEYS)
 VIDEO_CONTAINER_FORMAT_KEYS = ("mp4", "mkv")
 IMAGE_OUTPUT_FORMAT_KEYS = ("jpeg", "png", "webp", "tiff", "bmp")
@@ -79,6 +82,17 @@ DEFAULT_FORMAT_SETTINGS = {
         "audio_normalize_streaming": False,
         "rate_mode": "cbr",
         "audio_bitrate": "192k",
+        "audio_qscale": 3,
+        "audio_sample_rate": "original",
+        "audio_channels": "2",
+    },
+    "m4b": {
+        # Livre audio : défaut stéréo 128k (certains livres ont de la musique) ;
+        # tout est ajustable dans la boîte de réglages (mono/64k possible).
+        "audio_mode": "convert",
+        "audio_normalize_streaming": False,
+        "rate_mode": "cbr",
+        "audio_bitrate": "128k",
         "audio_qscale": 3,
         "audio_sample_rate": "original",
         "audio_channels": "2",
@@ -187,6 +201,7 @@ APP_DEFAULT_SETTINGS = {
     "continue_on_error": True,
     "check_updates_on_startup": True,
     "preserve_metadata": False,
+    "m4b_chapter_naming": DEFAULT_M4B_CHAPTER_NAMING,
     "ui_language": AUTO_LANGUAGE_CODE,
     "install_id": "",              # identifiant anonyme d'installation (généré au 1er lancement)
     "seen_announcements": [],      # ids des annonces "once" déjà affichées
@@ -238,6 +253,7 @@ def build_format_label(format_key, context="audio"):
         extraction_labels = {
             "mp3": _translate("MP3 - Audio (Extract)"),
             "aac": _translate("AAC - Audio (Extract)"),
+            "m4b": _translate("M4B - Audio (Extract)"),
             "wav": _translate("WAV - Audio (Extract)"),
             "flac": _translate("FLAC - Audio (Extract)"),
             "alac": _translate("ALAC - Audio (Extract)"),
@@ -249,6 +265,7 @@ def build_format_label(format_key, context="audio"):
     labels = {
         "mp3": _translate("MP3 - Audio"),
         "aac": _translate("AAC - Audio (M4A)"),
+        "m4b": _translate("M4B - Audiobook (Chapters)"),
         "wav": _translate("WAV - Audio (Lossless)"),
         "flac": _translate("FLAC - Audio (Lossless)"),
         "alac": _translate("ALAC - Audio (Apple Lossless)"),
@@ -381,6 +398,8 @@ def normalize_settings_store(settings_store):
     normalized["preserve_metadata"] = bool(
         normalized.get("preserve_metadata", APP_DEFAULT_SETTINGS["preserve_metadata"])
     )
+    if normalized.get("m4b_chapter_naming") not in M4B_CHAPTER_NAMING_MODES:
+        normalized["m4b_chapter_naming"] = DEFAULT_M4B_CHAPTER_NAMING
     normalized["ui_language"] = normalize_ui_language(
         normalized.get("ui_language", APP_DEFAULT_SETTINGS["ui_language"])
     )

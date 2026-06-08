@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.10.2`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.11.0`.
 
 ## Running and building
 
@@ -140,6 +140,23 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.11.0 (M4B audiobooks)** — New **M4B output format with chapters**.
+  `"m4b"` added to `AUDIO_OUTPUT_FORMAT_KEYS` (`core/formatting.py`); it is a MP4/AAC
+  container forced with `-f ipod` and defaults to **stereo 128k** (audiobooks may contain
+  music — fully adjustable, mono/64k possible). **Merging** several audio files into an M4B
+  generates **one chapter per file**: `core/merge.py` builds an FFMETADATA file
+  (`;FFMETADATA1` + `[CHAPTER]` blocks, `TIMEBASE=1/1000`, START/END in ms cumulated from
+  `meta.duration`), passed as a 2nd input with `-map 0:a -map_chapters 1`. **Converting** a
+  single already-chaptered file to M4B preserves its chapters (`-map_chapters 0`). Chapter
+  titles follow a new **Preferences** dropdown `m4b_chapter_naming` (3 modes:
+  `title_or_number` default → file's `title` tag else localized "Chapter N" via gettext;
+  `title_or_filename`; `numbered`). M4B routes through the AAC controls in the settings
+  dialog (`_get_active_audio_codec_key` maps `m4b`→`aac`) and is accepted as input (`.m4b`).
+- **v1.11.0 (video/audio metadata)** — Metadata editor adapts to a **video Content type**
+  selector (Film / TV series / Other) showing relevant fields (synopsis; series/season/episode),
+  with **filename auto-detection** of season/episode (SxxExx) for video and track number for
+  audio (`core/episode_parse.py`), new audio fields (Grouping, Copyright, multi-line Lyrics),
+  and accessibility fixes (Ctrl+A and the keyboard context menu now honour the multi-selection).
 - **v1.10.2 (report gate)** — Reporting a problem now requires an up-to-date app and a valid email.
   Before opening the support form (Help → Contact Support) **or** the automatic conversion-error
   dialog, `ui/main_window.py` runs a fresh GitHub update check (`_check_update_then` /

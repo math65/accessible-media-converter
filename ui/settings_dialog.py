@@ -673,6 +673,8 @@ class SettingsDialog(wx.Dialog):
     def _get_active_audio_codec_key(self):
         if self.format_key in VIDEO_CONTAINER_FORMAT_KEYS:
             return self._get_selected_audio_codec_key()
+        if self.format_key == 'm4b':
+            return 'aac'  # M4B = conteneur AAC : mêmes contrôles que l'AAC
         return self.format_key
 
     def _get_selected_video_encoder_preset_key(self):

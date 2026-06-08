@@ -5,22 +5,160 @@ re-tag path (``core/metadata_retag.py``). No gettext at module level: the
 labels are msgids consumed by the UI, which calls ``_()`` itself.
 """
 
+from core.episode_parse import parse_episode_from_filename, parse_track_from_filename
 
-# (ffmpeg metadata key, UI label msgid) in display / command order.
-METADATA_TAG_FIELDS = (
-    ("title", "Title"),
-    ("artist", "Artist"),
-    ("album", "Album"),
-    ("album_artist", "Album artist"),
-    ("composer", "Composer"),
-    ("date", "Year"),
-    ("track", "Track number"),
-    ("disc", "Disc number"),
-    ("genre", "Genre"),
-    ("comment", "Comment"),
+
+def N_(message):
+    """gettext no-op: marks a literal for extraction without translating it.
+
+    The UI translates these label msgids at render time via ``_()``; we only
+    need them collected into the catalog. Same pattern as ``core/support.py``.
+    """
+    return message
+
+
+# Field sets are (ffmpeg metadata key, UI label msgid) in display / command order.
+#
+# Audio keeps the music-oriented tags. Video splits by *content type* (film /
+# series / other): an album/track layout makes no sense for a movie. Every video
+# key below was verified to round-trip in both MP4 and MKV, for re-encode and
+# stream-copy alike (season/episode are integer atoms in MP4, hence numeric).
+# director/studio/producer are intentionally excluded: they have no standard MP4
+# atom and are silently dropped on MP4 output.
+
+AUDIO_METADATA_FIELDS = (
+    ("title", N_("Title")),
+    ("artist", N_("Artist")),
+    ("album", N_("Album")),
+    ("album_artist", N_("Album artist")),
+    ("composer", N_("Composer")),
+    ("date", N_("Year")),
+    ("track", N_("Track number")),
+    ("disc", N_("Disc number")),
+    ("genre", N_("Genre")),
+    ("comment", N_("Comment")),
+    ("grouping", N_("Grouping")),
+    ("copyright", N_("Copyright")),
+    ("lyrics", N_("Lyrics")),
+)
+
+# Album edited as a batch with per-file track auto-detection on: only the fields
+# genuinely shared across the album are shown. Title / track / disc (and lyrics)
+# are per-track and come from each file (track/disc from its name), so omitted.
+AUDIO_BATCH_FIELDS = (
+    ("artist", N_("Artist")),
+    ("album", N_("Album")),
+    ("album_artist", N_("Album artist")),
+    ("composer", N_("Composer")),
+    ("date", N_("Year")),
+    ("genre", N_("Genre")),
+    ("comment", N_("Comment")),
+    ("grouping", N_("Grouping")),
+    ("copyright", N_("Copyright")),
+)
+
+# Fields rendered as a multi-line text box (long free text).
+MULTILINE_TAG_KEYS = frozenset({"lyrics"})
+
+VIDEO_FILM_FIELDS = (
+    ("title", N_("Title")),
+    ("date", N_("Year")),
+    ("genre", N_("Genre")),
+    ("description", N_("Synopsis")),
+    ("comment", N_("Comment")),
+)
+
+VIDEO_SERIES_FIELDS = (
+    ("title", N_("Episode title")),
+    ("show", N_("Series")),
+    ("season_number", N_("Season")),
+    ("episode_id", N_("Episode")),
+    ("date", N_("Year")),
+    ("genre", N_("Genre")),
+    ("description", N_("Synopsis")),
+    ("comment", N_("Comment")),
+)
+
+VIDEO_OTHER_FIELDS = (
+    ("title", N_("Title")),
+    ("date", N_("Year")),
+    ("genre", N_("Genre")),
+    ("comment", N_("Comment")),
+)
+
+# Series, edited as a batch with per-file episode auto-detection on: only the
+# fields that are genuinely shared across the season are shown. Season/episode
+# (and the episode title) are unique per file and come from each file name, so
+# they are omitted here and injected at apply time.
+VIDEO_SERIES_BATCH_FIELDS = (
+    ("show", N_("Series")),
+    ("date", N_("Year")),
+    ("genre", N_("Genre")),
+    ("comment", N_("Comment")),
+)
+
+# Keys FFmpeg stores as integer atoms in MP4 (e.g. tvsn for the season): a
+# non-numeric value is silently coerced to 0, so the editor rejects it up front.
+NUMERIC_TAG_KEYS = frozenset({"season_number"})
+
+CONTENT_TYPE_FILM = "film"
+CONTENT_TYPE_SERIES = "series"
+CONTENT_TYPE_OTHER = "other"
+
+# (content_type id, selector label msgid, field set) in selector display order.
+VIDEO_CONTENT_TYPES = (
+    (CONTENT_TYPE_FILM, N_("Film"), VIDEO_FILM_FIELDS),
+    (CONTENT_TYPE_SERIES, N_("TV series"), VIDEO_SERIES_FIELDS),
+    (CONTENT_TYPE_OTHER, N_("Other"), VIDEO_OTHER_FIELDS),
+)
+
+_VIDEO_FIELDS_BY_TYPE = {ctype: fields for ctype, _label, fields in VIDEO_CONTENT_TYPES}
+
+
+def _ordered_union(*field_groups):
+    """Merge field groups keeping first-seen order, deduplicated by key."""
+    merged = {}
+    for group in field_groups:
+        for key, label in group:
+            merged.setdefault(key, label)
+    return tuple(merged.items())
+
+
+# Superset of every key any set can produce. Drives METADATA_TAG_KEYS, which
+# read_prefill_tags / build_tag_metadata_args / normalize_metadata_overrides use.
+# Those only ever emit keys actually present in a tag dict, so widening the
+# superset is safe for the audio and conversion paths.
+METADATA_TAG_FIELDS = _ordered_union(
+    AUDIO_METADATA_FIELDS, VIDEO_FILM_FIELDS, VIDEO_SERIES_FIELDS, VIDEO_OTHER_FIELDS
 )
 
 METADATA_TAG_KEYS = tuple(key for key, _label in METADATA_TAG_FIELDS)
+
+
+def fields_for_content_type(content_type):
+    """Ordered (key, label) field set for a video content type (default: film)."""
+    return _VIDEO_FIELDS_BY_TYPE.get(content_type, VIDEO_FILM_FIELDS)
+
+
+def detect_content_type(meta):
+    """Best-effort default content type for a video file.
+
+    Series when the source already carries show/season/episode tags, or when the
+    file name has a recognizable SxxExx / NxNN token; film otherwise.
+    """
+    tags = getattr(meta, "format_tags", {}) or {}
+    lowered = {str(key).lower() for key in tags}
+    series_markers = {
+        "show", "tvshow", "season_number", "season",
+        "episode_id", "episode_sort", "episode",
+    }
+    if lowered & series_markers:
+        return CONTENT_TYPE_SERIES
+
+    name = getattr(meta, "full_path", "") or getattr(meta, "filename", "")
+    if parse_episode_from_filename(name):
+        return CONTENT_TYPE_SERIES
+    return CONTENT_TYPE_FILM
 
 # ffprobe tag aliases -> our canonical field key (keys are lowercased on read).
 _TAG_ALIASES = {
@@ -39,6 +177,22 @@ _TAG_ALIASES = {
     "discnumber": "disc",
     "genre": "genre",
     "comment": "comment",
+    # Video / film / series.
+    "description": "description",
+    "synopsis": "description",
+    "show": "show",
+    "tvshow": "show",
+    "season_number": "season_number",
+    "season": "season_number",
+    "episode_id": "episode_id",
+    "episode": "episode_id",
+    "episode_sort": "episode_id",
+    # Extra music tags.
+    "grouping": "grouping",
+    "copyright": "copyright",
+    "lyrics": "lyrics",
+    "unsyncedlyrics": "lyrics",
+    "unsynced lyrics": "lyrics",
 }
 
 # Output audio formats whose container can embed a cover (attached_pic) image.
@@ -135,6 +289,55 @@ def has_metadata_overrides(meta):
 
 def get_metadata_overrides(meta):
     return normalize_metadata_overrides(getattr(meta, "metadata_overrides", None))
+
+
+def overrides_with_detected_episode(base_overrides, filename):
+    """Merge season/episode parsed from ``filename`` over ``base_overrides``.
+
+    Used for batch series tagging: shared fields (series, year, genre…) come
+    from the dialog and are identical for every file, while season and episode
+    are unique and read from each file's own name. Returns ``base_overrides``
+    unchanged when the name has no recognizable SxxExx / NxNN token.
+    """
+    parsed = parse_episode_from_filename(filename)
+    if not parsed:
+        return base_overrides
+
+    base = base_overrides if isinstance(base_overrides, dict) else {}
+    tags = dict(base.get("tags", {}))
+    tags["season_number"] = str(parsed["season"])
+    tags["episode_id"] = str(parsed["episode"])
+    merged = {"tags": tags, "cover": base.get("cover", {"action": "keep"})}
+    return normalize_metadata_overrides(merged)
+
+
+def overrides_with_detected_track(base_overrides, filename):
+    """Merge track (and disc) parsed from ``filename`` over ``base_overrides``.
+
+    The audio analogue of ``overrides_with_detected_episode``: for batch album
+    tagging the shared fields (album, artist, year…) come from the dialog while
+    each file's track number is read from its own name.
+    """
+    parsed = parse_track_from_filename(filename)
+    if not parsed:
+        return base_overrides
+
+    base = base_overrides if isinstance(base_overrides, dict) else {}
+    tags = dict(base.get("tags", {}))
+    tags["track"] = str(parsed["track"])
+    if parsed.get("disc"):
+        tags["disc"] = str(parsed["disc"])
+    merged = {"tags": tags, "cover": base.get("cover", {"action": "keep"})}
+    return normalize_metadata_overrides(merged)
+
+
+def overrides_with_detected_numbers(base_overrides, filename, kind):
+    """Dispatch per-file number detection by kind ('episode' / 'track')."""
+    if kind == "episode":
+        return overrides_with_detected_episode(base_overrides, filename)
+    if kind == "track":
+        return overrides_with_detected_track(base_overrides, filename)
+    return base_overrides
 
 
 def build_tag_metadata_args(tags):

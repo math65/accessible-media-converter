@@ -52,6 +52,8 @@ class MergeTask:
     def _apply_audio_codec_settings(self, cmd):
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             codec_key = get_effective_audio_codec(self.target_format, self.settings)
+        elif self.target_format == 'm4b':
+            codec_key = 'aac'  # conteneur MP4/ipod encodé en AAC
         else:
             codec_key = self.target_format
 
@@ -64,6 +66,54 @@ class MergeTask:
         ):
             cmd.extend(['-filter:a', STREAMING_LOUDNORM_FILTER])
 
+    @staticmethod
+    def _escape_ffmetadata(value):
+        # Dans un fichier FFMETADATA, =, ;, #, \ et le saut de ligne doivent être
+        # échappés par un antislash.
+        text = str(value)
+        for char in ('\\', '=', ';', '#'):
+            text = text.replace(char, '\\' + char)
+        return text.replace('\n', '\\\n')
+
+    def _chapter_title_for(self, index, meta):
+        mode = self.settings.get('m4b_chapter_naming', 'title_or_number')
+        tag_title = ''
+        format_tags = getattr(meta, 'format_tags', None)
+        if isinstance(format_tags, dict):
+            tag_title = str(format_tags.get('title') or '').strip()
+
+        if mode != 'numbered' and tag_title:
+            return tag_title
+        if mode == 'title_or_filename':
+            stem = os.path.splitext(os.path.basename(meta.full_path))[0].strip()
+            if stem:
+                return stem
+        # 'numbered', ou repli quand titre/nom manquent.
+        return _translatef("Chapter {number}", number=index + 1)
+
+    def _build_chapter_ffmetadata(self):
+        """Construit le texte FFMETADATA (un [CHAPTER] par fichier d'entrée)."""
+        lines = [';FFMETADATA1']
+        start_ms = 0
+        for index, meta in enumerate(self.input_list):
+            duration = float(getattr(meta, 'duration', 0) or 0)
+            end_ms = start_ms + int(round(duration * 1000))
+            if end_ms <= start_ms:
+                # Durée inconnue/nulle : chapitre de longueur nulle, on prévient.
+                logging.warning(
+                    "Durée nulle pour %s : chapitre M4B de longueur nulle.",
+                    os.path.basename(meta.full_path),
+                )
+                end_ms = start_ms
+            title = self._escape_ffmetadata(self._chapter_title_for(index, meta))
+            lines.append('[CHAPTER]')
+            lines.append('TIMEBASE=1/1000')
+            lines.append(f'START={start_ms}')
+            lines.append(f'END={end_ms}')
+            lines.append(f'title={title}')
+            start_ms = end_ms
+        return '\n'.join(lines) + '\n'
+
     def run(self, progress_callback=None, stop_check_callback=None):
         for meta in self.input_list:
             if not os.path.isfile(meta.full_path):
@@ -75,6 +125,9 @@ class MergeTask:
                     )
                 )
 
+        is_m4b = self.target_format == 'm4b'
+        meta_path = None
+
         list_fd, list_path = tempfile.mkstemp(suffix='.txt', prefix='amc_concat_')
         try:
             with os.fdopen(list_fd, 'w', encoding='utf-8') as f:
@@ -83,6 +136,13 @@ class MergeTask:
                     f.write(f"file '{path}'\n")
 
             cmd = [self.ffmpeg_exe, '-y', '-f', 'concat', '-safe', '0', '-i', list_path]
+
+            if is_m4b:
+                # Chapitres : un [CHAPTER] par fichier fusionné, passé en 2e entrée.
+                meta_fd, meta_path = tempfile.mkstemp(suffix='.ffmeta', prefix='amc_chapters_')
+                with os.fdopen(meta_fd, 'w', encoding='utf-8') as mf:
+                    mf.write(self._build_chapter_ffmetadata())
+                cmd.extend(['-i', meta_path])
 
             if self.target_format in VIDEO_CONTAINER_OUTPUTS:
                 video_mode = self.settings.get('video_mode', 'convert')
@@ -109,13 +169,20 @@ class MergeTask:
                     self._apply_audio_codec_settings(cmd)
                 cmd.append('-vn')
 
-            # Conserve tags et chapitres du premier fichier fusionné si demandé
-            # (la pochette n'est pas gérée pour les fusions concat).
-            apply_metadata_preservation(cmd, self.settings)
+            if is_m4b:
+                # Audio du concat (entrée 0) + chapitres générés (entrée 1).
+                cmd.extend(['-map', '0:a', '-map_chapters', '1'])
+            else:
+                # Conserve tags et chapitres du premier fichier fusionné si demandé
+                # (la pochette n'est pas gérée pour les fusions concat).
+                apply_metadata_preservation(cmd, self.settings)
 
             thread_count = parse_ffmpeg_threads(self.settings)
             if thread_count is not None:
                 cmd.extend(['-threads', str(thread_count)])
+
+            if is_m4b:
+                cmd.extend(['-f', 'ipod'])  # muxer qui gère .m4b
 
             cmd.append(self.output_path)
 
@@ -180,3 +247,8 @@ class MergeTask:
                 os.unlink(list_path)
             except Exception:
                 pass
+            if meta_path:
+                try:
+                    os.unlink(meta_path)
+                except Exception:
+                    pass

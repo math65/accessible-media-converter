@@ -9,6 +9,8 @@ from core.i18n import (
 from core.formatting import (
     DEFAULT_CONCURRENT_JOBS,
     DEFAULT_FFMPEG_THREADS,
+    DEFAULT_M4B_CHAPTER_NAMING,
+    M4B_CHAPTER_NAMING_MODES,
     MAX_CONCURRENT_JOBS,
     MIN_CONCURRENT_JOBS,
     get_detected_cpu_threads,
@@ -34,6 +36,9 @@ class PreferencesDialog(wx.Dialog):
         self.continue_on_error = bool(self.settings.get('continue_on_error', True))
         self.check_updates_on_startup = bool(self.settings.get('check_updates_on_startup', True))
         self.preserve_metadata = bool(self.settings.get('preserve_metadata', False))
+        self.m4b_chapter_naming = self.settings.get('m4b_chapter_naming', DEFAULT_M4B_CHAPTER_NAMING)
+        if self.m4b_chapter_naming not in M4B_CHAPTER_NAMING_MODES:
+            self.m4b_chapter_naming = DEFAULT_M4B_CHAPTER_NAMING
         self.detected_cpu_threads = get_detected_cpu_threads()
         self.ffmpeg_thread_values = (DEFAULT_FFMPEG_THREADS, *get_ffmpeg_thread_values())
 
@@ -121,6 +126,28 @@ class PreferencesDialog(wx.Dialog):
             _("Keep tags, chapters and embedded cover art from the source file when possible.")
         )
         output_sizer.Add(self.chk_preserve_metadata, 0, wx.ALL, 5)
+
+        chapter_naming_row = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_chapter_naming = wx.StaticText(panel, label=_("M4B chapter naming"))
+        self.m4b_chapter_naming_modes = list(M4B_CHAPTER_NAMING_MODES)
+        self.choice_m4b_chapter_naming = wx.Choice(
+            panel,
+            choices=[
+                _("Title, otherwise number"),
+                _("Title, otherwise file name"),
+                _("Always numbered"),
+            ],
+        )
+        self.choice_m4b_chapter_naming.SetName(_("M4B chapter naming"))
+        self.choice_m4b_chapter_naming.SetToolTip(
+            _("How chapters are named when merging files into an M4B audiobook.")
+        )
+        self.choice_m4b_chapter_naming.SetSelection(
+            self.m4b_chapter_naming_modes.index(self.m4b_chapter_naming)
+        )
+        chapter_naming_row.Add(lbl_chapter_naming, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        chapter_naming_row.Add(self.choice_m4b_chapter_naming, 1, wx.EXPAND)
+        output_sizer.Add(chapter_naming_row, 0, wx.EXPAND | wx.ALL, 5)
 
         execution_box = wx.StaticBox(panel, label=_("Execution"))
         execution_box.SetWindowStyle(execution_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
@@ -291,4 +318,7 @@ class PreferencesDialog(wx.Dialog):
             'continue_on_error': self.chk_continue_on_error.GetValue(),
             'check_updates_on_startup': self.chk_check_updates_on_startup.GetValue(),
             'preserve_metadata': self.chk_preserve_metadata.GetValue(),
+            'm4b_chapter_naming': self.m4b_chapter_naming_modes[
+                self.choice_m4b_chapter_naming.GetSelection()
+            ],
         }

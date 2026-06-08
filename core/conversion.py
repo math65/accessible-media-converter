@@ -206,6 +206,8 @@ class ConversionTask:
     def _get_target_audio_codec(self):
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             return get_effective_audio_codec(self.target_format, self.settings)
+        if self.target_format == 'm4b':
+            return 'aac'  # le M4B est un conteneur MP4 encodé en AAC
         return self.target_format
 
     def _apply_encoded_audio_settings(self, cmd, mapped_container_tracks):
@@ -430,6 +432,12 @@ class ConversionTask:
                 preserve_metadata = True
             cmd.extend(build_tag_metadata_args(override_tags))
 
+        if self.target_format == 'm4b' and not preserve_metadata:
+            # Le M4B est un livre audio : on conserve toujours les chapitres (et
+            # tags) de la source lors d'une conversion d'un seul fichier.
+            cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
+            preserve_metadata = True
+
         audio_mode = self.settings.get('audio_mode', 'convert')
         if audio_mode == 'copy':
             cmd.extend(['-c:a', 'copy'])
@@ -481,6 +489,10 @@ class ConversionTask:
         thread_count = parse_ffmpeg_threads(self.settings)
         if thread_count is not None:
             cmd.extend(['-threads', str(thread_count)])
+
+        if self.target_format == 'm4b':
+            # Le muxer ipod gère .m4b (sinon FFmpeg ne déduit pas le conteneur).
+            cmd.extend(['-f', 'ipod'])
 
         cmd.append(output_path)
         self.last_command = list(cmd)

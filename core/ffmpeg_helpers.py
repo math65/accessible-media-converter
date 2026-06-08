@@ -10,7 +10,7 @@ STREAMING_LOUDNORM_FILTER = "loudnorm=I=-16:TP=-1:LRA=7"
 VIDEO_CONTAINER_OUTPUTS = ('mp4', 'mkv', 'mov')
 
 # Formats audio dont le conteneur sait embarquer une pochette (attached_pic).
-COVER_ART_AUDIO_OUTPUTS = ('mp3', 'aac', 'alac', 'flac')
+COVER_ART_AUDIO_OUTPUTS = ('mp3', 'aac', 'm4b', 'alac', 'flac')
 
 _WAV_DEPTH_TO_CODEC = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
 
