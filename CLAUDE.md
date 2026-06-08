@@ -157,6 +157,18 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   with **filename auto-detection** of season/episode (SxxExx) for video and track number for
   audio (`core/episode_parse.py`), new audio fields (Grouping, Copyright, multi-line Lyrics),
   and accessibility fixes (Ctrl+A and the keyboard context menu now honour the multi-selection).
+- **v1.11.0 (updater integrity)** — `core/updater.py` now verifies the downloaded installer
+  before launching it: completeness check (bytes vs `Content-Length`) plus a SHA-256 match
+  against the GitHub asset `digest` field (`parse_expected_sha256`; `find_setup_asset` returns
+  `(name, url, digest)`). A mismatch raises `UpdateDownloadError` and the installer is not run.
+- **v1.11.0 (user docs)** — User documentation (`docs/en/`, `docs/fr/`) brought up to date with
+  the app: new M4B/chapters, metadata editor (audio + video Content type + auto-detection),
+  preferences, and update integrity. New page `docs/{en,fr}/user/image-conversion.html` (the
+  image feature was undocumented). EN pages now use a **local** stylesheet (`docs/en/assets/`)
+  instead of pulling FR's, FR/EN parity fixed (e.g. the missing "Application language" bullet),
+  and keyboard equivalents (Menu key / Shift+F10) added for every context-menu action.
+  Published as **v1.11.0** (2026-06-08), tag `v1.11.0`, single asset
+  `AccessibleMediaConverter-Setup.exe`.
 - **v1.10.2 (report gate)** — Reporting a problem now requires an up-to-date app and a valid email.
   Before opening the support form (Help → Contact Support) **or** the automatic conversion-error
   dialog, `ui/main_window.py` runs a fresh GitHub update check (`_check_update_then` /
