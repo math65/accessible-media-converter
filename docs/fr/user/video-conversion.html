@@ -29,6 +29,7 @@
         <li><a href="#video">Régler la vidéo</a></li>
         <li><a href="#audio">Régler l'audio</a></li>
         <li><a href="#pistes">Gérer les pistes</a></li>
+        <li><a href="#metadonnees">Modifier les métadonnées vidéo</a></li>
       </ul>
     </section>
 
@@ -121,16 +122,17 @@
     <section class="section" id="pistes">
       <h2>Gérer les pistes</h2>
       <p>
-        Pour ouvrir les actions de pistes, faites un clic droit sur un fichier vidéo dans la liste.
+        Pour ouvrir les actions de pistes, faites un clic droit (ou touche Menu/Applications,
+        ou Maj+F10, sur la ligne sélectionnée) sur un fichier vidéo dans la liste.
         Le menu proposé dépend du format de sortie actuellement sélectionné.
       </p>
       <ul class="summary-list">
         <li>
-          <strong>Manage Tracks...</strong>
+          <strong>Gérer les pistes...</strong>
           Disponible pour une sortie vidéo <strong>MP4</strong> ou <strong>MKV</strong>.
         </li>
         <li>
-          <strong>Choose Audio Track...</strong>
+          <strong>Choisir la piste audio...</strong>
           Disponible pour une extraction audio depuis une vidéo avec plusieurs pistes audio.
         </li>
       </ul>
@@ -148,6 +150,54 @@
       <div class="callout">
         Si aucune action de piste n'apparaît au clic droit, vérifiez d'abord le format de sortie
         choisi et le type réel du fichier sélectionné.
+      </div>
+    </section>
+
+    <section class="section" id="metadonnees">
+      <h2>Modifier les métadonnées vidéo</h2>
+      <p>
+        Faites un clic droit sur un fichier vidéo (ou plusieurs) dans la liste, puis choisissez
+        <strong>Modifier les métadonnées…</strong> (clic droit, ou touche Menu/Applications,
+        ou Maj+F10, sur la ligne sélectionnée). Une fenêtre dédiée s'ouvre pour modifier les tags.
+      </p>
+      <p>
+        Un sélecteur <strong>Type de contenu</strong> adapte les champs disponibles :
+      </p>
+      <ul class="summary-list">
+        <li>
+          <strong>Film</strong>
+          Titre, Année, Genre, Synopsis, Commentaire.
+        </li>
+        <li>
+          <strong>Série TV</strong>
+          Titre de l'épisode, Série, Saison, Épisode, Année, Genre, Synopsis, Commentaire.
+        </li>
+        <li>
+          <strong>Autre</strong>
+          Titre, Année, Genre, Commentaire.
+        </li>
+      </ul>
+      <p>Une option <strong>Appliquer à</strong> détermine où vont les changements :</p>
+      <ul class="summary-list">
+        <li>
+          <strong>Lors de la conversion (fichier de sortie)</strong>
+          Les métadonnées sont écrites dans le fichier converti.
+        </li>
+        <li>
+          <strong>Re-taguer le fichier original maintenant (sans réencodage)</strong>
+          Le fichier original est re-tagué sur place, sans réencodage.
+        </li>
+      </ul>
+      <div class="callout">
+        <strong>Détection automatique saison/épisode.</strong> Pour un seul fichier de série,
+        la saison et l'épisode (et le nom de la série) sont préremplis depuis le nom s'il contient
+        un repère comme S01E02 ou 1x02. En lot, la case
+        <strong>Détecter la saison et l'épisode à partir du nom de chaque fichier</strong> lit les
+        numéros de chaque fichier.
+      </div>
+      <div class="callout">
+        La <strong>pochette</strong> de la fenêtre de métadonnées concerne les sorties audio
+        (MP3, AAC/M4A, ALAC, FLAC). Pour une sortie vidéo, les options de pochette sont désactivées.
       </div>
     </section>
 

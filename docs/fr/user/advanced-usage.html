@@ -17,20 +17,57 @@
       <p class="eyebrow">Manuel utilisateur</p>
       <h1>Usage avancé</h1>
       <p>
-        Cette page regroupe les fonctions plus poussées : réglages fins vidéo, codecs audio
-        de sortie, gestion des pistes, lots parallèles, debug et support.
+        Cette page regroupe les fonctions plus poussées : fusion de fichiers (dont les livres
+        audio M4B chapitrés), édition des métadonnées avec auto-détection depuis le nom de fichier,
+        réglages fins vidéo, codecs audio de sortie, gestion des pistes, lots parallèles, debug
+        et support.
       </p>
     </header>
 
     <section class="toc">
       <h2>Dans cette page</h2>
       <ul>
+        <li><a href="#merge">Fusion de fichiers</a></li>
+        <li><a href="#metadata">Édition des métadonnées</a></li>
         <li><a href="#video">Réglages vidéo avancés</a></li>
         <li><a href="#audio">Réglages audio avancés</a></li>
         <li><a href="#tracks">Gestion des pistes</a></li>
         <li><a href="#batch">Batch et performances</a></li>
         <li><a href="#debug">Debug, support et mises à jour</a></li>
       </ul>
+    </section>
+
+    <section class="section" id="merge">
+      <h2>Fusion de fichiers</h2>
+      <p>
+        Vous pouvez fusionner deux fichiers ou plus en une seule sortie (concat FFmpeg). Lorsque la
+        cible est le format <strong>M4B</strong> (livre audio), la fusion génère <strong>un chapitre par fichier
+        source</strong>. Convertir un seul fichier déjà chapitré vers M4B préserve ses chapitres, et le .m4b est
+        aussi accepté en entrée. Par défaut stéréo 128 kb/s, mais tout est réglable (mono / 64 kb/s convient bien
+        à la voix). Sélectionnez au moins deux fichiers (Ctrl+clic, Maj+clic ou Ctrl+A) puis lancez la fusion.
+      </p>
+    </section>
+
+    <section class="section" id="metadata">
+      <h2>Édition des métadonnées</h2>
+      <p>
+        Clic droit sur un fichier audio ou vidéo, ou plusieurs (clic droit, ou touche Menu/Applications,
+        ou Maj+F10, sur la ligne sélectionnée), puis <strong>Modifier les métadonnées…</strong> : tags standard
+        (titre, artiste, album, artiste de l'album, compositeur, année, piste, disque, genre, commentaire) et
+        pochette (remplacer JPEG/PNG, retirer, conserver). Cible : <em>appliquer pendant la conversion</em> ou
+        <em>re-taguer l'original maintenant</em>. Les champs renseignés peuvent être appliqués à tout un lot.
+      </p>
+      <p>
+        Pour une vidéo, un sélecteur <strong>Type de contenu</strong> (Film / Série TV / Autre) adapte les champs
+        (Film : synopsis ; Série : série, saison, épisode, titre d'épisode). Les fichiers audio proposent aussi
+        <strong>Regroupement</strong>, <strong>Copyright</strong> et un champ <strong>Paroles</strong> multiligne.
+      </p>
+      <h3>Auto-détection depuis le nom de fichier</h3>
+      <p>
+        L'éditeur peut remplir certains champs depuis le nom de fichier, proposé via une case à cocher : pour une
+        vidéo il lit la saison et l'épisode (motif SxxExx), et pour un fichier audio il lit le numéro de piste.
+        Laissez la case décochée pour ne pas toucher aux champs.
+      </p>
     </section>
 
     <section class="section" id="video">
@@ -61,13 +98,25 @@
     <section class="section" id="audio">
       <h2>Réglages audio avancés</h2>
       <p>
-        Dans une sortie vidéo, les réglages audio restent séparés des réglages vidéo.
-        Vous pouvez choisir un codec compatible avec le conteneur, puis ajuster bitrate,
-        qualité, canaux, fréquence et normalisation selon le codec choisi.
+        <strong>Audio dans une sortie vidéo.</strong> Dans une sortie vidéo, les réglages audio restent
+        séparés des réglages vidéo. Vous pouvez choisir un codec compatible avec le conteneur, puis ajuster
+        bitrate, qualité, canaux, fréquence et normalisation selon le codec choisi.
       </p>
       <ul>
         <li><strong>MP4</strong> : AAC ou MP3</li>
         <li><strong>MKV</strong> : AAC, MP3, Opus ou FLAC</li>
+      </ul>
+      <p>
+        <strong>Audio comme format de sortie principal.</strong> Lorsque la sortie est un format audio, vous
+        pouvez choisir parmi <strong>MP3</strong>, <strong>AAC/M4A</strong>, <strong>WAV</strong>, <strong>FLAC</strong>,
+        <strong>ALAC</strong>, <strong>OGG/Vorbis</strong>, <strong>WMA</strong> et <strong>M4B</strong>.
+      </p>
+      <ul>
+        <li><strong>Copie de flux</strong> pour remuxer sans réencoder quand le codec source correspond ;</li>
+        <li><strong>mode de débit CBR ou VBR</strong> selon le codec ;</li>
+        <li><strong>bitrate, fréquence et canaux</strong> (par exemple mono / stéréo) ;</li>
+        <li><strong>normalisation</strong> vers une cible de -16 LUFS ;</li>
+        <li><strong>niveau de compression et profondeur de bits FLAC</strong> pour une sortie sans perte.</li>
       </ul>
     </section>
 
@@ -78,9 +127,10 @@
         garder, de modifier leur ordre, puis d’ajuster certaines métadonnées et dispositions.
       </p>
       <p>
-        Dans la pratique, ces actions s'ouvrent par clic droit sur un fichier vidéo dans la liste.
-        <strong>Manage Tracks...</strong> est proposé pour une sortie <strong>MP4</strong> ou <strong>MKV</strong>,
-        tandis que <strong>Choose Audio Track...</strong> apparaît pour une extraction audio avec plusieurs pistes.
+        Dans la pratique, ces actions s'ouvrent par clic droit sur un fichier vidéo dans la liste
+        (clic droit, ou touche Menu/Applications, ou Maj+F10, sur la ligne sélectionnée).
+        <strong>Gérer les pistes...</strong> est proposé pour une sortie <strong>MP4</strong> ou <strong>MKV</strong>,
+        tandis que <strong>Choisir la piste audio...</strong> apparaît pour une extraction audio avec plusieurs pistes.
       </p>
       <div class="callout">
         Pour une conversion vidéo vers audio, l’application n’extrait qu’une seule piste audio.
@@ -109,12 +159,24 @@
       </p>
       <p>
         Le dialogue de support peut aussi afficher les détails techniques inclus et proposer
-        une copie manuelle du rapport si l'envoi automatique échoue.
+        une copie manuelle du rapport si l'envoi automatique échoue. Signaler un problème exige une
+        adresse e-mail valide, et le rapport est bloqué si votre version est obsolète (une vérification
+        de mise à jour est effectuée d'abord, car le bug est peut-être déjà corrigé).
       </p>
       <p>
         Les mises à jour peuvent aussi être vérifiées manuellement depuis le menu Aide,
-        ou automatiquement au lancement si l’option est activée.
+        ou automatiquement au lancement si l’option est activée. Avant son exécution, l'installeur
+        téléchargé est vérifié pour son intégrité (taille du fichier et empreinte SHA-256). Après une
+        mise à jour silencieuse, l'application se relance automatiquement.
       </p>
+      <p>
+        Autres préférences à noter :
+      </p>
+      <ul>
+        <li><strong>Nommage des chapitres M4B</strong> : titre sinon numéro localisé / titre sinon nom de
+          fichier / toujours numéroté ;</li>
+        <li><strong>Conserver les métadonnées d'origine</strong> : garder les tags source pendant la conversion.</li>
+      </ul>
     </section>
 
     <footer class="footer">

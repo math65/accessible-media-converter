@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Advanced usage - Accessible Media Converter</title>
-  <link rel="stylesheet" href="../../fr/assets/style.css">
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <div class="page">
@@ -17,20 +17,58 @@
       <p class="eyebrow">User guide</p>
       <h1>Advanced usage</h1>
       <p>
-        This page groups more advanced features: detailed video settings, output audio codecs,
-        track management, parallel batches, debug mode, and support.
+        This page groups the more advanced features: merging files (including chaptered
+        M4B audiobooks), editing metadata with auto-detection from file names, detailed
+        video settings, output audio codecs, track management, parallel batches, debug
+        mode, and support.
       </p>
     </header>
 
     <section class="toc">
       <h2>On this page</h2>
       <ul>
+        <li><a href="#merge">Merging files</a></li>
+        <li><a href="#metadata">Editing metadata</a></li>
         <li><a href="#video">Advanced video settings</a></li>
         <li><a href="#audio">Advanced audio settings</a></li>
         <li><a href="#tracks">Track management</a></li>
         <li><a href="#batch">Batch and performance</a></li>
         <li><a href="#debug">Debug, support, and updates</a></li>
       </ul>
+    </section>
+
+    <section class="section" id="merge">
+      <h2>Merging files</h2>
+      <p>
+        You can merge two or more files into a single output (FFmpeg concat). When the target
+        is the <strong>M4B</strong> format (audiobook), the merge produces <strong>one chapter per
+        source file</strong>. Converting a single already-chaptered file to M4B preserves its chapters,
+        and the .m4b file is also accepted as input. The default is stereo at 128 kb/s, but everything
+        is adjustable (mono / 64 kb/s works well for voice). Select at least two files (Ctrl+click,
+        Shift+click, or Ctrl+A), then start the merge.
+      </p>
+    </section>
+
+    <section class="section" id="metadata">
+      <h2>Editing metadata</h2>
+      <p>
+        Right-click an audio or video file, or several (or the Menu/Applications key, or Shift+F10,
+        on the selected row), then <strong>Edit Metadata...</strong>: standard tags (title, artist,
+        album, album artist, composer, year, track, disc, genre, comment) and the cover art (replace
+        from JPEG/PNG, remove, keep). Target: <em>apply during conversion</em> or <em>re-tag the original
+        now</em>. The fields you fill in can be applied to a whole batch.
+      </p>
+      <p>
+        For a video, a <strong>Content type</strong> selector (Movie / TV Show / Other) adapts the fields
+        (Movie: synopsis; TV Show: series, season, episode, episode title). Audio files also offer
+        <strong>Grouping</strong>, <strong>Copyright</strong>, and a multi-line <strong>Lyrics</strong> field.
+      </p>
+      <h3>Auto-detection from the file name</h3>
+      <p>
+        The editor can fill some fields from the file name, offered through a checkbox: for a video it reads
+        the season and episode (SxxExx pattern), and for audio it reads the track number. Leave the box
+        unchecked to keep the fields untouched.
+      </p>
     </section>
 
     <section class="section" id="video">
@@ -60,13 +98,25 @@
     <section class="section" id="audio">
       <h2>Advanced audio settings</h2>
       <p>
-        In a video output, audio settings stay separate from video settings.
-        You can choose a codec compatible with the container, then adjust bitrate,
+        <strong>Audio inside a video output.</strong> In a video output, audio settings stay separate
+        from video settings. You can choose a codec compatible with the container, then adjust bitrate,
         quality, channels, sample rate, and normalization depending on the codec.
       </p>
       <ul>
         <li><strong>MP4</strong>: AAC or MP3</li>
         <li><strong>MKV</strong>: AAC, MP3, Opus, or FLAC</li>
+      </ul>
+      <p>
+        <strong>Audio as the main output format.</strong> When the output is an audio format, you can
+        pick from <strong>MP3</strong>, <strong>AAC/M4A</strong>, <strong>WAV</strong>, <strong>FLAC</strong>,
+        <strong>ALAC</strong>, <strong>OGG/Vorbis</strong>, <strong>WMA</strong>, and <strong>M4B</strong>.
+      </p>
+      <ul>
+        <li><strong>Stream copy</strong> to remux without re-encoding when the source codec matches;</li>
+        <li><strong>CBR or VBR</strong> bitrate mode depending on the codec;</li>
+        <li><strong>bitrate, sample rate, and channels</strong> (for example mono / stereo);</li>
+        <li><strong>normalization</strong> to a target of -16 LUFS;</li>
+        <li><strong>FLAC compression level and bit depth</strong> for lossless output.</li>
       </ul>
     </section>
 
@@ -77,7 +127,8 @@
         change their order, and adjust some metadata and dispositions.
       </p>
       <p>
-        In practice, these actions open from a right-click on a video file in the list.
+        In practice, these actions open from a right-click on a video file in the list
+        (right-click, or the Menu/Applications key, or Shift+F10, on the selected row).
         <strong>Manage Tracks...</strong> is offered for an <strong>MP4</strong> or <strong>MKV</strong> output,
         while <strong>Choose Audio Track...</strong> appears for audio extraction when several tracks exist.
       </p>
@@ -107,12 +158,24 @@
       </p>
       <p>
         The support dialog can also show the included technical details and provide
-        a manual copy fallback if automatic sending fails.
+        a manual copy fallback if automatic sending fails. Reporting a problem requires a
+        valid email address, and the report is blocked if your version is out of date (a fresh
+        update check runs first, since the bug may already be fixed).
       </p>
       <p>
         Updates can also be checked manually from the Help menu, or automatically at startup
-        if the option is enabled.
+        if the option is enabled. Before running, the downloaded installer is verified for integrity
+        (file size and SHA-256 checksum). After a silent update, the application relaunches itself
+        automatically.
       </p>
+      <p>
+        Other preferences worth noting:
+      </p>
+      <ul>
+        <li><strong>M4B chapter naming</strong>: title otherwise a localized number / title otherwise
+          the file name / always numbered;</li>
+        <li><strong>Preserve original metadata</strong>: keep the source tags during conversion.</li>
+      </ul>
     </section>
 
     <footer class="footer">

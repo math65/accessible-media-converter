@@ -18,7 +18,8 @@
       <h1>Prendre en main Accessible Media Converter</h1>
       <p>
         Utilisez cette page si vous découvrez l'application. Elle couvre l'ouverture,
-        l'ajout de médias, les formats acceptés et la logique générale des deux onglets.
+        l'ajout de médias, les formats acceptés et la logique générale des onglets
+        (Audio, Vidéo et Image).
       </p>
     </header>
 
@@ -61,7 +62,7 @@
         classique. Les fichiers non média sont ignorés.
       </p>
       <div class="callout">
-        À ce stade, l'application ne propose pas de glisser-déposer. Utilisez l'ouverture,
+        L'application ne prend pas en charge le glisser-déposer. Utilisez l'ouverture,
         l'import de dossier ou le collage <strong>Ctrl+V</strong>.
       </div>
     </section>
@@ -78,11 +79,15 @@
         <tbody>
           <tr>
             <td>Audio</td>
-            <td><code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.aac</code>, <code>.ogg</code>, <code>.wma</code>, <code>.m4a</code></td>
+            <td><code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.aac</code>, <code>.ogg</code>, <code>.wma</code>, <code>.m4a</code>, <code>.m4b</code></td>
           </tr>
           <tr>
             <td>Vidéo</td>
             <td><code>.mp4</code>, <code>.mkv</code>, <code>.avi</code>, <code>.mov</code>, <code>.wmv</code>, <code>.webm</code></td>
+          </tr>
+          <tr>
+            <td>Image</td>
+            <td><code>.jpg</code>, <code>.jpeg</code>, <code>.png</code>, <code>.webp</code>, <code>.tiff</code>, <code>.bmp</code></td>
           </tr>
         </tbody>
       </table>
@@ -104,6 +109,10 @@
           Utilisez-le pour convertir une vidéo vers MP4 ou MKV, ou pour extraire son audio.
         </li>
         <li>
+          <strong>Onglet Image</strong>
+          Utilisez-le pour convertir une image en JPEG, PNG, WebP, TIFF ou BMP, avec un redimensionnement optionnel.
+        </li>
+        <li>
           <strong>Liste centrale</strong>
           Chaque ligne affiche le nom du fichier, quelques détails et le statut de traitement.
         </li>
@@ -118,12 +127,22 @@
       <h2>Où trouver les actions avancées</h2>
       <p>
         Certaines actions n'apparaissent pas comme de gros boutons dans la fenêtre principale.
-        Pour un fichier vidéo, faites un clic droit sur la ligne du fichier pour ouvrir le menu contextuel.
+        Pour n'importe quel fichier, ouvrez le menu contextuel sur la ligne du fichier
+        (clic droit, ou touche Menu/Applications, ou Maj+F10, sur la ligne sélectionnée).
       </p>
       <ul>
-        <li><strong>Manage Tracks...</strong> apparaît pour une sortie vidéo <strong>MP4</strong> ou <strong>MKV</strong>.</li>
-        <li><strong>Choose Audio Track...</strong> apparaît pour une extraction audio depuis une vidéo qui contient plusieurs pistes audio.</li>
+        <li><strong>Gérer les pistes...</strong> apparaît pour une sortie vidéo <strong>MP4</strong> ou <strong>MKV</strong>.</li>
+        <li><strong>Choisir la piste audio...</strong> apparaît pour une extraction audio depuis une vidéo qui contient plusieurs pistes audio.</li>
+        <li><strong>Modifier les métadonnées...</strong> apparaît pour les fichiers audio et vidéo.
+          Modifiez les tags standard (titre, artiste, album, etc.) et la pochette, lors de la conversion
+          ou en re-taguant l'original. Pour une vidéo, vous pouvez choisir un type de contenu
+          (Film / Série TV / Autre), et la saison/l'épisode (ou le numéro de piste) peuvent être détectés
+          automatiquement depuis le nom du fichier.</li>
       </ul>
+      <p>
+        Vous pouvez fusionner deux fichiers ou plus en une seule sortie ; quand la cible est M4B,
+        chaque fichier fusionné devient un chapitre.
+      </p>
       <p>
         Les réglages globaux comme le dossier de sortie, le parallélisme ou les mises à jour
         se trouvent dans <strong>Édition &gt; Préférences</strong>.
@@ -133,8 +152,9 @@
     <footer class="footer">
       <p>
         Lire ensuite :
-        <a href="audio-conversion.html">Conversions audio</a> ou
-        <a href="video-conversion.html">Conversions vidéo</a>.
+        <a href="audio-conversion.html">Conversions audio</a>,
+        <a href="video-conversion.html">Conversions vidéo</a> ou
+        <a href="image-conversion.html">Conversions d'images</a>.
       </p>
     </footer>
   </div>

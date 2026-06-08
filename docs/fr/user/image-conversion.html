@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convertir des images - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Convertir des images</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Manuel utilisateur</p>
+      <h1>Convertir des images</h1>
+      <p>
+        L'onglet Image convertit une image vers un autre format, avec un redimensionnement
+        optionnel. Les images ajoutées à l'application sont automatiquement routées vers cet onglet.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Dans cette page</h2>
+      <ul>
+        <li><a href="#formats">Choisir un format de sortie</a></li>
+        <li><a href="#reglages">Régler la qualité</a></li>
+        <li><a href="#redimensionnement">Redimensionner</a></li>
+        <li><a href="#batch">Traitement par lot</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="formats">
+      <h2>Choisir un format de sortie</h2>
+      <p>Les formats image pris en charge sont :</p>
+      <ul>
+        <li>JPEG</li>
+        <li>PNG (sans perte)</li>
+        <li>WebP</li>
+        <li>TIFF (sans perte)</li>
+        <li>BMP (non compressé)</li>
+      </ul>
+      <p>
+        Le format choisi détermine les réglages disponibles : un format avec perte comme JPEG
+        propose une qualité, un format sans perte comme PNG propose un niveau de compression.
+      </p>
+    </section>
+
+    <section class="section" id="reglages">
+      <h2>Régler la qualité</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Qualité (JPEG, WebP)</strong>
+          De 1 à 100. Plus la valeur est élevée, meilleure est la qualité et plus le fichier est gros.
+        </li>
+        <li>
+          <strong>Compression (PNG)</strong>
+          De 0 (rapide) à 9 (fichier le plus petit), sans perte de qualité.
+        </li>
+        <li>
+          <strong>Sans perte (WebP)</strong>
+          Une case à cocher active le mode WebP sans perte.
+        </li>
+        <li>
+          <strong>Compression (TIFF)</strong>
+          LZW, Deflate, PackBits ou aucune.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="redimensionnement">
+      <h2>Redimensionner</h2>
+      <p>
+        Un réglage de redimensionnement permet de réduire l'image vers une résolution cible
+        (par exemple 4K, Full HD, HD). Le <strong>ratio est conservé</strong> automatiquement, donc
+        l'image n'est jamais déformée.
+      </p>
+    </section>
+
+    <section class="section" id="batch">
+      <h2>Traitement par lot</h2>
+      <p>
+        Comme pour l'audio et la vidéo, l'application peut convertir plusieurs images en parallèle.
+        Le nombre maximal de tâches simultanées se règle dans les préférences.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Lire ensuite :
+        <a href="audio-conversion.html">Conversions audio</a>,
+        <a href="video-conversion.html">Conversions vidéo</a> ou
+        <a href="preferences-and-support.html">Préférences, support et mises à jour</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

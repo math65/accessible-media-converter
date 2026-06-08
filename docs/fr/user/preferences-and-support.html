@@ -36,6 +36,10 @@
       <h2>Préférences générales</h2>
       <ul class="summary-list">
         <li>
+          <strong>Langue de l'application</strong>
+          Choisissez la détection automatique, le français ou l'anglais. Changer la langue nécessite un redémarrage.
+        </li>
+        <li>
           <strong>Dossier de sortie</strong>
           Choisissez le dossier source, un dossier spécifique, ou demandez un dossier à chaque batch.
         </li>
@@ -58,6 +62,14 @@
         <li>
           <strong>Continuer après erreur</strong>
           Permet de laisser le batch poursuivre les autres tâches si une conversion échoue.
+        </li>
+        <li>
+          <strong>Conserver les métadonnées d'origine</strong>
+          Conserve les tags, chapitres et la pochette intégrée du fichier source lors de la conversion et de la fusion, lorsque c'est possible. Désactivé par défaut.
+        </li>
+        <li>
+          <strong>Nommage des chapitres M4B</strong>
+          Lorsque vous créez un livre audio M4B, choisissez comment nommer les chapitres générés : « Titre, sinon numéro » (titre du chapitre/fichier, sinon un numéro localisé), « Titre, sinon nom de fichier », ou « Toujours numéroté ».
         </li>
         <li>
           <strong>Mises à jour automatiques</strong>
@@ -87,7 +99,13 @@
       <p>
         Le dialogue <strong>Contacter le support</strong> envoie un rapport directement
         au backend support. L'utilisateur remplit une adresse email, choisit un type de
-        problème, puis décrit la situation.
+        problème, puis décrit la situation. Une adresse email valide est obligatoire,
+        sinon le rapport ne peut pas être envoyé.
+      </p>
+      <p>
+        Avant l'ouverture du formulaire, l'application vérifie s'il existe une version plus
+        récente. Si c'est le cas, le rapport est bloqué et vous êtes invité à mettre à jour
+        d'abord, car le problème est peut-être déjà corrigé dans la version plus récente.
       </p>
       <p>
         Un bouton permet aussi d'afficher les détails techniques inclus dans le rapport,
@@ -96,6 +114,10 @@
       <p>
         Le rapport technique reste volontairement limité : pas de chemins locaux complets,
         pas de noms de fichiers détaillés, pas de contenu du dossier debug envoyé automatiquement.
+      </p>
+      <p>
+        Accessibilité : chaque champ est accessible au clavier avec la touche Tab, et les
+        dialogues sont lus par NVDA.
       </p>
       <div class="callout">
         Si l'envoi automatique échoue, le dialogue propose un mode de repli avec copie de
@@ -114,6 +136,12 @@
         <li>vérification automatique au lancement si l'option est activée ;</li>
         <li>installation via le setup officiel téléchargé localement.</li>
       </ul>
+      <p>
+        Une fois l'installeur téléchargé, l'application le vérifie (taille du fichier et
+        empreinte SHA-256) avant de l'exécuter. La mise à jour s'installe ensuite
+        silencieusement avec une barre de progression, puis l'application se relance
+        automatiquement.
+      </p>
     </section>
 
     <footer class="footer">

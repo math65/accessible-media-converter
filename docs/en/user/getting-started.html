@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Getting started - Accessible Media Converter</title>
-  <link rel="stylesheet" href="../../fr/assets/style.css">
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <div class="page">
@@ -18,7 +18,8 @@
       <h1>Getting started with Accessible Media Converter</h1>
       <p>
         Use this page if you are discovering the application. It covers launching,
-        adding media, supported formats, and the general logic of the two tabs.
+        adding media, supported formats, and the general logic of the tabs
+        (Audio, Video and Image).
       </p>
     </header>
 
@@ -61,7 +62,7 @@
         Non-media files are ignored.
       </p>
       <div class="callout">
-        At this stage, the application does not provide drag and drop. Use file open,
+        The application does not support drag and drop. Use file open,
         folder import, or <strong>Ctrl+V</strong> paste instead.
       </div>
     </section>
@@ -78,11 +79,15 @@
         <tbody>
           <tr>
             <td>Audio</td>
-            <td><code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.aac</code>, <code>.ogg</code>, <code>.wma</code>, <code>.m4a</code></td>
+            <td><code>.mp3</code>, <code>.wav</code>, <code>.flac</code>, <code>.aac</code>, <code>.ogg</code>, <code>.wma</code>, <code>.m4a</code>, <code>.m4b</code></td>
           </tr>
           <tr>
             <td>Video</td>
             <td><code>.mp4</code>, <code>.mkv</code>, <code>.avi</code>, <code>.mov</code>, <code>.wmv</code>, <code>.webm</code></td>
+          </tr>
+          <tr>
+            <td>Image</td>
+            <td><code>.jpg</code>, <code>.jpeg</code>, <code>.png</code>, <code>.webp</code>, <code>.tiff</code>, <code>.bmp</code></td>
           </tr>
         </tbody>
       </table>
@@ -104,6 +109,10 @@
           Use it to convert a video to MP4 or MKV, or to extract its audio.
         </li>
         <li>
+          <strong>Image tab</strong>
+          Use it to convert an image to JPEG, PNG, WebP, TIFF or BMP, with optional resizing.
+        </li>
+        <li>
           <strong>Main list</strong>
           Each row shows the file name, a few details, and the processing status.
         </li>
@@ -117,13 +126,22 @@
     <section class="section" id="advanced">
       <h2>Where to find advanced actions</h2>
       <p>
-        Some actions do not appear as large buttons in the main window. For a video file,
-        right-click the file row to open the context menu.
+        Some actions do not appear as large buttons in the main window. For any file,
+        open the context menu on the file row (right-click, or the Menu/Applications key,
+        or Shift+F10, on the selected row).
       </p>
       <ul>
         <li><strong>Manage Tracks...</strong> appears for an <strong>MP4</strong> or <strong>MKV</strong> video output.</li>
         <li><strong>Choose Audio Track...</strong> appears for audio extraction from a video that contains several audio tracks.</li>
+        <li><strong>Edit Metadata...</strong> appears for audio and video files. Edit standard tags
+          (title, artist, album, etc.) and the cover art, applied during conversion or written back to
+          the original now. For a video you can pick a content type (Movie / TV Show / Other), and
+          season/episode (or track number) can be auto-detected from the file name.</li>
       </ul>
+      <p>
+        You can merge two or more files into a single output; when the target is M4B, each
+        merged file becomes one chapter.
+      </p>
       <p>
         Global settings such as the output folder, parallelism, or update checks are
         available in <strong>Edit &gt; Preferences</strong>.
@@ -133,8 +151,9 @@
     <footer class="footer">
       <p>
         Read next:
-        <a href="audio-conversion.html">Audio conversion</a> or
-        <a href="video-conversion.html">Video conversion</a>.
+        <a href="audio-conversion.html">Audio conversion</a>,
+        <a href="video-conversion.html">Video conversion</a> or
+        <a href="image-conversion.html">Image conversion</a>.
       </p>
     </footer>
   </div>

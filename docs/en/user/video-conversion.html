@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Convert videos - Accessible Media Converter</title>
-  <link rel="stylesheet" href="../../fr/assets/style.css">
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <div class="page">
@@ -29,6 +29,7 @@
         <li><a href="#video">Adjust video settings</a></li>
         <li><a href="#audio">Adjust audio settings</a></li>
         <li><a href="#tracks">Manage tracks</a></li>
+        <li><a href="#metadata">Edit video metadata</a></li>
       </ul>
     </section>
 
@@ -120,7 +121,8 @@
     <section class="section" id="tracks">
       <h2>Manage tracks</h2>
       <p>
-        To open track actions, right-click a video file in the list. The menu depends on
+        To open track actions, right-click (or the Menu/Applications key, or Shift+F10, on the
+        selected row) a video file in the list. The menu depends on
         the output format that is currently selected.
       </p>
       <ul class="summary-list">
@@ -147,6 +149,54 @@
       <div class="callout">
         If no track action appears on right-click, check the selected output format first
         and confirm that the selected file is actually a video file.
+      </div>
+    </section>
+
+    <section class="section" id="metadata">
+      <h2>Edit video metadata</h2>
+      <p>
+        Right-click a video file (or several) in the list, then choose
+        <strong>Edit Metadata...</strong> (right-click, or the Menu/Applications key,
+        or Shift+F10, on the selected row). A dedicated window opens to edit the tags.
+      </p>
+      <p>
+        A <strong>Content type</strong> selector adapts the available fields:
+      </p>
+      <ul class="summary-list">
+        <li>
+          <strong>Movie</strong>
+          Title, Year, Genre, Synopsis, Comment.
+        </li>
+        <li>
+          <strong>TV series</strong>
+          Episode title, Series, Season, Episode, Year, Genre, Synopsis, Comment.
+        </li>
+        <li>
+          <strong>Other</strong>
+          Title, Year, Genre, Comment.
+        </li>
+      </ul>
+      <p>An <strong>Apply to</strong> option controls where the changes go:</p>
+      <ul class="summary-list">
+        <li>
+          <strong>During conversion (output file)</strong>
+          The metadata is written to the converted output.
+        </li>
+        <li>
+          <strong>Re-tag the original file now (without re-encoding)</strong>
+          The original file is re-tagged in place, with no re-encoding.
+        </li>
+      </ul>
+      <div class="callout">
+        <strong>Automatic season/episode detection.</strong> For a single TV series file,
+        the season and episode (and the series name) are pre-filled from the file name when
+        it contains a marker such as S01E02 or 1x02. In batch mode, the
+        <strong>Detect the season and episode from each file name</strong> checkbox reads the
+        numbers from each file.
+      </div>
+      <div class="callout">
+        The <strong>cover art</strong> in the metadata window applies to audio outputs
+        (MP3, AAC/M4A, ALAC, FLAC). For a video output, the cover art options are disabled.
       </div>
     </section>
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Preferences, support, and updates - Accessible Media Converter</title>
-  <link rel="stylesheet" href="../../fr/assets/style.css">
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <div class="page">
@@ -64,6 +64,14 @@
           Lets the batch continue with other tasks if one conversion fails.
         </li>
         <li>
+          <strong>Preserve original metadata</strong>
+          Keeps the tags, chapters, and embedded cover art of the source file during conversion and merging, when possible. Disabled by default.
+        </li>
+        <li>
+          <strong>M4B chapter naming</strong>
+          When you create an M4B audiobook, choose how the generated chapters are named: "Title, otherwise number" (chapter/file title, otherwise a localized number), "Title, otherwise file name", or "Always numbered".
+        </li>
+        <li>
           <strong>Automatic update checks</strong>
           Enable or disable update checks at startup.
         </li>
@@ -91,7 +99,13 @@
       <p>
         The <strong>Contact Support</strong> dialog sends a report directly through the
         support backend. The user enters an email address, chooses a problem type,
-        and describes the situation.
+        and describes the situation. A valid email address is required, otherwise the
+        report cannot be sent.
+      </p>
+      <p>
+        Before the form opens, the application checks whether a newer version exists.
+        If one is available, the report is blocked and you are invited to update first,
+        because the problem may already be fixed in the newer version.
       </p>
       <p>
         A button can also display the technical details included in the report,
@@ -100,6 +114,10 @@
       <p>
         The technical report remains intentionally limited: no full local paths,
         no detailed file names, and no automatic upload of the debug folder contents.
+      </p>
+      <p>
+        Accessibility: every field is reachable from the keyboard with Tab, and the
+        dialogs are read aloud by NVDA.
       </p>
       <div class="callout">
         If automatic sending fails, the dialog provides a fallback with the support
@@ -118,6 +136,11 @@
         <li>automatic check at startup if enabled;</li>
         <li>installation through the official setup downloaded locally.</li>
       </ul>
+      <p>
+        Once the installer is downloaded, the application verifies it (file size and
+        SHA-256 fingerprint) before running it. The update then installs silently with
+        a progress bar, and the application relaunches automatically afterwards.
+      </p>
     </section>
 
     <footer class="footer">

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Convert audio files - Accessible Media Converter</title>
-  <link rel="stylesheet" href="../../fr/assets/style.css">
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <div class="page">
@@ -26,7 +26,9 @@
       <h2>On this page</h2>
       <ul>
         <li><a href="#formats">Choose an output format</a></li>
+        <li><a href="#audiobook">M4B audiobook (chapters)</a></li>
         <li><a href="#settings">Adjust quality</a></li>
+        <li><a href="#metadata">Edit audio metadata</a></li>
         <li><a href="#normalization">Streaming normalization</a></li>
         <li><a href="#batch">Batch processing</a></li>
       </ul>
@@ -43,10 +45,25 @@
         <li>ALAC / M4A</li>
         <li>OGG</li>
         <li>WMA</li>
+        <li>M4B (audiobook with chapters)</li>
       </ul>
       <p>
         The selected format determines which settings are available afterwards. A lossless
         format such as FLAC does not follow the same logic as a lossy format such as MP3 or AAC.
+      </p>
+    </section>
+
+    <section class="section" id="audiobook">
+      <h2>M4B audiobook (chapters)</h2>
+      <p>The <strong>M4B</strong> output format produces an audiobook with chapters. M4B is also accepted as input.</p>
+      <ul>
+        <li>Merging several files into one M4B creates <strong>one chapter per file</strong>.</li>
+        <li>Converting a single file that is already chaptered <strong>preserves its chapters</strong>.</li>
+        <li>Defaults to stereo at 128 kb/s; fully adjustable (for example mono / 64 kb/s for spoken voice).</li>
+      </ul>
+      <p>
+        To assemble several files into one chaptered audiobook, use the <strong>merge</strong>
+        (select at least two files) with an M4B output. Chapter naming is configured in the preferences.
       </p>
     </section>
 
@@ -73,7 +90,27 @@
           <strong>Sample rate, channels, bit depth</strong>
           Let you refine the result depending on the selected codec.
         </li>
+        <li>
+          <strong>Bit depth and FLAC compression</strong>
+          These are specific to lossless formats (such as WAV, FLAC, ALAC) and do not apply to lossy formats like MP3 or AAC.
+        </li>
       </ul>
+    </section>
+
+    <section class="section" id="metadata">
+      <h2>Edit audio metadata</h2>
+      <p>
+        Right-click one or several audio files (or the Menu/Applications key, or Shift+F10,
+        on the selected row), then <strong>Edit Metadata...</strong>.
+        Edit the tags: title, artist, album, album artist, composer, year, track, disc, genre, comment,
+        as well as <strong>Grouping</strong>, <strong>Copyright</strong> and <strong>Lyrics</strong> (multiline). The cover art
+        can be replaced (JPEG/PNG), removed, or kept.
+      </p>
+      <p>
+        A <strong>Detect track number from the file name</strong> checkbox fills in the track number.
+        Choose the target: <em>apply during conversion</em> or <em>re-tag the original now</em>.
+        Batch editing applies the filled-in fields to all selected files.
+      </p>
     </section>
 
     <section class="section" id="normalization">

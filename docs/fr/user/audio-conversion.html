@@ -26,7 +26,9 @@
       <h2>Dans cette page</h2>
       <ul>
         <li><a href="#formats">Choisir un format de sortie</a></li>
+        <li><a href="#livre-audio">Livre audio M4B (chapitres)</a></li>
         <li><a href="#reglages">Régler la qualité</a></li>
+        <li><a href="#metadonnees">Éditer les métadonnées audio</a></li>
         <li><a href="#normalisation">Normalisation streaming</a></li>
         <li><a href="#batch">Traitement par lot</a></li>
       </ul>
@@ -43,10 +45,25 @@
         <li>ALAC / M4A</li>
         <li>OGG</li>
         <li>WMA</li>
+        <li>M4B (livre audio avec chapitres)</li>
       </ul>
       <p>
         Le format choisi détermine ensuite les réglages disponibles. Un format sans perte
         comme FLAC n'a pas la même logique qu'un format avec perte comme MP3 ou AAC.
+      </p>
+    </section>
+
+    <section class="section" id="livre-audio">
+      <h2>Livre audio M4B (chapitres)</h2>
+      <p>Le format de sortie <strong>M4B</strong> produit un livre audio avec chapitres. Le M4B est aussi accepté en entrée.</p>
+      <ul>
+        <li>Fusionner plusieurs fichiers vers un M4B crée <strong>un chapitre par fichier</strong>.</li>
+        <li>Convertir un seul fichier déjà chapitré <strong>préserve ses chapitres</strong>.</li>
+        <li>Par défaut stéréo à 128 kb/s ; entièrement réglable (par ex. mono / 64 kb/s pour la voix).</li>
+      </ul>
+      <p>
+        Pour assembler plusieurs fichiers en un livre audio chapitré, utilisez la <strong>fusion</strong>
+        (sélectionnez au moins deux fichiers) avec une sortie M4B. Le nommage des chapitres se règle dans les préférences.
       </p>
     </section>
 
@@ -73,7 +90,27 @@
           <strong>Sample rate, canaux, bit depth</strong>
           Permettent d'affiner la sortie selon le codec choisi.
         </li>
+        <li>
+          <strong>Profondeur de bits et compression FLAC</strong>
+          Spécifiques aux formats sans perte (comme WAV, FLAC, ALAC) ; elles ne s'appliquent pas aux formats avec perte comme MP3 ou AAC.
+        </li>
       </ul>
+    </section>
+
+    <section class="section" id="metadonnees">
+      <h2>Éditer les métadonnées audio</h2>
+      <p>
+        Clic droit sur un ou plusieurs fichiers audio (ou touche Menu/Applications, ou Maj+F10,
+        sur la ligne sélectionnée), puis <strong>Modifier les métadonnées…</strong>.
+        Modifiez les tags : titre, artiste, album, artiste de l'album, compositeur, année, piste, disque, genre, commentaire,
+        ainsi que <strong>Regroupement</strong>, <strong>Copyright</strong> et <strong>Paroles</strong> (multiligne). La pochette
+        peut être remplacée (JPEG/PNG), retirée ou conservée.
+      </p>
+      <p>
+        Une case <strong>Détecter le numéro de piste depuis le nom de fichier</strong> remplit le numéro de piste.
+        Choisissez la cible : <em>appliquer pendant la conversion</em> ou <em>re-taguer l'original maintenant</em>.
+        L'édition par lot applique les champs renseignés à tous les fichiers sélectionnés.
+      </p>
     </section>
 
     <section class="section" id="normalisation">
