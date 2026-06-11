@@ -12,6 +12,7 @@ from core.ffmpeg_helpers import (
     apply_common_audio_options,
     apply_metadata_preservation,
     get_ffmpeg_path,
+    get_ffprobe_path,
     parse_ffmpeg_threads,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
@@ -91,6 +92,7 @@ class ConversionTask:
         self.custom_output_dir = output_dir
         self.output_path = output_path
         self.ffmpeg_exe = get_ffmpeg_path()
+        self.ffprobe_exe = get_ffprobe_path()
         self.process = None
         self.last_command = []
         self.stderr_lines = []
@@ -357,7 +359,41 @@ class ConversionTask:
             except Exception:
                 logging.exception("Impossible d'interrompre FFmpeg pour: %s", self.input_path)
 
-    def run(self, progress_callback=None, stop_check_callback=None):
+    def _probe_duration(self, path):
+        """Renvoie la durée (secondes) d'un fichier via ffprobe, ou None si illisible."""
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        try:
+            result = subprocess.run(
+                [
+                    self.ffprobe_exe, '-v', 'error',
+                    '-show_entries', 'format=duration',
+                    '-of', 'default=noprint_wrappers=1:nokey=1', path,
+                ],
+                capture_output=True, text=True, timeout=30,
+                startupinfo=startupinfo, creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+            return float(result.stdout.strip())
+        except (ValueError, subprocess.SubprocessError, OSError):
+            return None
+
+    def _output_looks_truncated(self, output_path):
+        """Heuristique conservatrice : une conversion saine conserve la durée.
+
+        On ne contrôle que les médias temporels dont la durée source est connue et
+        non négligeable, et on ne signale que les sorties manifestement amputées
+        (moins de la moitié de la source) afin d'éviter tout faux positif.
+        """
+        if not self.duration or self.duration <= 5:
+            return False
+        if not os.path.isfile(output_path):
+            return True
+        out_duration = self._probe_duration(output_path)
+        if out_duration is None:
+            return True
+        return out_duration < self.duration * 0.5
+
+    def run(self, progress_callback=None, stop_check_callback=None, drop_cover=False):
         if not os.path.isfile(self.input_path):
             logging.error("Fichier d'entrée introuvable au moment de la conversion : %s", self.input_path)
             raise FileNotFoundError(
@@ -390,7 +426,6 @@ class ConversionTask:
         audio_output = self.target_format not in VIDEO_CONTAINER_OUTPUTS
         cover_capable = self.target_format in COVER_ART_AUDIO_OUTPUTS
         cover_replace = cover_action == 'replace' and audio_output and cover_capable
-        cover_remove = cover_action == 'remove' and audio_output
         cover_path = cover.get('path') if cover_replace else None
 
         cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
@@ -444,6 +479,7 @@ class ConversionTask:
         else:
             self._apply_encoded_audio_settings(cmd, mapped_container_tracks)
 
+        used_cover_copy = False
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             video_mode = self.settings.get('video_mode', 'convert')
             if video_mode == 'copy':
@@ -470,20 +506,30 @@ class ConversionTask:
                     cmd.extend(['-c:s', 'copy'])
         else:
             if cover_replace and cover_path:
-                # Nouvelle pochette : copier le flux image et le marquer attached_pic.
+                # Nouvelle pochette (éditeur de métadonnées) : copier le flux image
+                # ajouté en 2e entrée et le marquer attached_pic.
                 cmd.extend(['-c:v', 'copy'])
                 cmd.extend(cover_stream_args(0))
-            elif cover_remove:
-                cmd.append('-vn')
             elif (
                 preserve_metadata
                 and self.target_format in COVER_ART_AUDIO_OUTPUTS
                 and not self._is_video_to_audio_conversion()
+                and not drop_cover
             ):
-                # Source sans vraie piste vidéo : copier la pochette attached_pic
-                # via la sélection de flux par défaut au lieu de la supprimer (-vn).
+                # Source sans vraie piste vidéo : tenter de conserver la pochette
+                # attached_pic d'origine (sélection de flux par défaut). ATTENTION :
+                # certaines pochettes (podcasts Radio France) sont un flux mjpeg à
+                # paquet unique SANS timestamp (PTS=N/A) et de durée = celle du
+                # fichier ; FFmpeg ne sait pas les ordonner dans le mux et tronque
+                # tout l'audio (sortie ~20 Ko en code 0). On détecte ce cas après coup
+                # (durée de sortie << durée source) et on relance sans pochette : voir
+                # la validation en fin de run() (drop_cover=True).
                 cmd.extend(['-c:v', 'copy'])
+                used_cover_copy = True
             else:
+                # Sortie audio sans pochette à conserver : on supprime le flux vidéo.
+                # Les tags et chapitres restent préservés via -map_metadata /
+                # -map_chapters appliqués plus haut.
                 cmd.append('-vn')
 
         thread_count = parse_ffmpeg_threads(self.settings)
@@ -544,4 +590,22 @@ class ConversionTask:
             tail = "\n".join(self.stderr_lines[-50:])
             raise Exception(f"FFmpeg error (code {self.process.returncode}):\n{tail}")
         else:
+            # Filet anti-échec-silencieux : FFmpeg renvoie parfois le code 0 tout en
+            # produisant une sortie tronquée (pochette attached_pic ingérable, source
+            # corrompue, etc.). On compare la durée produite à la durée source.
+            if self._output_looks_truncated(output_path):
+                if used_cover_copy and not drop_cover:
+                    logging.warning(
+                        "Sortie tronquée avec copie de pochette (%s) : nouvelle tentative sans pochette (-vn).",
+                        os.path.basename(output_path),
+                    )
+                    return self.run(progress_callback, stop_check_callback, drop_cover=True)
+                tail = "\n".join(self.stderr_lines[-50:])
+                logging.error("Fichier de sortie anormalement court : %s", output_path)
+                raise Exception(
+                    _translate(
+                        "The converted file is unexpectedly short — the conversion likely failed."
+                    )
+                    + (f"\n{tail}" if tail else "")
+                )
             logging.info("Conversion terminée avec succès.")
