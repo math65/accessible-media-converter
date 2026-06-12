@@ -37,6 +37,7 @@ from core.formatting import (
     build_format_label,
     normalize_settings_store,
 )
+from core.cue import cuesheet_from_chapters, finalize_tracks, parse_cue_text
 from core.merge import MergeTask
 from core.single_instance import drain_paths
 from core.speech import speak
@@ -884,6 +885,16 @@ class MainWindow(wx.Frame):
         item_down.Enable(index < len(data) - 1)
         self.Bind(wx.EVT_MENU, lambda e: self._move_media_item(1), item_down)
 
+        # Cuesheet embarqué (FLAC) : découpage opt-in / retour à un seul fichier.
+        if getattr(meta, 'has_embedded_cue', False) and self.current_tab == 'audio':
+            menu.AppendSeparator()
+            if getattr(meta, 'cue_sheet', None) is None:
+                item_split = menu.Append(wx.ID_ANY, _("Split by Embedded Cue Sheet"))
+                self.Bind(wx.EVT_MENU, lambda e: self.on_split_embedded_cue(index), item_split)
+            else:
+                item_unsplit = menu.Append(wx.ID_ANY, _("Convert as a Single File"))
+                self.Bind(wx.EVT_MENU, lambda e: self.on_unsplit_embedded_cue(index), item_unsplit)
+
         show_track = (
             self.current_tab == 'video'
             and meta.has_video
@@ -1538,6 +1549,58 @@ class MainWindow(wx.Frame):
         header = _("{album} — {count} tracks").format(
             album=sheet.album or _("Unknown album"), count=len(sheet.tracks))
         wx.MessageBox(header + "\n\n" + "\n".join(lines), _("Cue Sheet Tracks"), wx.ICON_INFORMATION)
+
+    def _build_embedded_cue_sheet(self, meta):
+        """Construit un CueSheet depuis le cuesheet intégré (tag CUESHEET ou
+        chapitres), avec le fichier lui-même comme image audio."""
+        if getattr(meta, 'embedded_cue_text', None):
+            sheet = parse_cue_text(meta.embedded_cue_text)
+        elif getattr(meta, 'embedded_chapters', None):
+            sheet = cuesheet_from_chapters(meta.embedded_chapters)
+        else:
+            return None
+        if not sheet.tracks:
+            return None
+        sheet.audio_ref = meta.full_path  # le fichier lui-même est l'image audio
+        if not sheet.album:
+            sheet.album = meta.format_tags.get('album', '')
+        if not sheet.album_performer:
+            sheet.album_performer = (
+                meta.format_tags.get('album_artist') or meta.format_tags.get('artist', '')
+            )
+        finalize_tracks(sheet.tracks, int(round((meta.duration or 0) * 1000)))
+        return sheet
+
+    def on_split_embedded_cue(self, index):
+        if self.is_converting:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        if index < 0 or index >= len(data):
+            return
+        meta = data[index]
+        sheet = self._build_embedded_cue_sheet(meta)
+        if not sheet or not sheet.tracks:
+            wx.MessageBox(
+                _("No usable cue sheet was found in this file."), _("Info"), wx.ICON_INFORMATION
+            )
+            return
+        meta.cue_sheet = sheet
+        meta.cue_error = None
+        self._set_list_row(list_ctrl, index, meta)
+        self._set_status(
+            _("This file will be split into {count} tracks.").format(count=len(sheet.tracks))
+        )
+
+    def on_unsplit_embedded_cue(self, index):
+        if self.is_converting:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        if index < 0 or index >= len(data):
+            return
+        meta = data[index]
+        meta.cue_sheet = None
+        self._set_list_row(list_ctrl, index, meta)
+        self._set_status(_("This file will be converted as a single file."))
 
     def on_stop(self, event):
         self.btn_stop.Disable()

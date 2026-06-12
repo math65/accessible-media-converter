@@ -165,6 +165,19 @@ def load_cue_file(path):
     return parse_cue_text(_read_text(path))
 
 
+def cuesheet_from_chapters(chapters, album="", album_performer=""):
+    """Convertit des chapitres ffprobe (bloc CUESHEET natif FLAC) en CueSheet."""
+    sheet = CueSheet(album=album, album_performer=album_performer)
+    for position, chapter in enumerate(chapters, start=1):
+        try:
+            start_ms = int(round(float(chapter.get('start_time', 0)) * 1000))
+        except (TypeError, ValueError):
+            start_ms = 0
+        tags = chapter.get('tags') or {}
+        sheet.tracks.append(CueTrack(number=position, title=str(tags.get('title', '')), start_ms=start_ms))
+    return sheet
+
+
 def _list_audio_files(directory):
     try:
         entries = os.listdir(directory)

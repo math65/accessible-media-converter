@@ -70,6 +70,7 @@ class MediaMetadata:
         self.cue_sheet = None
         self.has_embedded_cue = False
         self.embedded_cue_text = None
+        self.embedded_chapters = None
         self.cue_error = None
         self.source_format_name = ""
 
@@ -152,6 +153,7 @@ class FileProber:
             '-print_format', 'json',
             '-show_format',
             '-show_streams',
+            '-show_chapters',
             file_path,
         ]
 
@@ -212,6 +214,8 @@ class FileProber:
             meta.is_image = self._detect_image(meta, fmt)
             if meta.is_image:
                 meta.has_video = False
+            else:
+                self._detect_embedded_cue(meta, data)
 
         except subprocess.TimeoutExpired:
             logging.error("ffprobe timeout (%ss) on %s", FFPROBE_TIMEOUT_SECONDS, file_path)
@@ -259,6 +263,20 @@ class FileProber:
         sheet.audio_ref = audio_path  # chemin absolu résolu, consommé par le batch
         finalize_tracks(sheet.tracks, int(round((meta.duration or 0) * 1000)))
         return meta
+
+    def _detect_embedded_cue(self, meta, data):
+        """Signale un cue sheet embarqué : tag CUESHEET (texte, EAC/foobar) ou
+        chapitres ffprobe (bloc CUESHEET natif FLAC). Découpage opt-in côté UI."""
+        cue_text = meta.format_tags.get('cuesheet')
+        if isinstance(cue_text, str) and 'TRACK' in cue_text.upper():
+            meta.has_embedded_cue = True
+            meta.embedded_cue_text = cue_text
+            return
+
+        chapters = data.get('chapters') or []
+        if len(chapters) > 1:
+            meta.has_embedded_cue = True
+            meta.embedded_chapters = chapters
 
     def _detect_image(self, meta, fmt_data):
         IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.avif', '.tiff', '.tif', '.bmp'}
