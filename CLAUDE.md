@@ -149,7 +149,10 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   **(B) Reorder files**: `_move_media_item` swaps the focused row with its neighbour (focus/selection
   follow), via a new `_set_list_row` helper reused by `_append_media_metadata`. **Alt+Up/Down** handled
   in `on_char_hook` (frame-level EVT_CHAR_HOOK, when a file list has focus) + "Move Up"/"Move Down"
-  context-menu entries. The list order drives merge order. **(C) Single instance**: `main.py` creates a
+  context-menu entries. The list order drives merge order. NVDA gets an **explicit spoken
+  announcement** ("<file> moved, N of M") via the new `core/speech.speak` helper backed by
+  **accessible_output2** (added to `requirements.txt`; the spec bundles it via `collect_all` for
+  `accessible_output2`/`platform_utils`/`libloader` — screen-reader DLLs). **(C) Single instance**: `main.py` creates a
   `wx.SingleInstanceChecker`; secondary instances (Explorer multi-select runs the `%1` verb once per
   file → N windows) relay their paths through `core/single_instance.py` (relay file in `%APPDATA%`,
   drained by a `wx.Timer` in `MainWindow.start_external_paths_watcher`) then exit. Master window adds
