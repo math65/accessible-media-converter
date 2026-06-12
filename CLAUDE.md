@@ -51,6 +51,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
   - `probe.py` — `FileProber` / `MediaMetadata` / `MediaTrack`: wraps `ffprobe` to extract stream info.
   - `batch_manager.py` — `BatchConversionManager`: spawns parallel `ConversionTask` threads.
   - `merge.py` — `MergeTask`: concatenates multiple files into one output via FFmpeg concat demuxer.
+  - `cue.py` — cue sheet parsing (`CueSheet`/`CueTrack`, `parse_cue_text`/`load_cue_file`, `resolve_cue_audio`, `cuesheet_from_chapters`); drives album splitting (1 input → N tracks) consumed by `BatchConversionManager`.
   - `ffmpeg_helpers.py` — shared FFmpeg helpers (binary path resolution, thread parsing, audio codec/sample-rate args) used by `ConversionTask`, `MergeTask`, and `FileProber`.
   - `formatting.py` — codec presets, format/codec constants, and settings validation.
   - `track_settings.py` — per-file track selection overrides (which audio/video/subtitle streams to keep or map).
@@ -140,6 +141,20 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.13.0 (cue sheets — album splitting)** — First **1 input → N outputs** path. A `.cue`
+  (or a FLAC with an embedded cue, opt-in) carries `meta.cue_sheet` (a `core/cue.py` `CueSheet`);
+  `BatchConversionManager._prepare_jobs` expands it into one job per track via `_append_cue_jobs`,
+  each a `ConversionTask` **clip** (`clip=(start_ms,end_ms)`, `extra_tags`, `input_path_override`):
+  `-ss` before `-i`, `-t` after, explicit per-track tags (no source-metadata copy). Output goes to an
+  **album subfolder** `<dir>/<album>/NN - Title.ext` (`build_cue_track_output_path` + `sanitize_filename`).
+  **Parser** `core/cue.py`: `parse_cue_text`/`load_cue_file` (MM:SS:FF→ms, encodings utf-8-sig/cp1252),
+  `finalize_tracks`, `resolve_cue_audio`, `cuesheet_from_chapters`. **probe** branches on `.cue`
+  (`_analyze_cue`: parse, resolve image, probe its duration) and adds `-show_chapters` to detect an
+  **embedded** cue (`CUESHEET` tag text or ffprobe chapters → `meta.has_embedded_cue`). **UI**: cue row
+  shows "Album — N tracks (CUE)" / "To split"; excluded from merge; context menu "Preview Tracks…",
+  "Split by Embedded Cue Sheet" / "Convert as a Single File". Fixed a race on the shared album subfolder
+  (`os.makedirs(exist_ok=True)` in `ConversionTask.run`). Tags from cue: title/artist(performer)/album/
+  album_artist/track/date/genre.
 - **v1.13.0 (4 Sèb feedback items)** — Done as 4 independent commits.
   **(A) Enter validates dialogs**: `SetAffirmativeId`/`SetEscapeId` added to `ui/settings_dialog.py`,
   `support_dialog.py`, `update_dialog.py`, `error_report_dialog.py` (the others already had it).
