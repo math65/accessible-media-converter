@@ -273,6 +273,7 @@ class MainWindow(wx.Frame):
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
         self.btn_merge = wx.Button(self.content_panel, label=_("&Merge Files"))
         self.btn_merge.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        self.btn_merge.SetToolTip(_("Merge the listed files into one, using the selected output format."))
         self.btn_merge.Bind(wx.EVT_BUTTON, self.on_merge)
         self.btn_stop = wx.Button(self.content_panel, label=_("Stop"))
         self.btn_stop.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))

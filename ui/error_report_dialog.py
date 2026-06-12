@@ -92,6 +92,8 @@ class ErrorReportDialog(wx.Dialog):
         root.Add(actions, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         panel.SetSizer(root)
+        self.SetAffirmativeId(self.btn_yes.GetId())
+        self.SetEscapeId(self.btn_no.GetId())
 
         self.btn_yes.Bind(wx.EVT_BUTTON, self._on_yes)
         self.btn_no.Bind(wx.EVT_BUTTON, self._on_no)

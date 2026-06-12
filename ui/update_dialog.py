@@ -100,6 +100,7 @@ class UpdateDialog(wx.Dialog):
 
         panel.SetSizer(root)
         self.SetEscapeId(self.btn_close.GetId())
+        self.SetAffirmativeId(self.btn_download_install.GetId())
 
         self.Bind(wx.EVT_BUTTON, self.on_download_install, self.btn_download_install)
         self.Bind(wx.EVT_BUTTON, self.on_open_release_page, self.btn_release_page)

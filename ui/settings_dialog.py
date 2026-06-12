@@ -248,6 +248,9 @@ class SettingsDialog(wx.Dialog):
         btn_sizer.AddButton(btn_cancel)
         btn_sizer.Realize()
         self.main_sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
+        # Entrée valide, Échap annule (sans tabuler jusqu'aux boutons).
+        self.SetAffirmativeId(wx.ID_OK)
+        self.SetEscapeId(wx.ID_CANCEL)
 
     def _bind_events(self):
         self.rb_convert.Bind(wx.EVT_RADIOBUTTON, self.on_mode_change)

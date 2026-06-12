@@ -177,7 +177,7 @@ class TrackPanel(wx.Panel):
         grid.Add(self.combo_lang, 1, wx.EXPAND)
 
         lbl_title = wx.StaticText(self, label=_("Track Title:"))
-        self.txt_title = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+        self.txt_title = wx.TextCtrl(self)
         self.txt_title.SetName(_("Track title"))
         grid.Add(lbl_title, 0, wx.ALIGN_CENTER_VERTICAL)
         grid.Add(self.txt_title, 1, wx.EXPAND)

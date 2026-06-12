@@ -186,6 +186,7 @@ class SupportContactDialog(wx.Dialog):
 
         panel.SetSizer(root)
         self.SetEscapeId(self.btn_cancel.GetId())
+        self.SetAffirmativeId(self.btn_send.GetId())
 
         self.Bind(wx.EVT_TEXT, self.on_form_changed, self.txt_email)
         self.Bind(wx.EVT_TEXT, self.on_form_changed, self.txt_user_message)
