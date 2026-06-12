@@ -82,6 +82,7 @@ SUPPORTED_MEDIA_EXTENSIONS = {
     '.tiff',
     '.tif',
     '.bmp',
+    '.cue',
 }
 
 SUPPORTED_MEDIA_WILDCARD = ";".join(
@@ -333,6 +334,9 @@ class MainWindow(wx.Frame):
             meta.metadata_overrides = None
         if not hasattr(meta, 'output_override'):
             meta.output_override = None
+        if not hasattr(meta, 'cue_sheet'):
+            meta.cue_sheet = None
+            meta.cue_error = None
 
         if meta.is_image:
             self.image_data.append(meta)

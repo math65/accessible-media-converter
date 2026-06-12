@@ -4,6 +4,7 @@ import json
 import logging
 import builtins
 
+from core.cue import finalize_tracks, load_cue_file, resolve_cue_audio
 from core.ffmpeg_helpers import get_ffprobe_path
 from core.track_settings import is_ui_track_visible
 
@@ -63,6 +64,13 @@ class MediaMetadata:
         # Override de sortie par fichier : {"format": fmt_key, "settings": {...}}.
         # Quand présent, ce fichier est converti avec ce format/qualité au lieu du global.
         self.output_override = None
+        # Découpage cue : si cue_sheet (core.cue.CueSheet) est posé, ce media est une
+        # image album à découper en N pistes. has_embedded_cue signale un cuesheet
+        # intégré (FLAC) que l'utilisateur peut activer ; cue_error = message d'ajout.
+        self.cue_sheet = None
+        self.has_embedded_cue = False
+        self.embedded_cue_text = None
+        self.cue_error = None
         self.source_format_name = ""
 
     @property
@@ -132,6 +140,10 @@ class FileProber:
             return meta
 
         meta.size_bytes = os.path.getsize(file_path)
+
+        if os.path.splitext(file_path)[1].lower() == '.cue':
+            return self._analyze_cue(meta, file_path)
+
         ffprobe = get_ffprobe_path()
 
         cmd = [
@@ -206,6 +218,46 @@ class FileProber:
         except Exception:
             logging.exception("Erreur fatale probing %s", file_path)
 
+        return meta
+
+    def _analyze_cue(self, meta, cue_path):
+        """Sonde un fichier .cue : parse le cue, résout l'image audio et la sonde
+        pour la durée totale, puis attache le CueSheet (toujours, même en erreur,
+        pour que la ligne soit reconnue comme une ligne album)."""
+        try:
+            sheet = load_cue_file(cue_path)
+        except Exception:
+            logging.exception("Échec du parsing du cue : %s", cue_path)
+            meta.cue_error = _translate("This cue sheet could not be read.")
+            return meta
+
+        meta.cue_sheet = sheet
+
+        if sheet.multi_file:
+            meta.cue_error = _translate("Cue sheets referencing multiple files are not supported yet.")
+            return meta
+        if not sheet.tracks:
+            meta.cue_error = _translate("This cue sheet contains no tracks.")
+            return meta
+
+        audio_path = resolve_cue_audio(cue_path, sheet.audio_ref)
+        if not audio_path:
+            meta.cue_error = _translatef(
+                "Audio file referenced by the cue sheet not found: {name}",
+                name=sheet.audio_ref or "?",
+            )
+            return meta
+
+        # Sonde l'image audio réelle (réutilise le chemin ffprobe normal) pour la
+        # durée totale et le codec ; on garde full_path = le .cue pour l'affichage.
+        audio_meta = self.analyze(audio_path)
+        meta.duration = audio_meta.duration
+        meta.audio_codec = audio_meta.audio_codec
+        meta.audio_tracks = audio_meta.audio_tracks
+        meta.source_format_name = audio_meta.source_format_name
+
+        sheet.audio_ref = audio_path  # chemin absolu résolu, consommé par le batch
+        finalize_tracks(sheet.tracks, int(round((meta.duration or 0) * 1000)))
         return meta
 
     def _detect_image(self, meta, fmt_data):
