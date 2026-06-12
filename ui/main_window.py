@@ -357,8 +357,22 @@ class MainWindow(wx.Frame):
         """(Ré)écrit les 3 colonnes d'une ligne. Réutilisé à l'ajout et au
         réordonnancement (échange de deux lignes)."""
         list_ctrl.SetItem(index, 0, meta.filename)
-        list_ctrl.SetItem(index, 1, meta.get_summary())
-        list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
+        if getattr(meta, 'cue_sheet', None) is not None:
+            list_ctrl.SetItem(index, 1, self._cue_summary(meta))
+            list_ctrl.SetItem(index, 2, self._cue_status(meta))
+        else:
+            list_ctrl.SetItem(index, 1, meta.get_summary())
+            list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
+
+    def _cue_summary(self, meta):
+        sheet = meta.cue_sheet
+        album = sheet.album or _("Unknown album")
+        return _("{album} — {count} tracks (CUE)").format(album=album, count=len(sheet.tracks))
+
+    def _cue_status(self, meta):
+        if getattr(meta, 'cue_error', None):
+            return meta.cue_error
+        return _("To split")
 
     def _move_media_item(self, direction):
         """Déplace l'élément focalisé d'un cran (Alt+Haut/Bas, menu contextuel).
@@ -893,16 +907,25 @@ class MainWindow(wx.Frame):
             item_audio_track = menu.Append(wx.ID_ANY, _("Choose Audio Track..."))
             self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index), item_audio_track)
 
+        is_cue = getattr(meta, 'cue_sheet', None) is not None
+
         if show_metadata:
             target_indices = self._resolve_metadata_target_indices(list_ctrl, index)
             if show_track or show_audio_track:
                 menu.AppendSeparator()
-            if len(target_indices) > 1:
-                label = _("Edit Metadata ({count} files)...").format(count=len(target_indices))
+            if is_cue:
+                # Pas d'édition de tags sur un cue (tags issus du cue) ; on propose
+                # un aperçu des pistes détectées.
+                if not getattr(meta, 'cue_error', None):
+                    item_preview = menu.Append(wx.ID_ANY, _("Preview Tracks..."))
+                    self.Bind(wx.EVT_MENU, lambda e: self.on_preview_cue_tracks(index), item_preview)
             else:
-                label = _("Edit Metadata...")
-            item_metadata = menu.Append(wx.ID_ANY, label)
-            self.Bind(wx.EVT_MENU, lambda e: self.on_edit_metadata(target_indices), item_metadata)
+                if len(target_indices) > 1:
+                    label = _("Edit Metadata ({count} files)...").format(count=len(target_indices))
+                else:
+                    label = _("Edit Metadata...")
+                item_metadata = menu.Append(wx.ID_ANY, label)
+                self.Bind(wx.EVT_MENU, lambda e: self.on_edit_metadata(target_indices), item_metadata)
 
             menu.AppendSeparator()
             if len(target_indices) > 1:
@@ -1262,7 +1285,8 @@ class MainWindow(wx.Frame):
             self.item_clear.Enable(True)
             self.item_remove.Enable(True)
             _lc, active_data = self._get_current_media_collection()
-            self.btn_merge.Enable(self.current_tab != 'image' and len(active_data) >= 2)
+            mergeable = [m for m in active_data if getattr(m, 'cue_sheet', None) is None]
+            self.btn_merge.Enable(self.current_tab != 'image' and len(mergeable) >= 2)
             self._set_status(
                 _("{audio_count} audio, {video_count} video, {image_count} image file(s) loaded.").format(
                     audio_count=len(self.audio_data),
@@ -1490,6 +1514,31 @@ class MainWindow(wx.Frame):
             _("Output settings reset for {count} file(s).").format(count=len(indices))
         )
 
+    @staticmethod
+    def _format_mmss(ms):
+        if ms is None:
+            return "?"
+        total = int(ms // 1000)
+        return f"{total // 60:02d}:{total % 60:02d}"
+
+    def on_preview_cue_tracks(self, index):
+        """Affiche les pistes détectées d'un cue (lu par NVDA) avant découpage."""
+        _lc, data = self._get_current_media_collection()
+        if index < 0 or index >= len(data):
+            return
+        sheet = getattr(data[index], 'cue_sheet', None)
+        if sheet is None:
+            return
+        lines = []
+        for track in sheet.tracks:
+            start = self._format_mmss(track.start_ms)
+            end = self._format_mmss(track.end_ms)
+            title = track.title or _("Track {number}").format(number=track.number)
+            lines.append(f"{track.number:02d}. {title}  ({start} → {end})")
+        header = _("{album} — {count} tracks").format(
+            album=sheet.album or _("Unknown album"), count=len(sheet.tracks))
+        wx.MessageBox(header + "\n\n" + "\n".join(lines), _("Cue Sheet Tracks"), wx.ICON_INFORMATION)
+
     def on_stop(self, event):
         self.btn_stop.Disable()
         self.btn_stop.SetLabel(_("Stopping..."))
@@ -1594,6 +1643,9 @@ class MainWindow(wx.Frame):
             data = self.audio_data
         else:
             data = self.video_data
+
+        # Les lignes cue (images album à découper) ne se fusionnent pas.
+        data = [m for m in data if getattr(m, 'cue_sheet', None) is None]
 
         if len(data) < 2:
             wx.MessageBox(
