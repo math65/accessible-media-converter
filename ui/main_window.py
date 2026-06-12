@@ -39,6 +39,7 @@ from core.formatting import (
 )
 from core.merge import MergeTask
 from core.single_instance import drain_paths
+from core.speech import speak
 from core.i18n import AUTO_LANGUAGE_CODE, get_current_language_code, normalize_ui_language
 from core.updater import (
     UpdateCheckError,
@@ -380,6 +381,9 @@ class MainWindow(wx.Frame):
             wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
         )
         list_ctrl.EnsureVisible(new_idx)
+        # Annonce explicite du fichier déplacé et de sa nouvelle position (NVDA).
+        speak(_("{name} moved, {pos} of {total}").format(
+            name=data[new_idx].filename, pos=new_idx + 1, total=len(data)))
 
     def _get_media_status_label(self, meta):
         suffixes = []

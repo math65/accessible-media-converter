@@ -1,17 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 
+from PyInstaller.utils.hooks import collect_all
+
 
 project_root = os.path.abspath(".")
 version_file = os.environ.get("UT_VERSION_FILE") or None
+
+# accessible_output2 charge à l'exécution des DLL de lecteurs d'écran (NVDA, JAWS…)
+# depuis son dossier ; collect_all embarque ces données + sous-modules. On inclut
+# aussi ses dépendances pures-Python pour fiabiliser le bundle.
+_speech_datas, _speech_binaries, _speech_hidden = [], [], []
+for _pkg in ('accessible_output2', 'platform_utils', 'libloader'):
+    _d, _b, _h = collect_all(_pkg)
+    _speech_datas += _d
+    _speech_binaries += _b
+    _speech_hidden += _h
 
 
 a = Analysis(
     ['main.py'],
     pathex=[project_root],
-    binaries=[('bin\\ffmpeg.exe', 'bin'), ('bin\\ffprobe.exe', 'bin')],
-    datas=[('locales', 'locales'), ('docs', 'docs')],
-    hiddenimports=['wx.richtext', 'wx._richtext', 'wx.xml', 'wx._xml'],
+    binaries=[('bin\\ffmpeg.exe', 'bin'), ('bin\\ffprobe.exe', 'bin')] + _speech_binaries,
+    datas=[('locales', 'locales'), ('docs', 'docs')] + _speech_datas,
+    hiddenimports=['wx.richtext', 'wx._richtext', 'wx.xml', 'wx._xml'] + _speech_hidden,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
