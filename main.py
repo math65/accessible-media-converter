@@ -8,6 +8,7 @@ from core.logger import setup_logger
 from core.i18n import AUTO_LANGUAGE_CODE
 from core.i18n import install_language
 from core.updater import cleanup_update_artifacts
+from core.single_instance import push_paths
 
 
 def init_i18n(config_data=None):
@@ -41,15 +42,28 @@ def main():
         logging.info("Démarrage de wx.App...")
         app = wx.App(False)
 
+        cli_paths = [path for path in sys.argv[1:] if os.path.exists(path)]
+
+        # Instance unique : une multi-sélection de l'explorateur lance N processus
+        # (un par fichier via le verbe %1). Les instances secondaires relaient leurs
+        # chemins à la fenêtre déjà ouverte et sortent au lieu d'empiler des fenêtres.
+        # Garder `instance_checker` vivant pour conserver le verrou côté maître.
+        instance_checker = wx.SingleInstanceChecker("AccessibleMediaConverter")
+        if instance_checker.IsAnotherRunning():
+            if cli_paths:
+                push_paths(cli_paths)
+            logging.info("Instance déjà en cours : %s chemin(s) relayé(s), sortie.", len(cli_paths))
+            return
+
         from ui.main_window import MainWindow
         frame = MainWindow()
         frame.Show()
         frame.schedule_startup_update_check()
         frame.check_announcement_at_startup()
+        frame.start_external_paths_watcher()
 
         # Fichiers/dossiers passés en argument (menu contextuel « Convertir avec… »
         # de l'explorateur). On les ajoute après l'affichage de la fenêtre.
-        cli_paths = [path for path in sys.argv[1:] if os.path.exists(path)]
         if cli_paths:
             wx.CallAfter(frame.add_external_paths, cli_paths)
 

@@ -38,6 +38,7 @@ from core.formatting import (
     normalize_settings_store,
 )
 from core.merge import MergeTask
+from core.single_instance import drain_paths
 from core.i18n import AUTO_LANGUAGE_CODE, get_current_language_code, normalize_ui_language
 from core.updater import (
     UpdateCheckError,
@@ -697,6 +698,24 @@ class MainWindow(wx.Frame):
         if focus_target:
             tab_name, list_ctrl, index = focus_target
             wx.CallAfter(self._focus_added_media_list_item, tab_name, list_ctrl, index)
+
+    def start_external_paths_watcher(self):
+        """Surveille le fichier relais de l'instance unique : les instances
+        secondaires (multi-sélection explorateur) y déposent leurs chemins, que
+        cette fenêtre maître draine et ajoute, puis revient au premier plan."""
+        self._external_watch_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self._on_external_watch_tick, self._external_watch_timer)
+        self._external_watch_timer.Start(700)
+
+    def _on_external_watch_tick(self, event):
+        paths = drain_paths()
+        if not paths:
+            return
+        self.add_external_paths(paths)
+        if self.IsIconized():
+            self.Iconize(False)
+        self.Raise()
+        self.RequestUserAttention()
 
     def on_char_hook(self, event):
         key_code = event.GetKeyCode()
