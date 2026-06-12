@@ -90,7 +90,8 @@ class BatchConversionManager:
         reserved_paths = set()
         jobs = []
         for index, meta in enumerate(self.media_list):
-            base_output_path = build_output_path(meta.full_path, self.target_format, custom_output_dir=self.output_dir)
+            target_format, job_settings = self._resolve_job_format_settings(meta)
+            base_output_path = build_output_path(meta.full_path, target_format, custom_output_dir=self.output_dir)
             resolved_output_path, skip_reason = self._reserve_output_path(
                 base_output_path,
                 reserved_paths,
@@ -99,8 +100,8 @@ class BatchConversionManager:
             job = BatchJob(
                 index=index,
                 meta=meta,
-                target_format=self.target_format,
-                settings=dict(self.settings),
+                target_format=target_format,
+                settings=job_settings,
                 output_path=resolved_output_path,
                 weight=self._get_job_weight(meta),
             )
@@ -110,6 +111,19 @@ class BatchConversionManager:
                 job.skip_reason = skip_reason
             jobs.append(job)
         return jobs
+
+    def _resolve_job_format_settings(self, meta):
+        """Retourne (format, settings) pour ce fichier : son override de sortie
+        s'il en a un, sinon le format/réglages globaux du batch. Les réglages non
+        liés au format (threads, préservation des métadonnées) sont hérités du global."""
+        override = getattr(meta, 'output_override', None)
+        if isinstance(override, dict) and override.get('format'):
+            job_settings = dict(override.get('settings') or {})
+            for global_key in ('ffmpeg_threads', 'preserve_metadata'):
+                if global_key in self.settings:
+                    job_settings.setdefault(global_key, self.settings[global_key])
+            return override['format'], job_settings
+        return self.target_format, dict(self.settings)
 
     def _reserve_output_path(self, base_output_path, reserved_paths, input_path):
         candidate_path = base_output_path

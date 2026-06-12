@@ -330,6 +330,8 @@ class MainWindow(wx.Frame):
             meta.audio_extract_track = None
         if not hasattr(meta, 'metadata_overrides'):
             meta.metadata_overrides = None
+        if not hasattr(meta, 'output_override'):
+            meta.output_override = None
 
         if meta.is_image:
             self.image_data.append(meta)
@@ -387,9 +389,18 @@ class MainWindow(wx.Frame):
             suffixes.append(_("Audio Track"))
         if has_metadata_overrides(meta):
             suffixes.append(_("Metadata"))
+        override = getattr(meta, 'output_override', None)
+        if isinstance(override, dict) and override.get('format'):
+            desc = override['format'].upper()
+            summary = (override.get('settings') or {}).get('summary')
+            if summary:
+                desc += " " + summary
+            base = _("Output: {desc}").format(desc=desc)
+        else:
+            base = _("Ready")
         if suffixes:
-            return _("Ready") + " (+" + ", ".join(suffixes) + ")"
-        return _("Ready")
+            return base + " (+" + ", ".join(suffixes) + ")"
+        return base
 
     def _describe_audio_extract_track(self, track_data):
         if not isinstance(track_data, dict):
@@ -875,15 +886,26 @@ class MainWindow(wx.Frame):
             self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index), item_audio_track)
 
         if show_metadata:
-            metadata_indices = self._resolve_metadata_target_indices(list_ctrl, index)
+            target_indices = self._resolve_metadata_target_indices(list_ctrl, index)
             if show_track or show_audio_track:
                 menu.AppendSeparator()
-            if len(metadata_indices) > 1:
-                label = _("Edit Metadata ({count} files)...").format(count=len(metadata_indices))
+            if len(target_indices) > 1:
+                label = _("Edit Metadata ({count} files)...").format(count=len(target_indices))
             else:
                 label = _("Edit Metadata...")
             item_metadata = menu.Append(wx.ID_ANY, label)
-            self.Bind(wx.EVT_MENU, lambda e: self.on_edit_metadata(metadata_indices), item_metadata)
+            self.Bind(wx.EVT_MENU, lambda e: self.on_edit_metadata(target_indices), item_metadata)
+
+            menu.AppendSeparator()
+            if len(target_indices) > 1:
+                out_label = _("Output Settings ({count} files)...").format(count=len(target_indices))
+            else:
+                out_label = _("Output Settings...")
+            item_output = menu.Append(wx.ID_ANY, out_label)
+            self.Bind(wx.EVT_MENU, lambda e: self.on_edit_output_settings(target_indices), item_output)
+            if any(getattr(data[i], 'output_override', None) for i in target_indices):
+                item_reset_output = menu.Append(wx.ID_ANY, _("Reset Output Settings"))
+                self.Bind(wx.EVT_MENU, lambda e: self.on_reset_output_settings(target_indices), item_reset_output)
 
         if menu.GetMenuItemCount() == 0:
             menu.Destroy()
@@ -1395,6 +1417,70 @@ class MainWindow(wx.Frame):
             self._update_formats_dropdown()
             self._set_status(_("Settings updated for format: {format}").format(format=clean))
         dlg.Destroy()
+
+    def on_edit_output_settings(self, indices):
+        """Définit un format/qualité de sortie spécifique pour le(s) fichier(s)
+        ciblé(s), réutilisant la boîte de réglages globale (retour de Sèb)."""
+        if self.is_converting or not indices:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        fmt_keys = list(self.current_fmt_keys_active)
+        if not fmt_keys:
+            return
+
+        first_meta = data[indices[0]]
+        existing = getattr(first_meta, 'output_override', None)
+
+        # 1) Choix du format parmi les formats valides de l'onglet courant.
+        labels = [build_format_label(key, context=self.current_tab) for key in fmt_keys]
+        if existing and existing.get('format') in fmt_keys:
+            preselect = fmt_keys.index(existing['format'])
+        else:
+            current_sel = self.combo_format.GetSelection()
+            preselect = current_sel if current_sel != wx.NOT_FOUND else 0
+        fmt_dlg = wx.SingleChoiceDialog(
+            self,
+            _("Output format for the selected file(s):"),
+            _("Output Settings"),
+            labels,
+        )
+        fmt_dlg.SetSelection(preselect)
+        if fmt_dlg.ShowModal() != wx.ID_OK:
+            fmt_dlg.Destroy()
+            return
+        fmt_key = fmt_keys[fmt_dlg.GetSelection()]
+        fmt_dlg.Destroy()
+
+        # 2) Réglages détaillés via la SettingsDialog habituelle, pré-remplie.
+        clean = build_format_label(fmt_key, context=self.current_tab)
+        input_has_vid = (self.current_tab == 'video')
+        input_ac = first_meta.audio_codec if self.current_tab in ('audio', 'video') else ""
+        if existing and existing.get('format') == fmt_key:
+            current_saved = existing.get('settings', {})
+        else:
+            current_saved = self.settings_store.get(fmt_key, {})
+
+        dlg = SettingsDialog(self, clean, input_has_vid, input_ac, current_saved, fmt_key)
+        if dlg.ShowModal() == wx.ID_OK:
+            new_settings = dlg.get_settings()
+            for i in indices:
+                data[i].output_override = {"format": fmt_key, "settings": dict(new_settings)}
+                self._set_list_row(list_ctrl, i, data[i])
+            self._set_status(
+                _("Output settings set for {count} file(s).").format(count=len(indices))
+            )
+        dlg.Destroy()
+
+    def on_reset_output_settings(self, indices):
+        if self.is_converting or not indices:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        for i in indices:
+            data[i].output_override = None
+            self._set_list_row(list_ctrl, i, data[i])
+        self._set_status(
+            _("Output settings reset for {count} file(s).").format(count=len(indices))
+        )
 
     def on_stop(self, event):
         self.btn_stop.Disable()

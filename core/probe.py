@@ -60,6 +60,9 @@ class MediaMetadata:
         self.format_tags = {}
         self.has_cover_art = False
         self.metadata_overrides = None
+        # Override de sortie par fichier : {"format": fmt_key, "settings": {...}}.
+        # Quand présent, ce fichier est converti avec ce format/qualité au lieu du global.
+        self.output_override = None
         self.source_format_name = ""
 
     @property
