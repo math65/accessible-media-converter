@@ -1,10 +1,18 @@
+import builtins
 import os
 import threading
 import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 
-from core.conversion import ConversionTask, build_output_path
+from core.conversion import ConversionTask, build_cue_track_output_path, build_output_path
+
+
+def _translate(msgid):
+    translator = builtins.__dict__.get('_')
+    if callable(translator):
+        return translator(msgid)
+    return msgid
 
 
 JOB_STATE_QUEUED = "queued"
@@ -28,6 +36,10 @@ class BatchJob:
     weight: float
     state: str = JOB_STATE_QUEUED
     progress: int = 0
+    # Découpage cue : entrée réelle (image audio), tranche temporelle et tags par piste.
+    input_path: str | None = None
+    clip: tuple | None = None
+    tag_overrides: dict | None = None
     skip_reason: str | None = None
     error_message: str = ""
     error_kind: str = ""
@@ -89,28 +101,95 @@ class BatchConversionManager:
     def _prepare_jobs(self):
         reserved_paths = set()
         jobs = []
-        for index, meta in enumerate(self.media_list):
-            target_format, job_settings = self._resolve_job_format_settings(meta)
-            base_output_path = build_output_path(meta.full_path, target_format, custom_output_dir=self.output_dir)
-            resolved_output_path, skip_reason = self._reserve_output_path(
-                base_output_path,
-                reserved_paths,
-                meta.full_path,
+        for meta in self.media_list:
+            if getattr(meta, 'cue_sheet', None) is not None:
+                self._append_cue_jobs(jobs, meta, reserved_paths)
+            else:
+                self._append_normal_job(jobs, meta, reserved_paths)
+        return jobs
+
+    def _append_normal_job(self, jobs, meta, reserved_paths):
+        target_format, job_settings = self._resolve_job_format_settings(meta)
+        base_output_path = build_output_path(meta.full_path, target_format, custom_output_dir=self.output_dir)
+        resolved_output_path, skip_reason = self._reserve_output_path(
+            base_output_path,
+            reserved_paths,
+            meta.full_path,
+        )
+        job = BatchJob(
+            index=len(jobs),
+            meta=meta,
+            target_format=target_format,
+            settings=job_settings,
+            output_path=resolved_output_path,
+            weight=self._get_job_weight(meta),
+        )
+        if skip_reason:
+            job.state = JOB_STATE_SKIPPED
+            job.progress = 100
+            job.skip_reason = skip_reason
+        jobs.append(job)
+
+    def _append_cue_jobs(self, jobs, meta, reserved_paths):
+        """Développe une image album (cue) en un job par piste (-ss/-t + tags)."""
+        target_format, job_settings = self._resolve_job_format_settings(meta)
+        sheet = meta.cue_sheet
+        audio_path = getattr(sheet, 'audio_ref', None)
+        error = getattr(meta, 'cue_error', None)
+
+        if error or not audio_path or not sheet.tracks:
+            # Ligne cue invalide : un job en erreur (output_path None → non exécuté).
+            jobs.append(BatchJob(
+                index=len(jobs), meta=meta, target_format=target_format, settings=job_settings,
+                output_path=None, weight=1.0, state=JOB_STATE_ERROR,
+                error_message=error or _translate("This cue sheet cannot be split."),
+            ))
+            return
+
+        total = len(sheet.tracks)
+        for track in sheet.tracks:
+            base_output_path = build_cue_track_output_path(
+                audio_path, sheet.album, track.number, total, track.title,
+                target_format, custom_output_dir=self.output_dir,
             )
+            resolved_output_path, skip_reason = self._reserve_output_path(
+                base_output_path, reserved_paths, audio_path,
+            )
+            weight = (track.end_ms - track.start_ms) / 1000.0 if track.end_ms else 1.0
             job = BatchJob(
-                index=index,
+                index=len(jobs),
                 meta=meta,
                 target_format=target_format,
                 settings=job_settings,
                 output_path=resolved_output_path,
-                weight=self._get_job_weight(meta),
+                weight=max(weight, 0.1),
+                input_path=audio_path,
+                clip=(track.start_ms, track.end_ms),
+                tag_overrides=self._build_cue_tags(sheet, track, total),
             )
             if skip_reason:
                 job.state = JOB_STATE_SKIPPED
                 job.progress = 100
                 job.skip_reason = skip_reason
             jobs.append(job)
-        return jobs
+
+    @staticmethod
+    def _build_cue_tags(sheet, track, total):
+        artist = track.performer or sheet.album_performer
+        tags = {'track': f"{track.number}/{total}"}
+        if track.title:
+            tags['title'] = track.title
+        if artist:
+            tags['artist'] = artist
+        if sheet.album:
+            tags['album'] = sheet.album
+        if sheet.album_performer:
+            tags['album_artist'] = sheet.album_performer
+        if sheet.date:
+            tags['date'] = sheet.date
+        if sheet.genre:
+            tags['genre'] = sheet.genre
+        return tags
 
     def _resolve_job_format_settings(self, meta):
         """Retourne (format, settings) pour ce fichier : son override de sortie
@@ -222,6 +301,9 @@ class BatchConversionManager:
             job.settings,
             output_dir=self.output_dir,
             output_path=job.output_path,
+            clip=job.clip,
+            extra_tags=job.tag_overrides,
+            input_path_override=job.input_path,
         )
         with self._state_lock:
             self._active_tasks[job.index] = task

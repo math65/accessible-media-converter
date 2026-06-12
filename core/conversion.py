@@ -76,8 +76,35 @@ def build_output_path(input_path, target_format, custom_output_dir=None):
     return os.path.join(output_dir, build_output_filename(input_path, target_format))
 
 
+def _format_ffmpeg_time(ms):
+    """Millisecondes → 'HH:MM:SS.mmm' accepté par ffmpeg (-ss/-t)."""
+    total_seconds = max(0, ms) / 1000.0
+    hours = int(total_seconds // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    seconds = total_seconds % 60
+    return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}"
+
+
+def sanitize_filename(name):
+    """Retire les caractères interdits dans un nom de fichier Windows."""
+    cleaned = re.sub(r'[\\/:*?"<>|]', '_', str(name)).strip(' .')
+    return cleaned or "_"
+
+
+def build_cue_track_output_path(image_path, album, number, total, title, target_format,
+                                custom_output_dir=None):
+    """Chemin d'une piste découpée : <dossier>/<album>/NN - Titre.ext."""
+    base_dir = resolve_output_dir(image_path, custom_output_dir=custom_output_dir)
+    album_dir = os.path.join(base_dir, sanitize_filename(album) if album else "Album")
+    width = max(2, len(str(total)))
+    extension = get_output_extension(target_format)
+    safe_title = sanitize_filename(title) if title else _translate("Track {number}").format(number=number)
+    return os.path.join(album_dir, f"{number:0{width}d} - {safe_title}.{extension}")
+
+
 class ConversionTask:
-    def __init__(self, input_data, target_format, settings, output_dir=None, output_path=None):
+    def __init__(self, input_data, target_format, settings, output_dir=None, output_path=None,
+                 clip=None, extra_tags=None, input_path_override=None):
         self.meta = None
         if hasattr(input_data, 'full_path'):
             self.meta = input_data
@@ -86,6 +113,17 @@ class ConversionTask:
         else:
             self.input_path = str(input_data)
             self.duration = 0.0
+
+        # Mode « clip » (découpage cue) : on lit une tranche [start, end] d'une image
+        # audio via input_path_override et on applique des tags explicites par piste.
+        self.clip = clip
+        self.extra_tags = extra_tags
+        if input_path_override:
+            self.input_path = input_path_override
+        if clip:
+            start_ms, end_ms = clip
+            if end_ms is not None and end_ms > start_ms:
+                self.duration = (end_ms - start_ms) / 1000.0
 
         self.target_format = target_format
         self.settings = settings
@@ -412,8 +450,9 @@ class ConversionTask:
             )
 
         output_dir = os.path.dirname(output_path) or os.getcwd()
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        # exist_ok : plusieurs pistes d'un même cue créent le sous-dossier album en
+        # parallèle (sinon WinError 183 sur le perdant de la course).
+        os.makedirs(output_dir, exist_ok=True)
 
         if self.target_format in IMAGE_OUTPUT_FORMAT_KEYS:
             return self._run_image_conversion(output_path)
@@ -428,9 +467,18 @@ class ConversionTask:
         cover_replace = cover_action == 'replace' and audio_output and cover_capable
         cover_path = cover.get('path') if cover_replace else None
 
-        cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
+        cmd = [self.ffmpeg_exe, '-y']
+        clip_start_ms = clip_end_ms = None
+        if self.clip:
+            clip_start_ms, clip_end_ms = self.clip
+            # -ss avant -i : seek d'entrée rapide et précis en réencodage.
+            cmd.extend(['-ss', _format_ffmpeg_time(clip_start_ms)])
+        cmd.extend(['-i', self.input_path])
         if cover_replace and cover_path:
             cmd.extend(['-i', cover_path])  # 2e entrée = nouvelle pochette (index 1)
+        if clip_start_ms is not None and clip_end_ms is not None and clip_end_ms > clip_start_ms:
+            # -t après toutes les entrées → s'applique à la sortie (durée de la piste).
+            cmd.extend(['-t', _format_ffmpeg_time(clip_end_ms - clip_start_ms)])
         mapped_container_tracks = None
 
         if self.target_format in VIDEO_CONTAINER_OUTPUTS and self.meta is not None:
@@ -458,20 +506,27 @@ class ConversionTask:
                 cmd.extend(['-map', '0:a'])
             cmd.extend(['-map', '1:0'])
 
-        preserve_metadata = apply_metadata_preservation(cmd, self.settings)
+        if self.clip:
+            # Découpage cue : tags explicites par piste, sans recopie des métadonnées
+            # de l'image (sinon le titre de l'album contaminerait chaque piste).
+            preserve_metadata = False
+            if self.extra_tags:
+                cmd.extend(build_tag_metadata_args(self.extra_tags))
+        else:
+            preserve_metadata = apply_metadata_preservation(cmd, self.settings)
 
-        if overrides_are_effective(overrides):
-            # L'édition conserve les tags non modifiés, puis surcharge les champs édités.
-            if not preserve_metadata:
+            if overrides_are_effective(overrides):
+                # L'édition conserve les tags non modifiés, puis surcharge les champs édités.
+                if not preserve_metadata:
+                    cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
+                    preserve_metadata = True
+                cmd.extend(build_tag_metadata_args(override_tags))
+
+            if self.target_format == 'm4b' and not preserve_metadata:
+                # Le M4B est un livre audio : on conserve toujours les chapitres (et
+                # tags) de la source lors d'une conversion d'un seul fichier.
                 cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
                 preserve_metadata = True
-            cmd.extend(build_tag_metadata_args(override_tags))
-
-        if self.target_format == 'm4b' and not preserve_metadata:
-            # Le M4B est un livre audio : on conserve toujours les chapitres (et
-            # tags) de la source lors d'une conversion d'un seul fichier.
-            cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
-            preserve_metadata = True
 
         audio_mode = self.settings.get('audio_mode', 'convert')
         if audio_mode == 'copy':
