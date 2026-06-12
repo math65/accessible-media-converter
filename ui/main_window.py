@@ -96,7 +96,7 @@ class FileListPanel(wx.Panel):
         self.list_ctrl.InsertColumn(1, _("Details (Codec/Bitrate)"), width=250)
         self.list_ctrl.InsertColumn(2, _("Status"), width=150)
         self.list_ctrl.SetName(list_name)
-        self.list_ctrl.SetToolTip(_("Use arrows to browse files. Press Delete to remove selected entries."))
+        self.list_ctrl.SetToolTip(_("Use arrows to browse files. Alt+Up/Down reorders the focused file. Press Delete to remove selected entries."))
         self.sizer.Add(self.list_ctrl, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
 
@@ -341,10 +341,42 @@ class MainWindow(wx.Frame):
             target_list = self.panel_audio_list.list_ctrl
 
         index = target_list.GetItemCount()
-        target_list.InsertItem(index, meta.filename)
-        target_list.SetItem(index, 1, meta.get_summary())
-        target_list.SetItem(index, 2, self._get_media_status_label(meta))
+        target_list.InsertItem(index, "")
+        self._set_list_row(target_list, index, meta)
         return index
+
+    def _set_list_row(self, list_ctrl, index, meta):
+        """(Ré)écrit les 3 colonnes d'une ligne. Réutilisé à l'ajout et au
+        réordonnancement (échange de deux lignes)."""
+        list_ctrl.SetItem(index, 0, meta.filename)
+        list_ctrl.SetItem(index, 1, meta.get_summary())
+        list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
+
+    def _move_media_item(self, direction):
+        """Déplace l'élément focalisé d'un cran (Alt+Haut/Bas, menu contextuel).
+        L'ordre de la liste pilote l'ordre de fusion."""
+        if self.is_converting:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        idx = list_ctrl.GetFocusedItem()
+        if idx == -1:
+            idx = list_ctrl.GetFirstSelected()
+        if idx == -1:
+            return
+        new_idx = idx + direction
+        if new_idx < 0 or new_idx >= len(data):
+            return
+        data[idx], data[new_idx] = data[new_idx], data[idx]
+        self._set_list_row(list_ctrl, idx, data[idx])
+        self._set_list_row(list_ctrl, new_idx, data[new_idx])
+        # Suit l'élément déplacé : focus + sélection sur sa nouvelle position.
+        list_ctrl.SetItemState(idx, 0, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED)
+        list_ctrl.SetItemState(
+            new_idx,
+            wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
+            wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
+        )
+        list_ctrl.EnsureVisible(new_idx)
 
     def _get_media_status_label(self, meta):
         suffixes = []
@@ -688,6 +720,16 @@ class MainWindow(wx.Frame):
         # processing (IsDialogMessage) sees them, so button & mnemonics never fire.
         # We resolve them manually from the translated button label.
         if event.AltDown() and not event.ControlDown() and not event.ShiftDown():
+            # Alt+Haut/Bas réordonne l'élément focalisé dans la liste de fichiers.
+            if key_code in (wx.WXK_UP, wx.WXK_DOWN):
+                focused = wx.Window.FindFocus()
+                if focused in (
+                    self.panel_audio_list.list_ctrl,
+                    self.panel_video_list.list_ctrl,
+                    self.panel_image_list.list_ctrl,
+                ):
+                    self._move_media_item(-1 if key_code == wx.WXK_UP else 1)
+                    return
             for btn, handler in (
                 (self.btn_convert, self.on_convert),
                 (self.btn_merge, self.on_merge),
@@ -782,25 +824,40 @@ class MainWindow(wx.Frame):
 
         menu = wx.Menu()
 
-        if (
+        # Réordonner (tous les onglets) — agit sur l'élément focalisé.
+        item_up = menu.Append(wx.ID_ANY, _("Move Up") + "\tAlt+Up")
+        item_up.Enable(index > 0)
+        self.Bind(wx.EVT_MENU, lambda e: self._move_media_item(-1), item_up)
+        item_down = menu.Append(wx.ID_ANY, _("Move Down") + "\tAlt+Down")
+        item_down.Enable(index < len(data) - 1)
+        self.Bind(wx.EVT_MENU, lambda e: self._move_media_item(1), item_down)
+
+        show_track = (
             self.current_tab == 'video'
             and meta.has_video
             and fmt_key in VIDEO_CONTAINER_FORMAT_KEYS
-        ):
-            item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
-            self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index), item_tracks)
-        if (
+        )
+        show_audio_track = (
             self.current_tab == 'video'
             and fmt_key in AUDIO_OUTPUT_FORMAT_KEYS
             and meta.has_video
             and len(meta.audio_tracks) > 1
-        ):
+        )
+        show_metadata = self.current_tab in ('audio', 'video')
+
+        if show_track or show_audio_track or show_metadata:
+            menu.AppendSeparator()
+
+        if show_track:
+            item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
+            self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index), item_tracks)
+        if show_audio_track:
             item_audio_track = menu.Append(wx.ID_ANY, _("Choose Audio Track..."))
             self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index), item_audio_track)
 
-        if self.current_tab in ('audio', 'video'):
+        if show_metadata:
             metadata_indices = self._resolve_metadata_target_indices(list_ctrl, index)
-            if menu.GetMenuItemCount() > 0:
+            if show_track or show_audio_track:
                 menu.AppendSeparator()
             if len(metadata_indices) > 1:
                 label = _("Edit Metadata ({count} files)...").format(count=len(metadata_indices))
