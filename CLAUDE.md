@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.12.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.13.0`.
 
 ## Running and building
 
@@ -140,6 +140,26 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.13.0 (4 Sèb feedback items)** — Done as 4 independent commits.
+  **(A) Enter validates dialogs**: `SetAffirmativeId`/`SetEscapeId` added to `ui/settings_dialog.py`,
+  `support_dialog.py`, `update_dialog.py`, `error_report_dialog.py` (the others already had it).
+  Multi-line `wx.TextCtrl` keep Enter as newline natively — no trap. Removed dead `TE_PROCESS_ENTER`
+  from `track_manager` `txt_title`; tooltip on `btn_merge` clarifying it uses the selected format
+  (the "merge only MP3?" question was a misunderstanding — `on_merge` already follows `combo_format`).
+  **(B) Reorder files**: `_move_media_item` swaps the focused row with its neighbour (focus/selection
+  follow), via a new `_set_list_row` helper reused by `_append_media_metadata`. **Alt+Up/Down** handled
+  in `on_char_hook` (frame-level EVT_CHAR_HOOK, when a file list has focus) + "Move Up"/"Move Down"
+  context-menu entries. The list order drives merge order. **(C) Single instance**: `main.py` creates a
+  `wx.SingleInstanceChecker`; secondary instances (Explorer multi-select runs the `%1` verb once per
+  file → N windows) relay their paths through `core/single_instance.py` (relay file in `%APPDATA%`,
+  drained by a `wx.Timer` in `MainWindow.start_external_paths_watcher`) then exit. Master window adds
+  the paths and raises itself. Relay file (not a socket) → no Windows firewall prompt. **(D) Per-file
+  output settings**: `meta.output_override = {"format", "settings"}` on `MediaMetadata` (modelled on
+  `track_settings`/`metadata_overrides`). Context menu (audio/video) "Output Settings…" picks a format
+  among the tab's valid formats then reuses `SettingsDialog`, applied to the multi-selection; "Reset
+  Output Settings" clears it. Shown in the Status column (`Output: MP3 320k`). Consumed by
+  `BatchConversionManager._prepare_jobs` via `_resolve_job_format_settings` (override format/settings
+  per job; threads/preserve-metadata inherited from global). Merge ignores overrides (single format).
 - **v1.12.0 (ABR MP3 + Explorer context menu)** — Follow-up to tester Sèb's feedback.
   **ABR mode** (target average bitrate) added to MP3 alongside CBR/VBR: `apply_audio_codec_args`
   (`core/ffmpeg_helpers.py`) emits `-abr 1 -b:a <bitrate>` for `rate_mode == "abr"`; libmp3lame
