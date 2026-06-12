@@ -140,8 +140,10 @@ class SettingsDialog(wx.Dialog):
         self.audio_grid.Add(self.combo_ch, 0, wx.EXPAND)
 
         self.lbl_rate_mode = wx.StaticText(self.panel_audio_opts, label=_("Rate Mode:"))
-        self.rate_mode_display_choices = [_("Constant Bitrate (CBR)"), _("Variable Bitrate (VBR)")]
-        self.combo_rate_mode = wx.Choice(self.panel_audio_opts, choices=self.rate_mode_display_choices)
+        # Les choix (et leurs valeurs) dépendent du codec : MP3 expose en plus le mode ABR
+        # (débit moyen ciblé), pas l'AAC. Peuplé via _populate_rate_mode_combo().
+        self._rate_mode_values = ['cbr', 'vbr']
+        self.combo_rate_mode = wx.Choice(self.panel_audio_opts, choices=[])
         self.audio_grid.Add(self.lbl_rate_mode, 0, wx.ALIGN_CENTER_VERTICAL)
         self.audio_grid.Add(self.combo_rate_mode, 0, wx.EXPAND)
 
@@ -287,7 +289,8 @@ class SettingsDialog(wx.Dialog):
         ch_map = {'2': 0, '1': 1, 'original': 2}
         self.combo_ch.SetSelection(ch_map.get(str(settings.get('audio_channels', '2')), 0))
 
-        self.combo_rate_mode.SetSelection(1 if settings.get('rate_mode') == 'vbr' else 0)
+        self._populate_rate_mode_combo(self._get_active_audio_codec_key())
+        self._set_rate_mode_selection(settings.get('rate_mode', 'cbr'))
 
         br_map = {'320k': 0, '256k': 1, '192k': 2, '160k': 3, '128k': 4, '96k': 5, '64k': 6}
         self.combo_bitrate.SetSelection(br_map.get(settings.get('audio_bitrate', '192k'), 2))
@@ -359,6 +362,27 @@ class SettingsDialog(wx.Dialog):
                 choices.append(label)
         self.combo_quality.Set(choices)
 
+    def _populate_rate_mode_combo(self, codec_key):
+        if codec_key == 'mp3':
+            labels = [_("Constant Bitrate (CBR)"), _("Average Bitrate (ABR)"), _("Variable Bitrate (VBR)")]
+            self._rate_mode_values = ['cbr', 'abr', 'vbr']
+        else:
+            labels = [_("Constant Bitrate (CBR)"), _("Variable Bitrate (VBR)")]
+            self._rate_mode_values = ['cbr', 'vbr']
+        self.combo_rate_mode.Set(labels)
+
+    def _current_rate_mode(self):
+        idx = self.combo_rate_mode.GetSelection()
+        if idx == wx.NOT_FOUND or idx >= len(self._rate_mode_values):
+            return 'cbr'
+        return self._rate_mode_values[idx]
+
+    def _set_rate_mode_selection(self, mode):
+        if mode in self._rate_mode_values:
+            self.combo_rate_mode.SetSelection(self._rate_mode_values.index(mode))
+        else:
+            self.combo_rate_mode.SetSelection(0)
+
     def _set_quality_selection(self, settings):
         codec_key = self._get_active_audio_codec_key()
         quality = int(settings.get("audio_qscale", 0))
@@ -414,8 +438,12 @@ class SettingsDialog(wx.Dialog):
         event.Skip()
 
     def on_audio_codec_change(self, event):
-        self._populate_quality_combo(self._get_active_audio_codec_key())
+        codec_key = self._get_active_audio_codec_key()
+        current_mode = self._current_rate_mode()
+        self._populate_quality_combo(codec_key)
         self._set_quality_selection(self.current_settings)
+        self._populate_rate_mode_combo(codec_key)
+        self._set_rate_mode_selection(current_mode)
         self._update_visibility(preserve_focus=self.combo_audio_codec)
         event.Skip()
 
@@ -467,11 +495,12 @@ class SettingsDialog(wx.Dialog):
             if codec_key in ("mp3", "aac"):
                 self.lbl_rate_mode.Show()
                 self.combo_rate_mode.Show()
-                if self.combo_rate_mode.GetSelection() == 1:
+                if self._current_rate_mode() == 'vbr':
                     self.lbl_quality.SetLabel(_("Quality (VBR):"))
                     self.lbl_quality.Show()
                     self.combo_quality.Show()
                 else:
+                    # CBR comme ABR utilisent le sélecteur de débit (moyenne ciblée en ABR).
                     self.lbl_bitrate.Show()
                     self.combo_bitrate.Show()
             elif codec_key == "ogg":
@@ -538,8 +567,8 @@ class SettingsDialog(wx.Dialog):
 
         self.combo_sr.SetToolTip(_("Target sample rate."))
         self.combo_ch.SetToolTip(_("Target channel layout."))
-        self.combo_rate_mode.SetToolTip(_("Choose CBR or VBR mode."))
-        self.combo_bitrate.SetToolTip(_("Bitrate used in CBR mode."))
+        self.combo_rate_mode.SetToolTip(_("Choose CBR, ABR (MP3 only) or VBR mode."))
+        self.combo_bitrate.SetToolTip(_("Bitrate used in CBR mode (target average in ABR)."))
         self.combo_quality.SetToolTip(_("Quality scale used in VBR mode."))
         self.combo_depth.SetToolTip(_("Bit depth for lossless formats."))
         self.combo_comp.SetToolTip(_("Compression level for FLAC."))
@@ -877,7 +906,7 @@ class SettingsDialog(wx.Dialog):
         ch_vals = ['2', '1', 'original']
         settings['audio_channels'] = ch_vals[self.combo_ch.GetSelection()]
 
-        settings['rate_mode'] = 'vbr' if self.combo_rate_mode.GetSelection() == 1 else 'cbr'
+        settings['rate_mode'] = self._current_rate_mode()
 
         br_vals = ['320k', '256k', '192k', '160k', '128k', '96k', '64k']
         settings['audio_bitrate'] = br_vals[self.combo_bitrate.GetSelection()]

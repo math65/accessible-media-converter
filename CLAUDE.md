@@ -140,6 +140,21 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.12.0 (ABR MP3 + Explorer context menu)** — Follow-up to tester Sèb's feedback.
+  **ABR mode** (target average bitrate) added to MP3 alongside CBR/VBR: `apply_audio_codec_args`
+  (`core/ffmpeg_helpers.py`) emits `-abr 1 -b:a <bitrate>` for `rate_mode == "abr"`; libmp3lame
+  exposes **no** VBR min/max bound, ABR is the honest equivalent. In `ui/settings_dialog.py` the
+  rate-mode selector moved from **index-based** (0=CBR/1=VBR) to **value-based** mapping that depends
+  on the codec (`_rate_mode_values`, `_populate_rate_mode_combo`/`_current_rate_mode`/
+  `_set_rate_mode_selection`): MP3 → CBR/ABR/VBR, AAC → CBR/VBR only (native AAC encoder has no
+  `-abr`). ABR reuses the bitrate selector (target average). Summary `ABR {bitrate}` in
+  `core/_build_audio_mode_summary`. Joint stereo: already on by default, nothing to do. **Explorer
+  context menu** "Convert with Accessible Media Converter": `main.py` reads `sys.argv` and routes the
+  paths through the new public method `MainWindow.add_external_paths` (mirrors `on_paste_files`,
+  reuses `_collect_media_paths`/`_process_added_files`); `installer/UniversalTranscoder.iss` adds
+  `[Registry]` HKCR keys (`*\shell` + `Directory\shell`, `Flags: uninsdeletekey`) and a
+  `[CustomMessages] ConvertWithApp` EN/FR. Single-instance out of scope (multi-select opens multiple
+  windows). Also ships the truncated-m4a fix (`de40507`, never published).
 - **v1.11.0 (M4B audiobooks)** — New **M4B output format with chapters**.
   `"m4b"` added to `AUDIO_OUTPUT_FORMAT_KEYS` (`core/formatting.py`); it is a MP4/AAC
   container forced with `-f ipod` and defaults to **stereo 128k** (audiobooks may contain

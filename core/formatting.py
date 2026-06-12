@@ -548,7 +548,8 @@ def _build_audio_mode_summary(format_key, settings, include_codec_label=False):
             return f"{codec_label} {bitrate}"
         return _translatef("Bitrate {bitrate}", bitrate=bitrate)
 
-    if settings.get("rate_mode", "cbr") == "vbr":
+    rate_mode = settings.get("rate_mode", "cbr")
+    if rate_mode == "vbr":
         quality = settings.get(
             "audio_qscale",
             DEFAULT_FORMAT_SETTINGS.get(codec_key, DEFAULT_FORMAT_SETTINGS["mp3"]).get(
@@ -563,7 +564,10 @@ def _build_audio_mode_summary(format_key, settings, include_codec_label=False):
                 "audio_bitrate", "192k"
             ),
         )
-        summary = _translatef("CBR {bitrate}", bitrate=bitrate)
+        if rate_mode == "abr":
+            summary = _translatef("ABR {bitrate}", bitrate=bitrate)
+        else:
+            summary = _translatef("CBR {bitrate}", bitrate=bitrate)
 
     if include_codec_label:
         return f"{codec_label} {summary}"

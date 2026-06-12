@@ -646,6 +646,25 @@ class MainWindow(wx.Frame):
             wx.CallAfter(self._focus_added_media_list_item, tab_name, list_ctrl, index)
         self._set_status(_("{count} file(s) pasted from the clipboard.").format(count=len(files_to_add)))
 
+    def add_external_paths(self, input_paths):
+        """Ajoute des fichiers/dossiers passés depuis l'extérieur (arguments de
+        ligne de commande / menu contextuel de l'explorateur). Réutilise la même
+        logique que le collage : collecte récursive puis import."""
+        if self.is_converting:
+            return
+
+        files_to_add = self._collect_media_paths(input_paths)
+        if not files_to_add:
+            wx.MessageBox(_("No compatible media files found."), _("Info"))
+            self._set_status(_("No compatible media files found."))
+            return
+
+        result = self._process_added_files(files_to_add)
+        focus_target = result.get('first_added_target')
+        if focus_target:
+            tab_name, list_ctrl, index = focus_target
+            wx.CallAfter(self._focus_added_media_list_item, tab_name, list_ctrl, index)
+
     def on_char_hook(self, event):
         key_code = event.GetKeyCode()
         if event.ControlDown() and not event.AltDown() and not event.ShiftDown() and key_code in (ord('V'), ord('v')):

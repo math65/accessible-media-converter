@@ -76,10 +76,14 @@ def apply_common_audio_options(cmd, settings):
 def apply_audio_codec_args(cmd, codec_key, settings):
     if codec_key == 'mp3':
         cmd.extend(['-c:a', 'libmp3lame'])
-        if settings.get('rate_mode', 'cbr') == 'cbr':
-            cmd.extend(['-b:a', settings.get('audio_bitrate', '192k')])
-        else:
+        mode = settings.get('rate_mode', 'cbr')
+        if mode == 'vbr':
             cmd.extend(['-q:a', str(settings.get('audio_qscale', 0))])
+        elif mode == 'abr':
+            # ABR : débit moyen ciblé (libmp3lame n'a pas de borne min/max VBR).
+            cmd.extend(['-abr', '1', '-b:a', settings.get('audio_bitrate', '192k')])
+        else:  # cbr
+            cmd.extend(['-b:a', settings.get('audio_bitrate', '192k')])
     elif codec_key == 'aac':
         cmd.extend(['-c:a', 'aac'])
         if settings.get('rate_mode', 'cbr') == 'cbr':

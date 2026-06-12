@@ -539,11 +539,11 @@ msgid "No files selected information"
 msgstr "Aucun fichier chargé"
 
 # --- ONGLETS ---
-#: core/support.py:390 ui/main_window.py:1052 ui/main_window.py:1112
+#: core/support.py:390 ui/main_window.py:1071 ui/main_window.py:1131
 msgid "Audio"
 msgstr "Audio"
 
-#: core/support.py:390 ui/main_window.py:1054 ui/main_window.py:1112
+#: core/support.py:390 ui/main_window.py:1073 ui/main_window.py:1131
 msgid "Video"
 msgstr "Vidéo"
 
@@ -584,7 +584,7 @@ msgstr "&Lancer la conversion"
 msgid "Start conversion"
 msgstr "Lancer la conversion"
 
-#: ui/main_window.py:1377 ui/main_window.py:1464 ui/main_window.py:277
+#: ui/main_window.py:1396 ui/main_window.py:1483 ui/main_window.py:277
 msgid "Stop"
 msgstr "Arrêter"
 
@@ -592,7 +592,7 @@ msgstr "Arrêter"
 msgid "Stop conversion"
 msgstr "Arrêter la conversion"
 
-#: ui/main_window.py:1161
+#: ui/main_window.py:1180
 msgid "Media Files"
 msgstr "Fichiers média"
 
@@ -660,15 +660,15 @@ msgstr "MP4 - Vidéo (H.264)"
 msgid "MKV - Video"
 msgstr "MKV - Vidéo"
 
-#: ui/main_window.py:1279
+#: ui/main_window.py:1298
 msgid "Output format selected: {format}"
 msgstr "Format de sortie sélectionné : {format}"
 
-#: ui/main_window.py:1300
+#: ui/main_window.py:1319
 msgid "Settings updated for format: {format}"
 msgstr "Réglages mis à jour pour le format : {format}"
 
-#: ui/main_window.py:1555 ui/main_window.py:357 ui/main_window.py:358
+#: ui/main_window.py:1574 ui/main_window.py:357 ui/main_window.py:358
 msgid "Ready"
 msgstr "Prêt"
 
@@ -684,39 +684,39 @@ msgstr "Affiche la progression de la conversion de 0 à 100 %."
 msgid "Conversion progress details"
 msgstr "Détails de la conversion"
 
-#: ui/main_window.py:1381
+#: ui/main_window.py:1400
 msgid "Preparing conversion..."
 msgstr "Préparation de la conversion..."
 
-#: ui/main_window.py:1384
+#: ui/main_window.py:1403
 msgid "Conversion started."
 msgstr "Conversion démarrée."
 
-#: ui/main_window.py:1534
+#: ui/main_window.py:1553
 msgid "Converting..."
 msgstr "Conversion en cours..."
 
-#: ui/main_window.py:1542 ui/main_window.py:1769
+#: ui/main_window.py:1561 ui/main_window.py:1788
 msgid "Done"
 msgstr "Terminé"
 
-#: ui/main_window.py:1305
+#: ui/main_window.py:1324
 msgid "Stopping..."
 msgstr "Arrêt en cours..."
 
-#: ui/main_window.py:1311 ui/main_window.py:1522
+#: ui/main_window.py:1330 ui/main_window.py:1541
 msgid "Stop requested."
 msgstr "Arrêt demandé."
 
-#: ui/main_window.py:1548
+#: ui/main_window.py:1567
 msgid "Stopped by user"
 msgstr "Arrêté par l'utilisateur"
 
-#: ui/main_window.py:1757
+#: ui/main_window.py:1776
 msgid "All tasks completed!"
 msgstr "Toutes les tâches sont terminées !"
 
-#: ui/main_window.py:1758
+#: ui/main_window.py:1777
 msgid "All tasks completed successfully."
 msgstr "Toutes les tâches sont terminées avec succès."
 
@@ -760,11 +760,11 @@ msgstr ""
 msgid "Update available: {version}"
 msgstr "Mise à jour disponible : {version}"
 
-#: ui/main_window.py:1188
+#: ui/main_window.py:1207
 msgid "{count} file(s) added."
 msgstr "{count} fichier(s) ajouté(s)."
 
-#: ui/main_window.py:1233
+#: ui/main_window.py:1252
 msgid "{count} file(s) removed."
 msgstr "{count} fichier(s) supprimé(s)."
 
@@ -772,38 +772,38 @@ msgstr "{count} fichier(s) supprimé(s)."
 msgid "{count} file(s) added from folder."
 msgstr "{count} fichier(s) ajouté(s) depuis le dossier."
 
-#: ui/main_window.py:1155
+#: ui/main_window.py:1174
 msgid "No files loaded."
 msgstr "Aucun fichier chargé."
 
-#: ui/main_window.py:1347
+#: ui/main_window.py:1366
 msgid "No files to convert."
 msgstr "Aucun fichier à convertir."
 
-#: ui/main_window.py:1203
+#: ui/main_window.py:1222
 msgid "List cleared."
 msgstr "Liste vidée."
 
-#: ui/main_window.py:1162
+#: ui/main_window.py:1181
 msgid "Open Media"
 msgstr "Ouvrir un média"
 
-#: ui/main_window.py:1519 ui/main_window.py:1757
+#: ui/main_window.py:1538 ui/main_window.py:1776
 msgid "Success"
 msgstr "Succès"
 
-#: ui/main_window.py:1526 ui/main_window.py:1546 ui/main_window.py:1802
-#: ui/main_window.py:403 ui/main_window.py:428 ui/main_window.py:525
-#: ui/main_window.py:533 ui/main_window.py:984
+#: ui/main_window.py:1003 ui/main_window.py:1545 ui/main_window.py:1565
+#: ui/main_window.py:1821 ui/main_window.py:403 ui/main_window.py:428
+#: ui/main_window.py:525 ui/main_window.py:533
 msgid "Error"
 msgstr "Erreur"
 
-#: ui/main_window.py:1362 ui/main_window.py:411 ui/main_window.py:490
+#: ui/main_window.py:1381 ui/main_window.py:411 ui/main_window.py:490
 #: ui/track_manager.py:436
 msgid "Warning"
 msgstr "Attention"
 
-#: ui/main_window.py:1362
+#: ui/main_window.py:1381
 msgid "Custom folder not found. Using source folder."
 msgstr "Dossier personnalisé introuvable. Utilisation du dossier source."
 
@@ -827,16 +827,16 @@ msgstr "Aucun fichier média compatible trouvé dans le presse-papiers."
 msgid "{count} file(s) pasted from the clipboard."
 msgstr "{count} fichier(s) collé(s) depuis le presse-papiers."
 
-#: ui/main_window.py:1268
+#: ui/main_window.py:1287
 msgid "{count} file(s) selected."
 msgstr "{count} fichier(s) sélectionné(s)."
 
-#: ui/main_window.py:1411 ui/main_window.py:539 ui/main_window.py:624
-#: ui/main_window.py:638
+#: ui/main_window.py:1430 ui/main_window.py:539 ui/main_window.py:624
+#: ui/main_window.py:638 ui/main_window.py:658
 msgid "Info"
 msgstr "Information"
 
-#: ui/main_window.py:1319
+#: ui/main_window.py:1338
 msgid ""
 "A conversion is currently running.\n"
 "Do you really want to stop it and exit?"
@@ -844,20 +844,20 @@ msgstr ""
 "Une conversion est en cours.\n"
 "Voulez-vous vraiment l'arrêter et quitter ?"
 
-#: ui/main_window.py:1320
+#: ui/main_window.py:1339
 msgid "Confirm Exit"
 msgstr "Confirmer la fermeture"
 
-#: ui/main_window.py:1820
+#: ui/main_window.py:1839
 msgid "About"
 msgstr "À propos"
 
 # --- RÉSUMÉS DE FORMATS ---
-#: core/formatting.py:566
+#: core/formatting.py:570
 msgid "CBR {bitrate}"
 msgstr "CBR {bitrate}"
 
-#: core/formatting.py:558
+#: core/formatting.py:559
 msgid "VBR Q{quality}"
 msgstr "VBR Q{quality}"
 
@@ -866,7 +866,7 @@ msgid "Copy"
 msgstr "Copie"
 
 #: core/formatting.py:240 core/formatting.py:542 core/formatting.py:543
-#: ui/settings_dialog.py:763
+#: ui/settings_dialog.py:792
 msgid "Lossless"
 msgstr "Sans perte"
 
@@ -874,7 +874,7 @@ msgstr "Sans perte"
 msgid "Normalized -16 LUFS"
 msgstr "Normalisé -16 LUFS"
 
-#: core/formatting.py:576
+#: core/formatting.py:580
 msgid "Stereo"
 msgstr "Stéréo"
 
@@ -907,7 +907,7 @@ msgstr "{count}x sous-titres"
 msgid "Configure settings for: "
 msgstr "Configurer les réglages de : "
 
-#: ui/settings_dialog.py:517
+#: ui/settings_dialog.py:546
 msgid "Format settings dialog"
 msgstr "Réglages du format"
 
@@ -915,35 +915,35 @@ msgstr "Réglages du format"
 msgid "Audio Settings"
 msgstr "Réglages audio"
 
-#: ui/settings_dialog.py:518
+#: ui/settings_dialog.py:547
 msgid "Audio settings panel"
 msgstr "Panneau des réglages audio"
 
-#: ui/settings_dialog.py:519
+#: ui/settings_dialog.py:548
 msgid "Use Tab to navigate audio options."
 msgstr "Utilisez Tab pour parcourir les options audio."
 
-#: ui/settings_dialog.py:101 ui/settings_dialog.py:202
+#: ui/settings_dialog.py:101 ui/settings_dialog.py:204
 msgid "Re-encode (Recommended)"
 msgstr "Réencoder (recommandé)"
 
-#: ui/settings_dialog.py:102 ui/settings_dialog.py:203
+#: ui/settings_dialog.py:102 ui/settings_dialog.py:205
 msgid "Copy Stream (Advanced)"
 msgstr "Copie du flux (avancé)"
 
-#: ui/settings_dialog.py:521
+#: ui/settings_dialog.py:550
 msgid "Audio mode re-encode"
 msgstr "Réencodage audio"
 
-#: ui/settings_dialog.py:522
+#: ui/settings_dialog.py:551
 msgid "Audio mode copy stream"
 msgstr "Copie du flux audio"
 
-#: ui/settings_dialog.py:523
+#: ui/settings_dialog.py:552
 msgid "Re-encode audio with detailed settings."
 msgstr "Réencoder l'audio avec des réglages détaillés."
 
-#: ui/settings_dialog.py:524
+#: ui/settings_dialog.py:553
 msgid "Copy source audio without re-encoding."
 msgstr "Copier l'audio source sans le réencoder."
 
@@ -955,7 +955,7 @@ msgstr ""
 "Conserve la qualité d'origine et accélère la conversion.\n"
 "Attention : le format de sortie doit prendre en charge le codec source."
 
-#: ui/settings_dialog.py:548
+#: ui/settings_dialog.py:577
 msgid "Copy mode warning"
 msgstr "Avertissement"
 
@@ -963,11 +963,11 @@ msgstr "Avertissement"
 msgid "Sample Rate:"
 msgstr "Fréquence d'échantillonnage :"
 
-#: ui/settings_dialog.py:530 ui/settings_dialog.py:569
+#: ui/settings_dialog.py:559 ui/settings_dialog.py:598
 msgid "Sample Rate"
 msgstr "Fréquence d'échantillonnage"
 
-#: ui/settings_dialog.py:539
+#: ui/settings_dialog.py:568
 msgid "Target sample rate."
 msgstr "Fréquence d'échantillonnage de sortie."
 
@@ -975,11 +975,11 @@ msgstr "Fréquence d'échantillonnage de sortie."
 msgid "Channels:"
 msgstr "Canaux :"
 
-#: ui/settings_dialog.py:531 ui/settings_dialog.py:570
+#: ui/settings_dialog.py:560 ui/settings_dialog.py:599
 msgid "Channels"
 msgstr "Canaux"
 
-#: ui/settings_dialog.py:540
+#: ui/settings_dialog.py:569
 msgid "Target channel layout."
 msgstr "Configuration des canaux de sortie."
 
@@ -987,15 +987,15 @@ msgstr "Configuration des canaux de sortie."
 msgid "Stereo (Downmix)"
 msgstr "Stéréo (mixage réduit)"
 
-#: core/formatting.py:578 ui/settings_dialog.py:136
+#: core/formatting.py:582 ui/settings_dialog.py:136
 msgid "Mono"
 msgstr "Mono"
 
-#: core/formatting.py:579 ui/settings_dialog.py:136
+#: core/formatting.py:583 ui/settings_dialog.py:136
 msgid "Original Channels"
 msgstr "Canaux d'origine"
 
-#: ui/settings_dialog.py:130 ui/settings_dialog.py:162
+#: ui/settings_dialog.py:130 ui/settings_dialog.py:164
 msgid "Original"
 msgstr "D'origine"
 
@@ -1003,27 +1003,23 @@ msgstr "D'origine"
 msgid "Rate Mode:"
 msgstr "Mode de débit :"
 
-#: ui/settings_dialog.py:532 ui/settings_dialog.py:571
+#: ui/settings_dialog.py:561 ui/settings_dialog.py:600
 msgid "Rate Mode"
 msgstr "Mode de débit"
 
-#: ui/settings_dialog.py:541
-msgid "Choose CBR or VBR mode."
-msgstr "Choisir un mode CBR ou VBR."
-
-#: ui/settings_dialog.py:143
+#: ui/settings_dialog.py:367 ui/settings_dialog.py:370
 msgid "Constant Bitrate (CBR)"
 msgstr "Débit constant (CBR)"
 
-#: ui/settings_dialog.py:143
+#: ui/settings_dialog.py:367 ui/settings_dialog.py:370
 msgid "Variable Bitrate (VBR)"
 msgstr "Débit variable (VBR)"
 
-#: ui/settings_dialog.py:148
+#: ui/settings_dialog.py:150
 msgid "Bitrate:"
 msgstr "Débit :"
 
-#: ui/settings_dialog.py:533 ui/settings_dialog.py:572
+#: ui/settings_dialog.py:562 ui/settings_dialog.py:601
 msgid "Bitrate"
 msgstr "Débit"
 
@@ -1031,123 +1027,119 @@ msgstr "Débit"
 msgid "Bitrate {bitrate}"
 msgstr "Débit {bitrate}"
 
-#: ui/settings_dialog.py:542
-msgid "Bitrate used in CBR mode."
-msgstr "Débit utilisé en mode CBR."
-
-#: ui/settings_dialog.py:154 ui/settings_dialog.py:471
+#: ui/settings_dialog.py:156 ui/settings_dialog.py:499
 msgid "Quality (VBR):"
 msgstr "Qualité (VBR) :"
 
-#: ui/settings_dialog.py:478
+#: ui/settings_dialog.py:507
 msgid "Quality (OGG):"
 msgstr "Qualité (OGG) :"
 
-#: ui/settings_dialog.py:534 ui/settings_dialog.py:573
+#: ui/settings_dialog.py:563 ui/settings_dialog.py:602
 msgid "Quality"
 msgstr "Qualité"
 
-#: ui/settings_dialog.py:543
+#: ui/settings_dialog.py:572
 msgid "Quality scale used in VBR mode."
 msgstr "Échelle de qualité utilisée en mode VBR."
 
-#: ui/settings_dialog.py:336
+#: ui/settings_dialog.py:339
 msgid "Best Quality"
 msgstr "Qualité maximale"
 
-#: ui/settings_dialog.py:338
+#: ui/settings_dialog.py:341
 msgid "High Quality"
 msgstr "Haute qualité"
 
-#: ui/settings_dialog.py:340
+#: ui/settings_dialog.py:343
 msgid "Medium"
 msgstr "Moyenne"
 
-#: ui/settings_dialog.py:342
+#: ui/settings_dialog.py:345
 msgid "Smallest Size"
 msgstr "Taille minimale"
 
-#: ui/settings_dialog.py:358
+#: ui/settings_dialog.py:361
 msgid "Audiophile"
 msgstr "Audiophile"
 
-#: ui/settings_dialog.py:348
+#: ui/settings_dialog.py:351
 msgid "Low"
 msgstr "Faible"
 
-#: ui/settings_dialog.py:352
+#: ui/settings_dialog.py:355
 msgid "High"
 msgstr "Élevée"
 
-#: ui/settings_dialog.py:159
+#: ui/settings_dialog.py:161
 msgid "Bit Depth:"
 msgstr "Profondeur en bits :"
 
-#: ui/settings_dialog.py:535 ui/settings_dialog.py:574
+#: ui/settings_dialog.py:564 ui/settings_dialog.py:603
 msgid "Bit Depth"
 msgstr "Profondeur en bits"
 
-#: ui/settings_dialog.py:544
+#: ui/settings_dialog.py:573
 msgid "Bit depth for lossless formats."
 msgstr "Profondeur en bits pour les formats sans perte."
 
-#: ui/settings_dialog.py:162
+#: ui/settings_dialog.py:164
 msgid "16-bit (CD Quality)"
 msgstr "16 bits (qualité CD)"
 
-#: ui/settings_dialog.py:162
+#: ui/settings_dialog.py:164
 msgid "24-bit (Studio Quality)"
 msgstr "24 bits (qualité studio)"
 
-#: ui/settings_dialog.py:162
+#: ui/settings_dialog.py:164
 msgid "32-bit Float (Pro)"
 msgstr "32 bits flottants (pro)"
 
-#: ui/settings_dialog.py:167
+#: ui/settings_dialog.py:169
 msgid "Compression Level:"
 msgstr "Niveau de compression :"
 
-#: ui/settings_dialog.py:536 ui/settings_dialog.py:575
+#: ui/settings_dialog.py:565 ui/settings_dialog.py:604
 msgid "Compression"
 msgstr "Compression"
 
-#: ui/settings_dialog.py:545
+#: ui/settings_dialog.py:574
 msgid "Compression level for FLAC."
 msgstr "Niveau de compression pour le FLAC."
 
-#: ui/settings_dialog.py:186
+#: ui/settings_dialog.py:188
 msgid "Normalize for streaming (-16 LUFS)"
 msgstr "Normaliser pour le streaming (-16 LUFS)"
 
-#: ui/settings_dialog.py:537 ui/settings_dialog.py:576
+#: ui/settings_dialog.py:566 ui/settings_dialog.py:605
 msgid "Normalize for streaming"
 msgstr "Normaliser pour le streaming"
 
-#: ui/settings_dialog.py:546
+#: ui/settings_dialog.py:575
 msgid "Apply streaming loudness normalization at -16 LUFS."
 msgstr "Appliquer une normalisation de loudness pour le streaming à -16 LUFS."
 
-#: ui/settings_dialog.py:172
+#: ui/settings_dialog.py:174
 msgid "Fast"
 msgstr "Rapide"
 
-#: ui/settings_dialog.py:174 ui/settings_dialog.py:350
+#: ui/settings_dialog.py:176 ui/settings_dialog.py:353
 msgid "Standard"
 msgstr "Standard"
 
-#: ui/settings_dialog.py:176
+#: ui/settings_dialog.py:178
 msgid "Max"
 msgstr "Maximum"
 
-#: ui/settings_dialog.py:178
+#: ui/settings_dialog.py:180
 msgid "Ultra Slow"
 msgstr "Très lent"
 
-#: ui/settings_dialog.py:197
+#: ui/settings_dialog.py:199
 msgid "Video Settings"
 msgstr "Réglages vidéo"
 
-#: ui/settings_dialog.py:551
+#: ui/settings_dialog.py:580
 msgid "Video settings panel"
 msgstr "Panneau des réglages vidéo"
 
@@ -1155,73 +1147,73 @@ msgstr "Panneau des réglages vidéo"
 msgid "Audio Codec:"
 msgstr "Codec audio :"
 
-#: ui/settings_dialog.py:527 ui/settings_dialog.py:568
+#: ui/settings_dialog.py:556 ui/settings_dialog.py:597
 msgid "Audio Codec"
 msgstr "Codec audio"
 
-#: ui/settings_dialog.py:528
+#: ui/settings_dialog.py:557
 msgid "Choose the audio codec used for the container output."
 msgstr "Choisissez le codec audio utilisé pour le fichier de sortie."
 
-#: ui/settings_dialog.py:552
+#: ui/settings_dialog.py:581
 msgid "Video mode re-encode"
 msgstr "Réencodage vidéo"
 
-#: ui/settings_dialog.py:553
+#: ui/settings_dialog.py:582
 msgid "Video mode copy stream"
 msgstr "Copie du flux vidéo"
 
-#: ui/settings_dialog.py:212
+#: ui/settings_dialog.py:214
 msgid "Video Preset:"
 msgstr "Preset vidéo :"
 
-#: ui/settings_dialog.py:554 ui/settings_dialog.py:578
+#: ui/settings_dialog.py:583 ui/settings_dialog.py:607
 msgid "Video Preset"
 msgstr "Preset vidéo"
 
-#: ui/settings_dialog.py:559
+#: ui/settings_dialog.py:588
 msgid "Lower CRF means better quality and bigger file."
 msgstr ""
 "Un CRF plus faible donne une meilleure qualité et un fichier plus "
 "volumineux."
 
-#: ui/settings_dialog.py:555 ui/settings_dialog.py:579
+#: ui/settings_dialog.py:584 ui/settings_dialog.py:608
 msgid "Video quality CRF"
 msgstr "Qualité vidéo CRF"
 
-#: ui/settings_dialog.py:222
+#: ui/settings_dialog.py:224
 msgid "Encoder Preset:"
 msgstr "Preset d'encodage :"
 
-#: ui/settings_dialog.py:556 ui/settings_dialog.py:580
+#: ui/settings_dialog.py:585 ui/settings_dialog.py:609
 msgid "Encoder Preset"
 msgstr "Preset d'encodage"
 
-#: ui/settings_dialog.py:560
+#: ui/settings_dialog.py:589
 msgid "Choose the x264 speed preset used for encoding."
 msgstr "Choisissez le preset de vitesse x264 utilisé pour l'encodage."
 
-#: ui/settings_dialog.py:227
+#: ui/settings_dialog.py:229
 msgid "H.264 Profile:"
 msgstr "Profil H.264 :"
 
-#: ui/settings_dialog.py:557 ui/settings_dialog.py:581
+#: ui/settings_dialog.py:586 ui/settings_dialog.py:610
 msgid "H.264 Profile"
 msgstr "Profil H.264"
 
-#: ui/settings_dialog.py:561
+#: ui/settings_dialog.py:590
 msgid "Choose the H.264 profile used for compatible outputs."
 msgstr "Choisissez le profil H.264 utilisé pour les sorties compatibles."
 
-#: ui/settings_dialog.py:232
+#: ui/settings_dialog.py:234
 msgid "Pixel Format:"
 msgstr "Format de pixel :"
 
-#: ui/settings_dialog.py:558 ui/settings_dialog.py:582
+#: ui/settings_dialog.py:587 ui/settings_dialog.py:611
 msgid "Pixel Format"
 msgstr "Format de pixel"
 
-#: ui/settings_dialog.py:562
+#: ui/settings_dialog.py:591
 msgid "Choose the output pixel format."
 msgstr "Choisissez le format de pixel de sortie."
 
@@ -1241,15 +1233,15 @@ msgstr "Opus"
 msgid "FLAC"
 msgstr "FLAC"
 
-#: ui/settings_dialog.py:217
+#: ui/settings_dialog.py:219
 msgid "Quality (CRF):"
 msgstr "Qualité (CRF) :"
 
-#: ui/settings_dialog.py:617
+#: ui/settings_dialog.py:646
 msgid "CRF {value} ({label})"
 msgstr "CRF {value} ({label})"
 
-#: ui/settings_dialog.py:616 ui/settings_dialog.py:653
+#: ui/settings_dialog.py:645 ui/settings_dialog.py:682
 msgid "Custom"
 msgstr "Personnalisé"
 
@@ -1302,12 +1294,12 @@ msgstr "Enregistrer les préférences"
 msgid "Cancel preferences"
 msgstr "Annuler les préférences"
 
-#: ui/main_window.py:1365 ui/main_window.py:1435 ui/preferences_dialog.py:292
+#: ui/main_window.py:1384 ui/main_window.py:1454 ui/preferences_dialog.py:292
 msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
 
 #: ui/metadata_editor.py:313 ui/preferences_dialog.py:207
-#: ui/settings_dialog.py:243
+#: ui/settings_dialog.py:245
 msgid "OK"
 msgstr "Valider"
 
@@ -1336,11 +1328,11 @@ msgstr "Pistes vidéo"
 msgid "Subtitles"
 msgstr "Sous-titres"
 
-#: ui/main_window.py:770
+#: ui/main_window.py:789
 msgid "Manage Tracks..."
 msgstr "Gérer les pistes..."
 
-#: ui/main_window.py:778 ui/track_manager.py:451
+#: ui/main_window.py:797 ui/track_manager.py:451
 msgid "Choose Audio Track..."
 msgstr "Choisir la piste audio..."
 
@@ -1435,23 +1427,23 @@ msgid "Forced"
 msgstr "Forcée"
 
 # --- BATCH PARALLELE ---
-#: ui/main_window.py:1540
+#: ui/main_window.py:1559
 msgid "Queued"
 msgstr "En file d'attente"
 
-#: ui/main_window.py:1554
+#: ui/main_window.py:1573
 msgid "Skipped"
 msgstr "Ignoré"
 
-#: ui/main_window.py:1551
+#: ui/main_window.py:1570
 msgid "Skipped (Exists)"
 msgstr "Ignoré (déjà présent)"
 
-#: ui/main_window.py:1553
+#: ui/main_window.py:1572
 msgid "Skipped (Batch stopped)"
 msgstr "Ignoré (batch interrompu)"
 
-#: ui/main_window.py:1571
+#: ui/main_window.py:1590
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error"
@@ -1459,7 +1451,7 @@ msgstr ""
 "{progress}% - {running} en cours / {queued} en attente / {done} terminés / "
 "{skipped} ignorés / {error} erreurs"
 
-#: ui/main_window.py:1575
+#: ui/main_window.py:1594
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error / {stopped} stopped"
@@ -1467,11 +1459,11 @@ msgstr ""
 "{progress}% - {running} en cours / {queued} en attente / {done} terminés / "
 "{skipped} ignorés / {error} erreurs / {stopped} arrêtés"
 
-#: ui/main_window.py:1749
+#: ui/main_window.py:1768
 msgid "Batch stopped by user."
 msgstr "Batch arrêté par l'utilisateur."
 
-#: ui/main_window.py:1761
+#: ui/main_window.py:1780
 msgid ""
 "Batch completed.\n"
 "\n"
@@ -1485,7 +1477,7 @@ msgstr ""
 "Ignorés : {skipped}\n"
 "Erreurs : {error}"
 
-#: ui/main_window.py:1771
+#: ui/main_window.py:1790
 msgid "Batch finished: {done} done / {skipped} skipped / {error} error"
 msgstr "Batch terminé : {done} terminés / {skipped} ignorés / {error} erreurs"
 
@@ -1587,7 +1579,7 @@ msgid "Apply track settings"
 msgstr "Valider les réglages de piste"
 
 #: ui/main_window.py:599 ui/metadata_editor.py:314
-#: ui/preferences_dialog.py:208 ui/settings_dialog.py:244
+#: ui/preferences_dialog.py:208 ui/settings_dialog.py:246
 #: ui/support_dialog.py:179 ui/support_dialog.py:180 ui/track_manager.py:416
 #: ui/track_manager.py:475
 msgid "Cancel"
@@ -1622,7 +1614,7 @@ msgstr "Valider la piste audio à extraire"
 msgid "Cancel audio extraction track"
 msgstr "Annuler le choix de piste audio"
 
-#: ui/main_window.py:887
+#: ui/main_window.py:906
 msgid "Audio extraction track selected: {track}"
 msgstr "Piste audio d'extraction sélectionnée : {track}"
 
@@ -1638,15 +1630,15 @@ msgstr "&Documentation..."
 msgid "View on &GitHub..."
 msgstr "Voir sur &GitHub..."
 
-#: ui/main_window.py:1801
+#: ui/main_window.py:1820
 msgid "Unable to open the GitHub repository page."
 msgstr "Impossible d'ouvrir la page GitHub du dépôt."
 
-#: ui/main_window.py:1793
+#: ui/main_window.py:1812
 msgid "Documentation"
 msgstr "Documentation"
 
-#: ui/main_window.py:1785
+#: ui/main_window.py:1804
 msgid ""
 "The local documentation files were not found.\n"
 "\n"
@@ -1658,7 +1650,7 @@ msgstr ""
 "Fichier attendu :\n"
 "{path}"
 
-#: ui/main_window.py:1789
+#: ui/main_window.py:1808
 msgid ""
 "The local documentation could not be opened.\n"
 "\n"
@@ -1670,7 +1662,7 @@ msgstr ""
 "Fichier :\n"
 "{path}"
 
-#: ui/main_window.py:1656
+#: ui/main_window.py:1675
 msgid ""
 "{paths}\n"
 "...and {count} more file(s)."
@@ -1678,7 +1670,7 @@ msgstr ""
 "{paths}\n"
 "...et {count} fichier(s) supplémentaire(s)."
 
-#: ui/main_window.py:1685
+#: ui/main_window.py:1704
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -1694,7 +1686,7 @@ msgstr ""
 "\n"
 "Voulez-vous le supprimer ?"
 
-#: ui/main_window.py:1689
+#: ui/main_window.py:1708
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -1710,11 +1702,11 @@ msgstr ""
 "\n"
 "Voulez-vous les supprimer ?"
 
-#: ui/main_window.py:1699 ui/main_window.py:1725
+#: ui/main_window.py:1718 ui/main_window.py:1744
 msgid "Delete Partial Files"
 msgstr "Supprimer les fichiers partiels"
 
-#: ui/main_window.py:1722
+#: ui/main_window.py:1741
 msgid ""
 "Some partially generated files could not be deleted.\n"
 "\n"
@@ -1724,7 +1716,7 @@ msgstr ""
 "\n"
 "{paths}"
 
-#: ui/main_window.py:1011
+#: ui/main_window.py:1030
 msgid "Application Language"
 msgstr "Langue de l'application"
 
@@ -1736,17 +1728,17 @@ msgstr "Langue de l'application"
 msgid "Choose the language used by the application interface."
 msgstr "Choisissez la langue utilisée par l'interface de l'application."
 
-#: ui/main_window.py:1015 ui/main_window.py:1037
+#: ui/main_window.py:1034 ui/main_window.py:1056
 msgid "Language change saved. It will be applied on next launch."
 msgstr ""
 "Le changement de langue est enregistré. Il sera appliqué au prochain "
 "lancement."
 
-#: ui/main_window.py:1023
+#: ui/main_window.py:1042
 msgid "Restart Required"
 msgstr "Redémarrage nécessaire"
 
-#: ui/main_window.py:1017
+#: ui/main_window.py:1036
 msgid ""
 "The application language has changed.\n"
 "\n"
@@ -1756,7 +1748,7 @@ msgstr ""
 "\n"
 "Redémarrer maintenant pour appliquer la nouvelle langue ?"
 
-#: ui/main_window.py:1008
+#: ui/main_window.py:1027
 msgid ""
 "The new language will be applied the next time the application starts "
 "because a conversion is currently running."
@@ -1764,7 +1756,7 @@ msgstr ""
 "La nouvelle langue sera appliquée au prochain lancement de l'application car"
 " une conversion est actuellement en cours."
 
-#: ui/main_window.py:1034
+#: ui/main_window.py:1053
 msgid "Unable to restart the application after changing language."
 msgstr "Impossible de redémarrer l'application après le changement de langue."
 
@@ -1772,15 +1764,15 @@ msgstr "Impossible de redémarrer l'application après le changement de langue."
 msgid "&Merge Files"
 msgstr "&Fusionner les fichiers"
 
-#: ui/main_window.py:1410
+#: ui/main_window.py:1429
 msgid "At least 2 files are required to merge."
 msgstr "Au moins 2 fichiers sont nécessaires pour fusionner."
 
-#: ui/main_window.py:1519 ui/main_window.py:1520
+#: ui/main_window.py:1538 ui/main_window.py:1539
 msgid "Merge complete."
 msgstr "Fusion terminée."
 
-#: ui/main_window.py:1525 ui/main_window.py:1529
+#: ui/main_window.py:1544 ui/main_window.py:1548
 msgid "Merge failed."
 msgstr "Échec de la fusion."
 
@@ -1788,15 +1780,15 @@ msgstr "Échec de la fusion."
 msgid "Merge files"
 msgstr "Fusionner les fichiers"
 
-#: ui/main_window.py:1468 ui/main_window.py:1471 ui/main_window.py:1494
+#: ui/main_window.py:1487 ui/main_window.py:1490 ui/main_window.py:1513
 msgid "Merging files..."
 msgstr "Fusion en cours..."
 
-#: ui/main_window.py:1448
+#: ui/main_window.py:1467
 msgid "Select Output File"
 msgstr "Choisir le fichier de sortie"
 
-#: ui/main_window.py:1537 ui/main_window.py:1589
+#: ui/main_window.py:1556 ui/main_window.py:1608
 msgid "{eta} remaining"
 msgstr "{eta} restant"
 
@@ -1878,19 +1870,19 @@ msgstr "Fichier inconnu"
 msgid "BMP - Image (Uncompressed)"
 msgstr "BMP - Image (Non compressée)"
 
-#: ui/settings_dialog.py:839
+#: ui/settings_dialog.py:868
 msgid "Choose a target resolution. Aspect ratio is preserved."
 msgstr "Choisir une résolution cible. Le ratio est préservé."
 
-#: ui/settings_dialog.py:836
+#: ui/settings_dialog.py:865
 msgid "Choose the compression algorithm for TIFF."
 msgstr "Choisir l'algorithme de compression pour TIFF."
 
-#: ui/settings_dialog.py:768
+#: ui/settings_dialog.py:797
 msgid "Compression Level (0-9):"
 msgstr "Niveau de compression (0-9) :"
 
-#: ui/settings_dialog.py:832
+#: ui/settings_dialog.py:861
 msgid "Compression level"
 msgstr "Niveau de compression"
 
@@ -1898,19 +1890,19 @@ msgstr "Niveau de compression"
 msgid "Compression {c}"
 msgstr "Compression {c}"
 
-#: ui/settings_dialog.py:774
+#: ui/settings_dialog.py:803
 msgid "Compression:"
 msgstr "Compression :"
 
-#: ui/settings_dialog.py:830
+#: ui/settings_dialog.py:859
 msgid "Enable lossless compression for WebP."
 msgstr "Activer la compression sans perte pour WebP."
 
-#: core/probe.py:98 ui/main_window.py:1056 ui/main_window.py:1112
+#: core/probe.py:98 ui/main_window.py:1075 ui/main_window.py:1131
 msgid "Image"
 msgstr "Image"
 
-#: ui/settings_dialog.py:740
+#: ui/settings_dialog.py:769
 msgid "Image Settings"
 msgstr "Réglages image"
 
@@ -1918,15 +1910,15 @@ msgstr "Réglages image"
 msgid "Image files list"
 msgstr "Liste des fichiers image"
 
-#: ui/settings_dialog.py:821
+#: ui/settings_dialog.py:850
 msgid "Image format settings dialog"
 msgstr "Dialogue des réglages du format image"
 
-#: ui/settings_dialog.py:826
+#: ui/settings_dialog.py:855
 msgid "Image quality"
 msgstr "Qualité de l'image"
 
-#: ui/settings_dialog.py:822
+#: ui/settings_dialog.py:851
 msgid "Image settings panel"
 msgstr "Panneau des réglages image"
 
@@ -1934,11 +1926,11 @@ msgstr "Panneau des réglages image"
 msgid "JPEG - Image"
 msgstr "JPEG - Image"
 
-#: ui/settings_dialog.py:829
+#: ui/settings_dialog.py:858
 msgid "Lossless mode"
 msgstr "Mode sans perte"
 
-#: ui/settings_dialog.py:775
+#: ui/settings_dialog.py:804
 msgid "None"
 msgstr "Aucune"
 
@@ -1946,15 +1938,15 @@ msgstr "Aucune"
 msgid "PNG - Image (Lossless)"
 msgstr "PNG - Image (Sans perte)"
 
-#: ui/settings_dialog.py:833
+#: ui/settings_dialog.py:862
 msgid "PNG compression from 0 (fast) to 9 (smallest)."
 msgstr "Compression PNG de 0 (rapide) à 9 (plus petit)."
 
-#: ui/settings_dialog.py:757
+#: ui/settings_dialog.py:786
 msgid "Quality (1-100):"
 msgstr "Qualité (1-100) :"
 
-#: ui/settings_dialog.py:827
+#: ui/settings_dialog.py:856
 msgid "Quality from 1 (lowest) to 100 (highest)."
 msgstr "Qualité de 1 (la plus basse) à 100 (la plus haute)."
 
@@ -1962,11 +1954,11 @@ msgstr "Qualité de 1 (la plus basse) à 100 (la plus haute)."
 msgid "Quality {q}"
 msgstr "Qualité {q}"
 
-#: ui/settings_dialog.py:838
+#: ui/settings_dialog.py:867
 msgid "Resize"
 msgstr "Redimensionnement"
 
-#: ui/settings_dialog.py:781
+#: ui/settings_dialog.py:810
 msgid "Resize:"
 msgstr "Redimensionnement :"
 
@@ -1974,7 +1966,7 @@ msgstr "Redimensionnement :"
 msgid "TIFF - Image (Lossless)"
 msgstr "TIFF - Image (Sans perte)"
 
-#: ui/settings_dialog.py:835
+#: ui/settings_dialog.py:864
 msgid "TIFF compression"
 msgstr "Compression TIFF"
 
@@ -1982,7 +1974,7 @@ msgstr "Compression TIFF"
 msgid "Uncompressed"
 msgstr "Non compressée"
 
-#: ui/settings_dialog.py:823
+#: ui/settings_dialog.py:852
 msgid "Use Tab to navigate image options."
 msgstr "Utilisez Tab pour naviguer entre les options image."
 
@@ -1990,22 +1982,22 @@ msgstr "Utilisez Tab pour naviguer entre les options image."
 msgid "WebP - Image"
 msgstr "WebP - Image"
 
-#: ui/main_window.py:1141
+#: ui/main_window.py:1160
 msgid ""
 "{audio_count} audio, {video_count} video, {image_count} image file(s) "
 "loaded."
 msgstr ""
 "{audio_count} audio, {video_count} vidéo, {image_count} image(s) chargé(es)."
 
-#: ui/main_window.py:1114
+#: ui/main_window.py:1133
 msgid "{tab} tab selected."
 msgstr "Onglet {tab} sélectionné."
 
-#: ui/main_window.py:1545
+#: ui/main_window.py:1564
 msgid "Error (file not found)"
 msgstr "Erreur (fichier introuvable)"
 
-#: core/conversion.py:364 core/merge.py:122
+#: core/conversion.py:400 core/merge.py:122
 msgid "File not found (it may have been moved or deleted): {name}"
 msgstr "Fichier introuvable (il a peut-être été déplacé ou supprimé) : {name}"
 
@@ -2049,11 +2041,11 @@ msgstr "La pochette n'est pas disponible pour cette cible / ce format."
 msgid "Cover image file"
 msgstr "Fichier image de pochette"
 
-#: ui/main_window.py:786
+#: ui/main_window.py:805
 msgid "Edit Metadata ({count} files)..."
 msgstr "Modifier les métadonnées ({count} fichiers)…"
 
-#: ui/main_window.py:788
+#: ui/main_window.py:807
 msgid "Edit Metadata..."
 msgstr "Modifier les métadonnées…"
 
@@ -2094,15 +2086,15 @@ msgstr "Conserver la pochette actuelle"
 msgid "Metadata"
 msgstr "Métadonnées"
 
-#: ui/main_window.py:987
+#: ui/main_window.py:1006
 msgid "Metadata rewrite finished with errors."
 msgstr "Réécriture des métadonnées terminée avec des erreurs."
 
-#: ui/main_window.py:989
+#: ui/main_window.py:1008
 msgid "Metadata rewritten on the original file(s)."
 msgstr "Métadonnées réécrites sur le(s) fichier(s) original(aux)."
 
-#: ui/main_window.py:941
+#: ui/main_window.py:960
 msgid "Metadata will be applied during conversion."
 msgstr "Les métadonnées seront appliquées lors de la conversion."
 
@@ -2122,11 +2114,11 @@ msgstr "Retirer la pochette"
 msgid "Replace with an image file..."
 msgstr "Remplacer par un fichier image…"
 
-#: ui/main_window.py:944
+#: ui/main_window.py:963
 msgid "Rewriting metadata..."
 msgstr "Réécriture des métadonnées…"
 
-#: ui/main_window.py:983
+#: ui/main_window.py:1002
 msgid "Some files could not be re-tagged:"
 msgstr "Certains fichiers n'ont pas pu être re-taggés :"
 
@@ -2320,6 +2312,39 @@ msgstr "Titre, sinon nom de fichier"
 #: ui/preferences_dialog.py:136
 msgid "Title, otherwise number"
 msgstr "Titre, sinon numéro"
+
+#: core/formatting.py:568
+msgid "ABR {bitrate}"
+msgstr "ABR {bitrate}"
+
+#: ui/settings_dialog.py:367
+msgid "Average Bitrate (ABR)"
+msgstr "Débit moyen (ABR)"
+
+#: ui/settings_dialog.py:571
+msgid "Bitrate used in CBR mode (target average in ABR)."
+msgstr "Débit utilisé en mode CBR (moyenne ciblée en ABR)."
+
+#: ui/settings_dialog.py:570
+msgid "Choose CBR, ABR (MP3 only) or VBR mode."
+msgstr "Choisir le mode CBR, ABR (MP3 uniquement) ou VBR."
+
+#: ui/main_window.py:658 ui/main_window.py:659
+msgid "No compatible media files found."
+msgstr "Aucun fichier multimédia compatible trouvé."
+
+#: core/conversion.py:606
+msgid ""
+"The converted file is unexpectedly short — the conversion likely failed."
+msgstr ""
+"Le fichier converti est anormalement court — la conversion a probablement "
+"échoué."
+
+#~ msgid "Choose CBR or VBR mode."
+#~ msgstr "Choisir un mode CBR ou VBR."
+
+#~ msgid "Bitrate used in CBR mode."
+#~ msgstr "Débit utilisé en mode CBR."
 
 #~ msgid "Your email"
 #~ msgstr "Votre email"

@@ -47,6 +47,12 @@ def main():
         frame.schedule_startup_update_check()
         frame.check_announcement_at_startup()
 
+        # Fichiers/dossiers passés en argument (menu contextuel « Convertir avec… »
+        # de l'explorateur). On les ajoute après l'affichage de la fenêtre.
+        cli_paths = [path for path in sys.argv[1:] if os.path.exists(path)]
+        if cli_paths:
+            wx.CallAfter(frame.add_external_paths, cli_paths)
+
         app.MainLoop()
 
     except Exception as e:

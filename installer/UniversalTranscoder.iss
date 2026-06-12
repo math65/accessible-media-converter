@@ -2,7 +2,7 @@
   #define AppName "Accessible Media Converter"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.11.0"
+  #define AppVersion "1.12.0"
 #endif
 #ifndef AppDistDirName
   #define AppDistDirName "AccessibleMediaConverter"
@@ -50,11 +50,25 @@ RestartApplications=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
+[CustomMessages]
+english.ConvertWithApp=Convert with Accessible Media Converter
+french.ConvertWithApp=Convertir avec Accessible Media Converter
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 Source: "..\dist\{#AppDistDirName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Registry]
+; Entrée « Convertir avec… » dans le menu contextuel de l'explorateur (fichiers et
+; dossiers). Lance l'exe avec le chemin sélectionné (%1). Nettoyé à la désinstallation.
+Root: HKCR; Subkey: "*\shell\AccessibleMediaConverter"; ValueType: string; ValueName: ""; ValueData: "{cm:ConvertWithApp}"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "*\shell\AccessibleMediaConverter"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#AppExeName}"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "*\shell\AccessibleMediaConverter\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\AccessibleMediaConverter"; ValueType: string; ValueName: ""; ValueData: "{cm:ConvertWithApp}"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\AccessibleMediaConverter"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#AppExeName}"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\AccessibleMediaConverter\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Flags: uninsdeletekey
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
