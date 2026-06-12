@@ -1,34 +1,55 @@
-"""Retour vocal optionnel via accessible_output2 (NVDA / JAWS / SAPI…).
+"""Retour vocal optionnel via un lecteur d'écran actif (NVDA, JAWS…).
 
-Sécurisé par conception : toute erreur d'initialisation ou de synthèse est
-avalée — le retour vocal ne doit jamais casser l'UI. L'instance Auto est créée
-paresseusement au premier appel et réutilisée ensuite.
+Conçu pour ne JAMAIS casser l'UI :
+- On n'utilise QUE des sorties lecteur d'écran à base de DLL. Toute sortie
+  passant par COM est exclue (SAPI, mais aussi JAWS et Window-Eyes) : le chemin
+  COM segfault sous Python 3.14 (crash natif non rattrapable). JAWS conserve la
+  lecture native du focus, simplement pas l'annonce explicite.
+- On ne parle que via un lecteur d'écran réellement ACTIF ; sinon, silence.
+- Toute erreur d'init/de synthèse est avalée.
 """
 
 import logging
 
-_speaker = None
-_init_failed = False
+# (module, classe) des sorties lecteur d'écran DLL (sans COM), par priorité.
+_SCREEN_READER_OUTPUTS = (
+    ('nvda', 'NVDA'),
+    ('system_access', 'SystemAccess'),
+    ('dolphin', 'Dolphin'),
+    ('pc_talker', 'PCTalker'),
+    ('zdsr', 'ZDSR'),
+)
+
+_speakers = None  # liste d'instances ; None tant que non initialisé
+
+
+def _ensure_speakers():
+    global _speakers
+    if _speakers is not None:
+        return
+    _speakers = []
+    for module_name, class_name in _SCREEN_READER_OUTPUTS:
+        try:
+            module = __import__(
+                'accessible_output2.outputs.' + module_name, fromlist=[class_name]
+            )
+            _speakers.append(getattr(module, class_name)())
+        except Exception:
+            logging.debug("Sortie vocale %s indisponible.", module_name, exc_info=True)
 
 
 def speak(message, interrupt=True):
-    """Annonce un message via le lecteur d'écran actif (SAPI en repli).
+    """Annonce un message via le premier lecteur d'écran actif.
 
-    No-op silencieux si accessible_output2 est indisponible ou si aucun moteur
-    ne répond. `interrupt=True` coupe l'annonce précédente (utile pour des
-    actions répétées rapidement, ex. réordonnancement)."""
-    global _speaker, _init_failed
-    if not message or _init_failed:
+    Silencieux si aucun lecteur d'écran n'est actif. `interrupt=True` coupe
+    l'annonce précédente (utile pour des actions répétées, ex. réordonnancement)."""
+    if not message:
         return
-    if _speaker is None:
+    _ensure_speakers()
+    for speaker in _speakers:
         try:
-            from accessible_output2.outputs.auto import Auto
-            _speaker = Auto()
+            if speaker.is_active():
+                speaker.speak(message, interrupt=interrupt)
+                return
         except Exception:
-            _init_failed = True
-            logging.debug("Retour vocal indisponible (accessible_output2).", exc_info=True)
-            return
-    try:
-        _speaker.speak(message, interrupt=interrupt)
-    except Exception:
-        logging.debug("Échec de la synthèse vocale.", exc_info=True)
+            logging.debug("Échec d'annonce via %s.", type(speaker).__name__, exc_info=True)
