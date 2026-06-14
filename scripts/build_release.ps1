@@ -75,9 +75,21 @@ Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffprobe.exe") -Label "FFpro
 
 Push-Location $ProjectRoot
 try {
+    # Dependencies are managed with uv. Sync the locked environment (runtime + dev
+    # group: PyInstaller, polib) so the build always runs against pyproject/uv.lock.
+    # --frozen fails instead of silently re-resolving, keeping release builds reproducible.
+    $uv = Get-Command uv -ErrorAction SilentlyContinue
+    if ($uv) {
+        Write-Host "Syncing dependencies with uv (locked, incl. dev group)..."
+        & $uv.Source sync --frozen
+        if ($LASTEXITCODE -ne 0) {
+            throw "uv sync failed. Run 'uv sync' manually, then re-run the build."
+        }
+    }
+
     & $PythonExe -c "import PyInstaller, polib"
     if ($LASTEXITCODE -ne 0) {
-        throw "Required build dependencies are missing. Install PyInstaller and polib in the virtual environment."
+        throw "Required build dependencies are missing. Run 'uv sync' to install them."
     }
 
     $metadataJson = & $PythonExe -c "import json; from core.app_info import APP_EXE_NAME, APP_EXECUTABLE_FILENAME, APP_ID, APP_INSTALLER_BASENAME, APP_INSTALLER_FILENAME, APP_INSTALL_DIRNAME, APP_NAME, APP_PUBLISHER, APP_VERSION, APP_VERSION_WIN; print(json.dumps({'APP_EXE_NAME': APP_EXE_NAME, 'APP_EXECUTABLE_FILENAME': APP_EXECUTABLE_FILENAME, 'APP_ID': APP_ID, 'APP_INSTALLER_BASENAME': APP_INSTALLER_BASENAME, 'APP_INSTALLER_FILENAME': APP_INSTALLER_FILENAME, 'APP_INSTALL_DIRNAME': APP_INSTALL_DIRNAME, 'APP_NAME': APP_NAME, 'APP_PUBLISHER': APP_PUBLISHER, 'APP_VERSION': APP_VERSION, 'APP_VERSION_WIN': APP_VERSION_WIN}))"
