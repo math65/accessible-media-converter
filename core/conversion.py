@@ -13,6 +13,7 @@ from core.ffmpeg_helpers import (
     apply_metadata_preservation,
     get_ffmpeg_path,
     get_ffprobe_path,
+    is_transport_stream,
     parse_ffmpeg_threads,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
@@ -74,17 +75,6 @@ def resolve_output_dir(input_path, custom_output_dir=None):
 def build_output_path(input_path, target_format, custom_output_dir=None):
     output_dir = resolve_output_dir(input_path, custom_output_dir=custom_output_dir)
     return os.path.join(output_dir, build_output_filename(input_path, target_format))
-
-
-# Conteneurs MPEG-TS (flux de diffusion / captures TV, caméscopes AVCHD).
-# Ces flux ont souvent des PTS manquants ou des DTS non-monotones ; `-fflags
-# +genpts` régénère les PTS manquants à l'entrée (correctif documenté FFmpeg),
-# ce qui fiabilise surtout les chemins `-c copy` vers MP4.
-TRANSPORT_STREAM_EXTENSIONS = {'.ts', '.m2ts', '.mts'}
-
-
-def _is_transport_stream(path):
-    return os.path.splitext(path or '')[1].lower() in TRANSPORT_STREAM_EXTENSIONS
 
 
 def _format_ffmpeg_time(ms):
@@ -479,7 +469,7 @@ class ConversionTask:
         cover_path = cover.get('path') if cover_replace else None
 
         cmd = [self.ffmpeg_exe, '-y']
-        if _is_transport_stream(self.input_path):
+        if is_transport_stream(self.input_path):
             # PTS manquants / DTS non-monotones fréquents sur les .ts broadcast.
             cmd.extend(['-fflags', '+genpts'])
         clip_start_ms = clip_end_ms = None

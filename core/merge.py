@@ -12,6 +12,7 @@ from core.ffmpeg_helpers import (
     apply_common_audio_options,
     apply_metadata_preservation,
     get_ffmpeg_path,
+    is_transport_stream,
     parse_ffmpeg_threads,
 )
 from core.formatting import get_effective_audio_codec
@@ -135,7 +136,11 @@ class MergeTask:
                     path = meta.full_path.replace('\\', '/').replace("'", "\\'")
                     f.write(f"file '{path}'\n")
 
-            cmd = [self.ffmpeg_exe, '-y', '-f', 'concat', '-safe', '0', '-i', list_path]
+            cmd = [self.ffmpeg_exe, '-y']
+            if any(is_transport_stream(meta.full_path) for meta in self.input_list):
+                # PTS manquants / DTS non-monotones fréquents sur les .ts broadcast.
+                cmd.extend(['-fflags', '+genpts'])
+            cmd.extend(['-f', 'concat', '-safe', '0', '-i', list_path])
 
             if is_m4b:
                 # Chapitres : un [CHAPTER] par fichier fusionné, passé en 2e entrée.

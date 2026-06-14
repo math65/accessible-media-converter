@@ -14,6 +14,17 @@ COVER_ART_AUDIO_OUTPUTS = ('mp3', 'aac', 'm4b', 'alac', 'flac')
 
 _WAV_DEPTH_TO_CODEC = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
 
+# Conteneurs MPEG-TS (flux de diffusion / captures TV, caméscopes AVCHD). Ces
+# flux ont souvent des PTS manquants ou des DTS non-monotones ; `-fflags +genpts`
+# régénère les PTS manquants à l'entrée (correctif documenté FFmpeg), ce qui
+# fiabilise surtout les chemins `-c copy` vers MP4.
+TRANSPORT_STREAM_EXTENSIONS = {'.ts', '.m2ts', '.mts'}
+
+
+def is_transport_stream(path):
+    """True si le chemin pointe vers un conteneur MPEG-TS (par extension)."""
+    return os.path.splitext(path or '')[1].lower() in TRANSPORT_STREAM_EXTENSIONS
+
 
 def _bin_path(executable):
     if getattr(sys, 'frozen', False):
