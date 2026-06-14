@@ -76,6 +76,17 @@ def build_output_path(input_path, target_format, custom_output_dir=None):
     return os.path.join(output_dir, build_output_filename(input_path, target_format))
 
 
+# Conteneurs MPEG-TS (flux de diffusion / captures TV, caméscopes AVCHD).
+# Ces flux ont souvent des PTS manquants ou des DTS non-monotones ; `-fflags
+# +genpts` régénère les PTS manquants à l'entrée (correctif documenté FFmpeg),
+# ce qui fiabilise surtout les chemins `-c copy` vers MP4.
+TRANSPORT_STREAM_EXTENSIONS = {'.ts', '.m2ts', '.mts'}
+
+
+def _is_transport_stream(path):
+    return os.path.splitext(path or '')[1].lower() in TRANSPORT_STREAM_EXTENSIONS
+
+
 def _format_ffmpeg_time(ms):
     """Millisecondes → 'HH:MM:SS.mmm' accepté par ffmpeg (-ss/-t)."""
     total_seconds = max(0, ms) / 1000.0
@@ -468,6 +479,9 @@ class ConversionTask:
         cover_path = cover.get('path') if cover_replace else None
 
         cmd = [self.ffmpeg_exe, '-y']
+        if _is_transport_stream(self.input_path):
+            # PTS manquants / DTS non-monotones fréquents sur les .ts broadcast.
+            cmd.extend(['-fflags', '+genpts'])
         clip_start_ms = clip_end_ms = None
         if self.clip:
             clip_start_ms, clip_end_ms = self.clip
