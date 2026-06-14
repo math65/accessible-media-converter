@@ -8,8 +8,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running and building
 
+Dependencies are managed with **uv** (`pyproject.toml` + `uv.lock`). The `dev`
+dependency group holds the packaging tools (`pyinstaller`, `polib`); runtime deps
+are `wxPython` and `accessible_output2`.
+
+**Set up / refresh the environment:**
+```powershell
+uv sync          # creates .venv and installs runtime + dev deps from the lock
+```
+`uv sync` keeps the venv at `.venv`, so the `.venv\Scripts\python.exe` convention
+below (and in `scripts/build_release.ps1`) still works unchanged. To bump a pinned
+dep deliberately: `uv lock --upgrade-package wxPython` then re-test (NVDA).
+
 **Run from source:**
 ```powershell
+uv run main.py
+# or, equivalently:
 .venv\Scripts\python.exe main.py
 ```
 

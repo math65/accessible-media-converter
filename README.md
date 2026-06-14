@@ -54,31 +54,30 @@ Current output formats:
 - Python `3.14` recommended for source development
 - `FFmpeg` and `ffprobe` binaries available in `bin/`
 
-Python dependency declared in the repository:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and declared in
+`pyproject.toml` (locked in `uv.lock`):
 
-- `wxPython>=4.2.1`
-
-Additional tools used for development and packaging:
-
-- `polib`
-- `PyInstaller`
-- `Inno Setup 6`
+- Runtime: `wxPython>=4.2.1`, `accessible_output2>=0.17`
+- Development / packaging (`dev` group): `polib`, `PyInstaller`
+- Plus `Inno Setup 6` (external, for the installer)
 
 ## Run from source
 
-1. Create and activate a virtual environment.
-2. Install dependencies:
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/).
+2. Create the virtual environment and install all dependencies (runtime + dev):
 
 ```powershell
-pip install -r requirements.txt
-pip install pyinstaller polib
+uv sync
 ```
+
+   `uv sync` creates `.venv` from `pyproject.toml`/`uv.lock` and installs the
+   pinned versions. Use `uv sync --no-dev` to skip the packaging tools.
 
 3. Place `ffmpeg.exe` and `ffprobe.exe` in the `bin/` folder.
 4. Launch the application:
 
 ```powershell
-python main.py
+uv run main.py
 ```
 
 ## Build a release
