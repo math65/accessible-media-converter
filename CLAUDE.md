@@ -77,7 +77,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 - **`ui/`** — wxPython UI. `ui/main_window.py` is the central orchestrator (large file by design). It handles file input, probing, dialog management, batch initiation, progress, and session restore. Separate dialog files for settings, preferences, track manager, support, and update.
 - **`scripts/`** — PowerShell release tooling and Python i18n tooling.
 - **`locales/`** — Gettext catalogs. English is the source language; French (`locales/fr/`) is the only shipped translation.
-- **`docs/`** — User-facing HTML docs (`docs/en/`, `docs/fr/`). `docs/codex-context.md` is the canonical AI agent handoff document (French, updated manually at each milestone).
+- **`docs/`** — User-facing HTML docs (`docs/en/`, `docs/fr/`), bundled into the app by PyInstaller. AI agent handoff/context lives in this `CLAUDE.md` plus the auto-memory, not in a separate doc.
 
 ### Support / feedback backend
 
