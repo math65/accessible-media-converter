@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.13.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.14.0`.
 
 ## Running and building
 
@@ -155,6 +155,18 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **v1.14.0 (MPEG-TS input)** — Accept the transport-stream family `.ts` / `.m2ts` / `.mts`
+  as input (tester Sèb request). Added to `SUPPORTED_MEDIA_EXTENSIONS` (`ui/main_window.py`,
+  the single source feeding the file dialog, drag-drop, paste, and the Explorer verb); audio/
+  video routing is automatic via the prober's stream inspection, no per-extension code.
+  Broadcast/TV captures often have missing PTS or non-monotonous DTS, so `-fflags +genpts` is
+  injected **before** `-i` for TS-family inputs — in `ConversionTask` (single-file) and
+  `MergeTask` (concat). The `-c copy` paths to MP4 need no manual bitstream filter: modern
+  FFmpeg auto-inserts `aac_adtstoasc` / `h264_mp4toannexb` (autobsf). Shared helper
+  `is_transport_stream` / `TRANSPORT_STREAM_EXTENSIONS` lives in `core/ffmpeg_helpers.py`.
+  Docs updated (EN/FR getting-started). **Dependency management migrated to uv** this cycle
+  (`pyproject.toml` + `uv.lock`, `.python-version` = 3.14; `requirements.txt` removed;
+  `build_release.ps1` runs `uv sync --frozen`). Removed the stale `docs/codex-context.md`.
 - **v1.13.0 (cue sheets — album splitting)** — First **1 input → N outputs** path. A `.cue`
   (or a FLAC with an embedded cue, opt-in) carries `meta.cue_sheet` (a `core/cue.py` `CueSheet`);
   `BatchConversionManager._prepare_jobs` expands it into one job per track via `_append_cue_jobs`,
