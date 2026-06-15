@@ -20,6 +20,7 @@ log = logging.getLogger("amc.announce")
 
 CHECK_URL = "https://mathieumartin.ovh/api/announce/check"
 ACK_URL = "https://mathieumartin.ovh/api/announce/ack"
+CLICK_URL = "https://mathieumartin.ovh/api/announce/click"
 
 
 def _post(url, payload, timeout):
@@ -63,5 +64,16 @@ def ack_announcement(install_id, ann_id):
             _post(ACK_URL, {"app": _APP_ID, "install_id": install_id, "id": ann_id}, timeout=8)
         except Exception as exc:
             log.debug("Accuse annonce impossible : %s", exc)
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def click_announcement(install_id, ann_id):
+    """Enregistre un clic sur le bouton lien de l'annonce (fire-and-forget)."""
+    def _run():
+        try:
+            _post(CLICK_URL, {"app": _APP_ID, "install_id": install_id, "id": ann_id}, timeout=8)
+        except Exception as exc:
+            log.debug("Clic annonce impossible : %s", exc)
 
     threading.Thread(target=_run, daemon=True).start()

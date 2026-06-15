@@ -53,6 +53,7 @@ from core.updater import (
 )
 from core.metadata_edit import has_metadata_overrides, overrides_with_detected_numbers
 from core.metadata_retag import MetadataRetagTask
+from ui.announcement_dialog import AnnouncementDialog
 from ui.metadata_editor import MetadataEditorDialog
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
@@ -529,27 +530,49 @@ class MainWindow(wx.Frame):
         )
 
     def _on_announcement_received(self, ann):
-        if not ann:
-            return
-        title = ann.get("title") or _(APP_NAME)
-        body = ann.get("body") or ""
-        ann_id = ann.get("id") or ""
-        mode = ann.get("mode") or "every"
+        # La vérif MAJ est enchaînée à la fin (finally) pour ne jamais empiler
+        # deux modales au démarrage : l'annonce d'abord, l'UpdateDialog ensuite.
+        try:
+            if not ann:
+                return
+            title = ann.get("title") or _(APP_NAME)
+            body = ann.get("body") or ""
+            ann_id = ann.get("id") or ""
+            mode = ann.get("mode") or "every"
 
-        seen = self.settings_store.get("seen_announcements", [])
-        if mode == "once" and ann_id in seen:
-            return
+            seen = self.settings_store.get("seen_announcements", [])
+            if mode == "once" and ann_id in seen:
+                return
 
-        icon = wx.ICON_WARNING if ann.get("style") == "warning" else wx.ICON_INFORMATION
-        wx.MessageBox(body, title, wx.OK | icon, self)
+            # /announce/check renvoie le lien comme objet imbriqué {label, url}
+            # (déjà localisé par le backend), ou null.
+            link = ann.get("link") or {}
+            link_url = link.get("url") or ""
+            if link_url:
+                install_id = self.settings_store.get("install_id", "")
+                dlg = AnnouncementDialog(
+                    self,
+                    title=title,
+                    body=body,
+                    link_label=link.get("label") or "",
+                    link_url=link_url,
+                    on_link=(lambda: announce.click_announcement(install_id, ann_id)) if ann_id else None,
+                )
+                dlg.ShowModal()
+                dlg.Destroy()
+            else:
+                icon = wx.ICON_WARNING if ann.get("style") == "warning" else wx.ICON_INFORMATION
+                wx.MessageBox(body, title, wx.OK | icon, self)
 
-        if mode == "once" and ann_id:
-            seen = self.settings_store.setdefault("seen_announcements", [])
-            if ann_id not in seen:
-                seen.append(ann_id)
-                self._save_config()
-        if ann_id:
-            announce.ack_announcement(self.settings_store.get("install_id", ""), ann_id)
+            if mode == "once" and ann_id:
+                seen = self.settings_store.setdefault("seen_announcements", [])
+                if ann_id not in seen:
+                    seen.append(ann_id)
+                    self._save_config()
+            if ann_id:
+                announce.ack_announcement(self.settings_store.get("install_id", ""), ann_id)
+        finally:
+            self.schedule_startup_update_check()
 
     def _start_update_check(self, interactive):
         if self._update_check_in_progress:

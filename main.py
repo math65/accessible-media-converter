@@ -58,7 +58,8 @@ def main():
         from ui.main_window import MainWindow
         frame = MainWindow()
         frame.Show()
-        frame.schedule_startup_update_check()
+        # L'annonce d'abord ; la vérif MAJ est enchaînée à la fin de son
+        # traitement (voir _on_announcement_received) pour éviter deux modales.
         frame.check_announcement_at_startup()
         frame.start_external_paths_watcher()
 
