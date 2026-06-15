@@ -63,6 +63,7 @@ from ui.update_dialog import UpdateDialog
 
 SUPPORTED_MEDIA_EXTENSIONS = {
     '.mp3',
+    '.mp2',
     '.wav',
     '.flac',
     '.aac',
