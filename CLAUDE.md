@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.14.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.15.0`.
 
 ## Running and building
 
@@ -155,7 +155,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
-- **Unreleased (post-v1.14.0) — input format expansion.** Broadened accepted **input**
+- **v1.15.0 (input format expansion) — published 2026-06-16, tag `v1.15.0`.** Broadened accepted **input**
   formats (tester Sèb request, started with `.mp2`, follow-up to the v1.14.0 MPEG-TS work).
   All additions verified decodable by the bundled FFmpeg before wiring.
   - **Audio**: `.mp2`, `.opus`, `.aiff`/`.aif`, `.ac3`, `.eac3`, `.dts`, `.mka`, `.amr`.
@@ -173,7 +173,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   audience (MP3/AAC/M4B beat them everywhere); only broadcast/legacy niches need them. If MP2
   output is ever needed, the bundled FFmpeg has the native `mp2` encoder (`-c:a mp2`, CBR);
   `libtwolame` is not in the build.
-- **Unreleased (post-v1.14.0) — interactive announcements + startup modal sequencing.**
+- **v1.15.0 (interactive announcements + startup modal sequencing).**
   Brings the announcement client to parity with Markdown Access / DownAccess; **no server
   change** (the backend already returned `link` and exposed `/api/announce/click`).
   **(1) Clickable links**: `core/announce.py` gains `CLICK_URL` + `click_announcement()`
