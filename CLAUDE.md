@@ -155,6 +155,24 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **Unreleased (post-v1.14.0) — interactive announcements + startup modal sequencing.**
+  Brings the announcement client to parity with Markdown Access / DownAccess; **no server
+  change** (the backend already returned `link` and exposed `/api/announce/click`).
+  **(1) Clickable links**: `core/announce.py` gains `CLICK_URL` + `click_announcement()`
+  (fire-and-forget, mirrors `ack_announcement`). New `ui/announcement_dialog.py`
+  (`AnnouncementDialog`) — accessible dialog (body in a read-only `wx.TextCtrl`, NVDA-read,
+  focus on it; "Open link" button triggers `/click` then `webbrowser.open`; affirmative
+  "Close"). `ui/main_window.py._on_announcement_received` now reads the nested
+  `link: {label, url}` object: if `link.url` is present it shows `AnnouncementDialog` (with
+  `on_link` → `click_announcement`), otherwise the existing `wx.MessageBox`. The `link` field
+  was previously **ignored entirely**. Dedup (`mode: once` / `seen_announcements`), `install_id`
+  and `ack` are unchanged. **(2) Modal sequencing**: the startup update check no longer races the
+  announcement. `frame.schedule_startup_update_check()` was **removed from `main.py`** and is now
+  chained in a `finally` inside `_on_announcement_received`, so the update check always fires —
+  whether an announcement was shown, already seen, or absent — but **never before** the
+  announcement modal closes (no two stacked modals). `schedule_startup_update_check()` itself
+  (its `check_updates_on_startup` gate and `wx.CallLater(1200)`) is unchanged. i18n: "Announcement"
+  / "Open link" added and translated to French.
 - **v1.14.0 (MPEG-TS input)** — Accept the transport-stream family `.ts` / `.m2ts` / `.mts`
   as input (tester Sèb request). Added to `SUPPORTED_MEDIA_EXTENSIONS` (`ui/main_window.py`,
   the single source feeding the file dialog, drag-drop, paste, and the Explorer verb); audio/
