@@ -155,13 +155,23 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
-- **Unreleased (post-v1.14.0) — MP2 audio input.** Accept `.mp2` (MPEG-1 Audio Layer II,
-  the audio codec of SD DVB/DAB broadcast) as input (tester Sèb request, follow-up to the
-  v1.14.0 MPEG-TS work). One line in `SUPPORTED_MEDIA_EXTENSIONS` (`ui/main_window.py`);
-  audio routing is automatic via the prober's stream inspection, no per-extension code.
-  Getting-started docs (EN/FR) updated. **MP2 output was deliberately not added** — no value
-  for the app's audience (MP3/AAC/M4B beat it everywhere); only the broadcast/legacy niche
-  needs it. If ever needed, the bundled FFmpeg has the native `mp2` encoder (`-c:a mp2`, CBR);
+- **Unreleased (post-v1.14.0) — input format expansion.** Broadened accepted **input**
+  formats (tester Sèb request, started with `.mp2`, follow-up to the v1.14.0 MPEG-TS work).
+  All additions verified decodable by the bundled FFmpeg before wiring.
+  - **Audio**: `.mp2`, `.opus`, `.aiff`/`.aif`, `.ac3`, `.eac3`, `.dts`, `.mka`, `.amr`.
+  - **Video**: `.mpg`/`.mpeg`, `.vob`, `.m4v`, `.3gp`/`.3g2`, `.flv`, `.ogv`.
+  - **Image**: `.heic`/`.heif` (iPhone photos). HEIC is demuxed via the **mov family**
+    (`mov,mp4,m4a,3gp,3g2,mj2`), carrying two HEVC image items (main + thumbnail); FFmpeg's
+    default stream selection picks the full-res main image, so the existing
+    `_build_image_command` path (`-i in … -an out`) converts it correctly with no special
+    mapping. **Important**: image inputs are not routed by stream inspection like audio/video —
+    they must also be added to `IMAGE_EXTENSIONS` in `core/probe.py._detect_image` (HEIC's
+    container format name is not a `*_pipe`, so extension match is the reliable trigger).
+  Audio/video additions are just one line each in `SUPPORTED_MEDIA_EXTENSIONS`
+  (`ui/main_window.py`) — routing is automatic via the prober. Getting-started docs (EN/FR)
+  updated. **MP2/AC3/DTS etc. output was deliberately not added** — no value for the app's
+  audience (MP3/AAC/M4B beat them everywhere); only broadcast/legacy niches need them. If MP2
+  output is ever needed, the bundled FFmpeg has the native `mp2` encoder (`-c:a mp2`, CBR);
   `libtwolame` is not in the build.
 - **Unreleased (post-v1.14.0) — interactive announcements + startup modal sequencing.**
   Brings the announcement client to parity with Markdown Access / DownAccess; **no server

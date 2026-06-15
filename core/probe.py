@@ -279,7 +279,7 @@ class FileProber:
             meta.embedded_chapters = chapters
 
     def _detect_image(self, meta, fmt_data):
-        IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.avif', '.tiff', '.tif', '.bmp'}
+        IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.avif', '.tiff', '.tif', '.bmp', '.heic', '.heif'}
         IMAGE_FORMAT_NAMES = {'image2', 'jpeg_pipe', 'png_pipe', 'webp_pipe', 'bmp_pipe', 'tiff_pipe', 'avif'}
         ext = os.path.splitext(meta.filename)[1].lower()
         if ext in IMAGE_EXTENSIONS:
