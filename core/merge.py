@@ -133,7 +133,10 @@ class MergeTask:
         try:
             with os.fdopen(list_fd, 'w', encoding='utf-8') as f:
                 for meta in self.input_list:
-                    path = meta.full_path.replace('\\', '/').replace("'", "\\'")
+                    # FFmpeg n'interprète aucun backslash dans une simple quote :
+                    # une apostrophe se ferme via l'idiome '\'' (fermer, ' échappée,
+                    # rouvrir). Ex. O'Brien.mp3 -> file 'O'\''Brien.mp3'.
+                    path = meta.full_path.replace('\\', '/').replace("'", "'\\''")
                     f.write(f"file '{path}'\n")
 
             cmd = [self.ffmpeg_exe, '-y']

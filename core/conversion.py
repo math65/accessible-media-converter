@@ -349,8 +349,12 @@ class ConversionTask:
                 quality = max(0, min(100, int(self.settings.get('image_quality', 80))))
                 cmd.extend(['-c:v', 'libwebp', '-quality', str(quality)])
         elif fmt == 'tiff':
-            valid_tiff = ('lzw', 'deflate', 'packbits', 'none')
+            # Le jeton « non compressé » de l'encodeur TIFF FFmpeg est 'raw', pas
+            # 'none' (qui est rejeté au parsing de -compression_algo).
+            valid_tiff = ('lzw', 'deflate', 'packbits', 'raw')
             compression = str(self.settings.get('image_compression', 'lzw')).lower()
+            if compression == 'none':
+                compression = 'raw'
             if compression not in valid_tiff:
                 compression = 'lzw'
             cmd.extend(['-compression_algo', compression])

@@ -805,7 +805,8 @@ class SettingsDialog(wx.Dialog):
         if fmt == 'tiff':
             self.lbl_tiff_compression = wx.StaticText(self.panel_image_opts, label=_("Compression:"))
             tiff_choices = ["LZW", "Deflate", "PackBits", _("None")]
-            self.tiff_compression_keys = ["lzw", "deflate", "packbits", "none"]
+            # 'raw' = jeton FFmpeg « non compressé » (affiché « None » côté UI).
+            self.tiff_compression_keys = ["lzw", "deflate", "packbits", "raw"]
             self.combo_tiff_compression = wx.Choice(self.panel_image_opts, choices=tiff_choices)
             self.image_grid.Add(self.lbl_tiff_compression, 0, wx.ALIGN_CENTER_VERTICAL)
             self.image_grid.Add(self.combo_tiff_compression, 0, wx.EXPAND)

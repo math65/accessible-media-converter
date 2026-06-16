@@ -351,7 +351,9 @@ def normalize_format_settings(format_key, settings):
             normalized["image_lossless"] = bool(normalized.get("image_lossless", False))
         if format_key == "tiff":
             comp = str(normalized.get("image_compression", "lzw")).lower()
-            if comp not in ("lzw", "deflate", "packbits", "none"):
+            if comp == "none":  # ancien réglage : le jeton FFmpeg non compressé est 'raw'
+                comp = "raw"
+            if comp not in ("lzw", "deflate", "packbits", "raw"):
                 comp = "lzw"
             normalized["image_compression"] = comp
         if normalized.get("image_resize", "original") not in [k for k, _ in IMAGE_RESIZE_OPTIONS]:
