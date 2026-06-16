@@ -45,6 +45,10 @@ class MediaMetadata:
     def __init__(self, path):
         self.full_path = path
         self.filename = os.path.basename(path)
+        # Sous-dossier relatif à la racine ajoutée (vide si fichier ajouté seul).
+        # Sert à recréer l'arborescence d'origine sous un dossier de sortie
+        # personnalisé quand la préférence preserve_folder_structure est active.
+        self.relative_dir = ""
         self.duration = 0
         self.size_bytes = 0
         self.video_tracks = []

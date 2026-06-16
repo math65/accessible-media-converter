@@ -72,8 +72,12 @@ def resolve_output_dir(input_path, custom_output_dir=None):
     return os.path.dirname(input_path) or os.getcwd()
 
 
-def build_output_path(input_path, target_format, custom_output_dir=None):
+def build_output_path(input_path, target_format, custom_output_dir=None, relative_dir=""):
     output_dir = resolve_output_dir(input_path, custom_output_dir=custom_output_dir)
+    # Recrée l'arborescence d'origine uniquement vers un dossier de sortie
+    # personnalisé ; en mode « source » la structure est déjà préservée.
+    if relative_dir and custom_output_dir and os.path.isdir(custom_output_dir):
+        output_dir = os.path.join(output_dir, relative_dir)
     return os.path.join(output_dir, build_output_filename(input_path, target_format))
 
 
@@ -93,9 +97,11 @@ def sanitize_filename(name):
 
 
 def build_cue_track_output_path(image_path, album, number, total, title, target_format,
-                                custom_output_dir=None):
+                                custom_output_dir=None, relative_dir=""):
     """Chemin d'une piste découpée : <dossier>/<album>/NN - Titre.ext."""
     base_dir = resolve_output_dir(image_path, custom_output_dir=custom_output_dir)
+    if relative_dir and custom_output_dir and os.path.isdir(custom_output_dir):
+        base_dir = os.path.join(base_dir, relative_dir)
     album_dir = os.path.join(base_dir, sanitize_filename(album) if album else "Album")
     width = max(2, len(str(total)))
     extension = get_output_extension(target_format)

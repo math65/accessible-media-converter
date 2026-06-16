@@ -36,6 +36,7 @@ class PreferencesDialog(wx.Dialog):
         self.continue_on_error = bool(self.settings.get('continue_on_error', True))
         self.check_updates_on_startup = bool(self.settings.get('check_updates_on_startup', True))
         self.preserve_metadata = bool(self.settings.get('preserve_metadata', False))
+        self.preserve_folder_structure = bool(self.settings.get('preserve_folder_structure', False))
         self.m4b_chapter_naming = self.settings.get('m4b_chapter_naming', DEFAULT_M4B_CHAPTER_NAMING)
         if self.m4b_chapter_naming not in M4B_CHAPTER_NAMING_MODES:
             self.m4b_chapter_naming = DEFAULT_M4B_CHAPTER_NAMING
@@ -126,6 +127,17 @@ class PreferencesDialog(wx.Dialog):
             _("Keep tags, chapters and embedded cover art from the source file when possible.")
         )
         output_sizer.Add(self.chk_preserve_metadata, 0, wx.ALL, 5)
+
+        self.chk_preserve_folder_structure = wx.CheckBox(
+            panel,
+            label=_("Preserve original subfolder structure"),
+        )
+        self.chk_preserve_folder_structure.SetName(_("Preserve original subfolder structure"))
+        self.chk_preserve_folder_structure.SetToolTip(
+            _("When converting to a specific folder, recreate the subfolders of the added "
+              "folders under the destination instead of placing all files together.")
+        )
+        output_sizer.Add(self.chk_preserve_folder_structure, 0, wx.ALL, 5)
 
         chapter_naming_row = wx.BoxSizer(wx.HORIZONTAL)
         lbl_chapter_naming = wx.StaticText(panel, label=_("M4B chapter naming"))
@@ -234,6 +246,7 @@ class PreferencesDialog(wx.Dialog):
         self.chk_continue_on_error.SetValue(self.continue_on_error)
         self.chk_check_updates_on_startup.SetValue(self.check_updates_on_startup)
         self.chk_preserve_metadata.SetValue(self.preserve_metadata)
+        self.chk_preserve_folder_structure.SetValue(self.preserve_folder_structure)
         self._update_controls()
 
     def _init_existing_output_policy(self):
@@ -318,6 +331,7 @@ class PreferencesDialog(wx.Dialog):
             'continue_on_error': self.chk_continue_on_error.GetValue(),
             'check_updates_on_startup': self.chk_check_updates_on_startup.GetValue(),
             'preserve_metadata': self.chk_preserve_metadata.GetValue(),
+            'preserve_folder_structure': self.chk_preserve_folder_structure.GetValue(),
             'm4b_chapter_naming': self.m4b_chapter_naming_modes[
                 self.choice_m4b_chapter_naming.GetSelection()
             ],

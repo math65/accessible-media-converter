@@ -57,6 +57,7 @@ class BatchConversionManager:
         max_concurrent=2,
         output_policy="rename",
         continue_on_error=True,
+        preserve_structure=False,
         on_job_update=None,
         on_batch_update=None,
         on_batch_complete=None,
@@ -68,6 +69,7 @@ class BatchConversionManager:
         self.max_concurrent = max(1, int(max_concurrent))
         self.output_policy = output_policy
         self.continue_on_error = bool(continue_on_error)
+        self.preserve_structure = bool(preserve_structure)
         self.on_job_update = on_job_update
         self.on_batch_update = on_batch_update
         self.on_batch_complete = on_batch_complete
@@ -110,7 +112,10 @@ class BatchConversionManager:
 
     def _append_normal_job(self, jobs, meta, reserved_paths):
         target_format, job_settings = self._resolve_job_format_settings(meta)
-        base_output_path = build_output_path(meta.full_path, target_format, custom_output_dir=self.output_dir)
+        base_output_path = build_output_path(
+            meta.full_path, target_format, custom_output_dir=self.output_dir,
+            relative_dir=self._meta_relative_dir(meta),
+        )
         resolved_output_path, skip_reason = self._reserve_output_path(
             base_output_path,
             reserved_paths,
@@ -151,6 +156,7 @@ class BatchConversionManager:
             base_output_path = build_cue_track_output_path(
                 audio_path, sheet.album, track.number, total, track.title,
                 target_format, custom_output_dir=self.output_dir,
+                relative_dir=self._meta_relative_dir(meta),
             )
             resolved_output_path, skip_reason = self._reserve_output_path(
                 base_output_path, reserved_paths, audio_path,
@@ -190,6 +196,13 @@ class BatchConversionManager:
         if sheet.genre:
             tags['genre'] = sheet.genre
         return tags
+
+    def _meta_relative_dir(self, meta):
+        """Sous-dossier relatif à recréer sous la sortie, seulement si la
+        préférence est active (sinon sortie à plat, comportement historique)."""
+        if not self.preserve_structure:
+            return ""
+        return getattr(meta, 'relative_dir', '') or ""
 
     def _resolve_job_format_settings(self, meta):
         """Retourne (format, settings) pour ce fichier : son override de sortie

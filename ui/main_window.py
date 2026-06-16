@@ -852,6 +852,9 @@ class MainWindow(wx.Frame):
             wx.TheClipboard.Close()
 
     def _collect_media_paths(self, input_paths):
+        # Renvoie des tuples (chemin, relative_dir). relative_dir est le sous-dossier
+        # du fichier relatif à la racine ajoutée (vide pour un fichier ajouté seul) ;
+        # il sert à recréer l'arborescence d'origine sous un dossier de sortie.
         media_paths = []
         seen = set()
 
@@ -867,7 +870,7 @@ class MainWindow(wx.Frame):
 
                 if os.path.isfile(normalized):
                     if self._is_supported_media_file(normalized) and normalized not in seen:
-                        media_paths.append(normalized)
+                        media_paths.append((normalized, ""))
                         seen.add(normalized)
                     continue
 
@@ -876,7 +879,10 @@ class MainWindow(wx.Frame):
                         for filename in files:
                             candidate = os.path.join(root, filename)
                             if self._is_supported_media_file(candidate) and candidate not in seen:
-                                media_paths.append(candidate)
+                                relative_dir = os.path.relpath(root, normalized)
+                                if relative_dir == os.curdir:
+                                    relative_dir = ""
+                                media_paths.append((candidate, relative_dir))
                                 seen.add(candidate)
         finally:
             wx.EndBusyCursor()
@@ -1373,12 +1379,14 @@ class MainWindow(wx.Frame):
         wx.BeginBusyCursor()
         added_count = 0
         first_added_target = None
-        for path in paths:
+        for entry in paths:
+            path, relative_dir = entry if isinstance(entry, tuple) else (entry, "")
             if not self._is_supported_media_file(path):
                 logging.info("Unsupported file skipped during import: %s", path)
                 continue
             meta = self.prober.analyze(path)
-            meta.track_settings = None 
+            meta.track_settings = None
+            meta.relative_dir = relative_dir
             index = self._append_media_metadata(meta)
             if first_added_target is None:
                 if meta.is_image:
@@ -1740,6 +1748,7 @@ class MainWindow(wx.Frame):
             max_concurrent=self.settings_store.get('max_concurrent_jobs', 2),
             output_policy=self.settings_store.get('existing_output_policy', 'rename'),
             continue_on_error=self.settings_store.get('continue_on_error', True),
+            preserve_structure=self.settings_store.get('preserve_folder_structure', False),
             on_job_update=lambda payload: wx.CallAfter(self._on_batch_job_update, payload),
             on_batch_update=lambda payload: wx.CallAfter(self._on_batch_progress_update, payload),
             on_batch_complete=lambda payload: wx.CallAfter(self._on_batch_complete, payload),

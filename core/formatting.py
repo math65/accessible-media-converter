@@ -196,6 +196,7 @@ APP_DEFAULT_SETTINGS = {
     "support_user_email": "",
     "existing_output_policy": "rename",
     "open_output_folder_after_batch": False,
+    "preserve_folder_structure": False,
     "max_concurrent_jobs": DEFAULT_CONCURRENT_JOBS,
     "ffmpeg_threads": DEFAULT_FFMPEG_THREADS,
     "continue_on_error": True,
@@ -397,6 +398,9 @@ def normalize_settings_store(settings_store):
     )
     normalized["preserve_metadata"] = bool(
         normalized.get("preserve_metadata", APP_DEFAULT_SETTINGS["preserve_metadata"])
+    )
+    normalized["preserve_folder_structure"] = bool(
+        normalized.get("preserve_folder_structure", APP_DEFAULT_SETTINGS["preserve_folder_structure"])
     )
     if normalized.get("m4b_chapter_naming") not in M4B_CHAPTER_NAMING_MODES:
         normalized["m4b_chapter_naming"] = DEFAULT_M4B_CHAPTER_NAMING
