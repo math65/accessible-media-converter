@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.15.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.16.0`.
 
 ## Running and building
 
@@ -154,6 +154,28 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.16.0 (preserve subfolder structure + 2 FFmpeg fixes) — published 2026-06-16, tag `v1.16.0`.**
+  - **Feature (opt-in, off by default): preserve the original subfolder structure on output.** New
+    Preferences checkbox `preserve_folder_structure`. When adding a folder that contains subfolders and
+    converting to a **custom** output folder (modes `custom`/`ask`), the subfolder tree is recreated under
+    the destination instead of flattening. No effect in `source` mode (already preserved) or on merge.
+    Tester Sèb request. Plumbing: `core/probe.py` `MediaMetadata.relative_dir` (relpath vs the added root,
+    "" for files added directly); `ui/main_window._collect_media_paths` now returns `(path, relative_dir)`
+    tuples and `_process_added_files` sets it on meta; `build_output_path`/`build_cue_track_output_path`
+    (`core/conversion.py`) take `relative_dir`, joined under the base dir only when a valid custom dir is in
+    effect; `BatchConversionManager(preserve_structure=...)` (`core/batch_manager.py`) gates it via
+    `_meta_relative_dir`, wired from `on_convert`. Subdirs auto-created by the existing `os.makedirs` in
+    `ConversionTask.run`. i18n FR + EN/FR preferences docs.
+  - **2 FFmpeg command bugs found by a full command audit and fixed** (commit `9c37209`; the audit verified
+    all 40 command fragments against official docs — see [[reference_ffmpeg_command_audit]] in auto-memory):
+    (1) **concat list apostrophe escaping** (`core/merge.py`) — the concat demuxer treats a single-quoted
+    path as fully literal, so backslash-escaping did nothing; files like `O'Brien.mp3` broke the merge. Now
+    uses the canonical `'\''` idiom. (2) **TIFF "uncompressed" emitted an invalid token** — FFmpeg's tiff
+    encoder `-compression_algo` has no `none`; the uncompressed token is `raw`. Internal key changed `none`→
+    `raw` in `core/conversion.py`, `core/formatting.py`, `ui/settings_dialog.py` (UI label "None" unchanged),
+    with legacy `none`→`raw` migration in the normalizer.
+  - **Embedded FFmpeg** bumped to `2026-06-15-git-44d082edc8`.
 
 - **v1.15.0 (input format expansion) — published 2026-06-16, tag `v1.15.0`.** Broadened accepted **input**
   formats (tester Sèb request, started with `.mp2`, follow-up to the v1.14.0 MPEG-TS work).
