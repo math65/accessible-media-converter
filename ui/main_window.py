@@ -252,9 +252,15 @@ class MainWindow(wx.Frame):
         self.lbl_empty.SetFont(wx.Font(14, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_add_files_empty = wx.Button(self.empty_panel, label=_("&Add Files..."))
         self.btn_add_files_empty.Bind(wx.EVT_BUTTON, self.on_add_files)
+        # Presets are reachable without loading a file (e.g. to import one) — Seb request.
+        self.btn_presets_empty = wx.Button(self.empty_panel, label=_("&Presets..."))
+        self.btn_presets_empty.SetName(_("Manage presets"))
+        self.btn_presets_empty.SetToolTip(_("Save, apply, import or export encoding presets."))
+        self.btn_presets_empty.Bind(wx.EVT_BUTTON, self.on_open_presets)
         empty_sizer.AddStretchSpacer()
         empty_sizer.Add(self.lbl_empty, 0, wx.ALIGN_CENTER | wx.ALL, 20)
-        empty_sizer.Add(self.btn_add_files_empty, 0, wx.ALIGN_CENTER | wx.BOTTOM, 20)
+        empty_sizer.Add(self.btn_add_files_empty, 0, wx.ALIGN_CENTER | wx.BOTTOM, 10)
+        empty_sizer.Add(self.btn_presets_empty, 0, wx.ALIGN_CENTER | wx.BOTTOM, 20)
         empty_sizer.AddStretchSpacer()
         self.empty_panel.SetSizer(empty_sizer)
         
@@ -1010,6 +1016,11 @@ class MainWindow(wx.Frame):
                 item_reset_output = menu.Append(wx.ID_ANY, _("Reset Output Settings"))
                 self.Bind(wx.EVT_MENU, lambda e: self.on_reset_output_settings(target_indices), item_reset_output)
 
+        # Presets — also reachable from the list, on every tab (Seb request).
+        menu.AppendSeparator()
+        item_presets = menu.Append(wx.ID_ANY, _("Manage Presets..."))
+        self.Bind(wx.EVT_MENU, self.on_open_presets, item_presets)
+
         if menu.GetMenuItemCount() == 0:
             menu.Destroy()
             return
@@ -1526,11 +1537,24 @@ class MainWindow(wx.Frame):
             self._set_status(_("Settings updated for format: {format}").format(format=clean))
         dlg.Destroy()
 
-    def on_open_presets(self, event):
+    def _active_format_key(self):
+        """Format key for the current tab, robust to the empty state.
+
+        With no files loaded the conversion controls are hidden and the format
+        dropdown isn't populated yet (so ``current_fmt_keys_active`` may be
+        unset); fall back to the stored last-used format so presets stay usable
+        without loading a file (e.g. to import one)."""
         idx = self.combo_format.GetSelection()
-        if idx == wx.NOT_FOUND:
-            return
-        fmt_key = self.current_fmt_keys_active[idx]
+        active_keys = getattr(self, 'current_fmt_keys_active', None)
+        if idx != wx.NOT_FOUND and active_keys:
+            return active_keys[idx]
+        defaults = {'audio': 'mp3', 'video': 'mp4', 'image': 'jpeg'}
+        return self.settings_store.get(
+            f'last_format_{self.current_tab}', defaults.get(self.current_tab, 'mp3')
+        )
+
+    def on_open_presets(self, event):
+        fmt_key = self._active_format_key()
         current_output = {
             'output_mode': self.settings_store.get('output_mode', 'source'),
             'custom_output_path': self.settings_store.get('custom_output_path', ''),
