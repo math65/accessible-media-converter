@@ -2,7 +2,7 @@
   #define AppName "Accessible Media Converter"
 #endif
 #ifndef AppVersion
-  #define AppVersion "1.17.0-rc1"
+  #define AppVersion "1.17.0-rc2"
 #endif
 #ifndef AppDistDirName
   #define AppDistDirName "AccessibleMediaConverter"
