@@ -51,12 +51,17 @@ from core.updater import (
     open_release_page,
     save_updater_state,
 )
-from core.metadata_edit import has_metadata_overrides, overrides_with_detected_numbers
+from core.metadata_edit import (
+    has_metadata_overrides,
+    normalize_metadata_overrides,
+    overrides_with_detected_numbers,
+)
 from core.metadata_retag import MetadataRetagTask
 from ui.announcement_dialog import AnnouncementDialog
 from ui.metadata_editor import MetadataEditorDialog
 from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
+from ui.presets_dialog import PresetsDialog
 from ui.support_dialog import SupportContactDialog
 from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog
 from ui.update_dialog import UpdateDialog
@@ -281,9 +286,12 @@ class MainWindow(wx.Frame):
         self.combo_format.Bind(wx.EVT_CHOICE, self.on_format_changed)
         self.btn_settings = wx.Button(self.content_panel, label=_("&Settings / Quality..."))
         self.btn_settings.Bind(wx.EVT_BUTTON, self.on_open_settings)
+        self.btn_presets = wx.Button(self.content_panel, label=_("&Presets..."))
+        self.btn_presets.Bind(wx.EVT_BUTTON, self.on_open_presets)
         row1.Add(self.lbl_fmt, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         row1.Add(self.combo_format, 1, wx.EXPAND | wx.RIGHT, 10)
-        row1.Add(self.btn_settings, 0)
+        row1.Add(self.btn_settings, 0, wx.RIGHT, 5)
+        row1.Add(self.btn_presets, 0)
         controls_box.Add(row1, 0, wx.EXPAND | wx.ALL, 5)
 
         self.gauge = wx.Gauge(self.content_panel, range=100, size=(250, 20))
@@ -332,6 +340,8 @@ class MainWindow(wx.Frame):
         self.combo_format.SetToolTip(_("Select the target output format."))
         self.btn_settings.SetName(_("Settings and quality"))
         self.btn_settings.SetToolTip(_("Open format-specific settings."))
+        self.btn_presets.SetName(_("Manage presets"))
+        self.btn_presets.SetToolTip(_("Save, apply, import or export encoding presets."))
 
         self.gauge.SetName(_("Conversion progress percentage"))
         self.gauge.SetToolTip(_("Shows conversion progress from 0 to 100 percent."))
@@ -1333,11 +1343,13 @@ class MainWindow(wx.Frame):
             self.item_remove.Enable(False)
             self.combo_format.Enable(False)
             self.btn_settings.Enable(False)
+            self.btn_presets.Enable(False)
 
             return
 
         self.combo_format.Enable(True)
         self.btn_settings.Enable(True)
+        self.btn_presets.Enable(True)
 
         if has_files:
             self.empty_panel.Hide()
@@ -1513,6 +1525,69 @@ class MainWindow(wx.Frame):
             self._update_formats_dropdown()
             self._set_status(_("Settings updated for format: {format}").format(format=clean))
         dlg.Destroy()
+
+    def on_open_presets(self, event):
+        idx = self.combo_format.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return
+        fmt_key = self.current_fmt_keys_active[idx]
+        current_output = {
+            'output_mode': self.settings_store.get('output_mode', 'source'),
+            'custom_output_path': self.settings_store.get('custom_output_path', ''),
+            'preserve_folder_structure': self.settings_store.get('preserve_folder_structure', False),
+        }
+        dlg = PresetsDialog(
+            self,
+            self.current_tab,
+            fmt_key,
+            self.settings_store.get(fmt_key, {}),
+            current_output,
+        )
+        applied = dlg.ShowModal() == wx.ID_OK and dlg.result_preset is not None
+        preset = dlg.result_preset if applied else None
+        dlg.Destroy()
+        if preset:
+            self._apply_preset(preset)
+
+    def _apply_preset(self, preset):
+        fmt_key = preset['format']
+        # A preset is a snapshot poured back into the existing settings_store: set
+        # the format's encoding settings, the global output prefs, and (if present)
+        # a shared-tag metadata template on the currently loaded files.
+        updated = dict(self.settings_store)
+        updated[fmt_key] = preset['settings']
+        updated[f'last_format_{self.current_tab}'] = fmt_key
+        if preset.get('output'):
+            updated.update(preset['output'])
+        self.settings_store = normalize_settings_store(updated)
+        self._save_config()
+        self._update_formats_dropdown()
+
+        meta_count = self._apply_preset_metadata(preset.get('metadata'))
+        clean = build_format_label(fmt_key, context=self.current_tab)
+        if meta_count:
+            self._set_status(
+                _("Preset \"{name}\" applied ({format}); metadata set on {count} file(s).").format(
+                    name=preset['name'], format=clean, count=meta_count
+                )
+            )
+        else:
+            self._set_status(
+                _("Preset \"{name}\" applied ({format}).").format(name=preset['name'], format=clean)
+            )
+
+    def _apply_preset_metadata(self, tags_template):
+        if not tags_template:
+            return 0
+        list_ctrl, data = self._get_current_media_collection()
+        for index, meta in enumerate(data):
+            existing = normalize_metadata_overrides(getattr(meta, 'metadata_overrides', None))
+            tags = dict(existing.get('tags', {}))
+            tags.update(tags_template)
+            cover = existing.get('cover', {'action': 'keep'})
+            meta.metadata_overrides = normalize_metadata_overrides({'tags': tags, 'cover': cover})
+            list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
+        return len(data)
 
     def on_edit_output_settings(self, indices):
         """Définit un format/qualité de sortie spécifique pour le(s) fichier(s)
