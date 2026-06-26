@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.16.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.17.0`.
 
 ## Running and building
 
@@ -154,6 +154,32 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.17.0 (encoding presets) — published 2026-06-26, tag `v1.17.0`.** First-class **encoding presets**
+  (save / apply / replace / rename / delete / import / export), tester Sèb request. A preset is a snapshot
+  poured back into the existing `settings_store` on apply — **no new conversion path**.
+  - **`core/presets.py`** (new, no gettext): model + `presets.json` persistence in `%APPDATA%` (separate from
+    `config.json`) + portable import/export. A preset = `{name, category, format, settings, output, metadata}`:
+    output format, encoding settings, output destination (`output_mode`/`custom_output_path`/
+    `preserve_folder_structure`), and a shared-tag **metadata template**. Reuses `normalize_format_settings`,
+    the format-key tuples, `METADATA_TAG_KEYS`. `strip_export_fields(presets, include_output, include_metadata)`
+    lets **export drop portability-sensitive blocks** (Sèb: the output path isn't relevant PC-to-PC; format +
+    settings always kept).
+  - **`ui/presets_dialog.py`** (new): `PresetsDialog` (list + manage buttons) + `_MetadataTemplateDialog`
+    (reuses `AUDIO_BATCH_FIELDS` / `VIDEO_SERIES_BATCH_FIELDS`, no cover art; image has no metadata template) +
+    `_ExportOptionsDialog` (checkboxes "include output" / "include metadata", both on by default, metadata box
+    hidden for image).
+  - **`ui/main_window.py`**: a **"Presets…"** button next to "Settings / Quality" **and** on the empty/start
+    panel (reachable **with no file loaded**, e.g. to import — `_active_format_key()` falls back to
+    `last_format_<tab>` when the format dropdown isn't populated yet), plus a **"Manage Presets…"** entry in the
+    file-list **context menu** (every tab). Apply = `_apply_preset` pours format/settings/output back into
+    `settings_store`; the metadata template goes onto loaded files via `_apply_preset_metadata`. **Scoping
+    nuance (final Sèb point):** applied from the **context menu** the metadata template targets only the
+    **selected files** (`target_indices` = `_resolve_metadata_target_indices`, mouse + keyboard); applied from
+    the general **button** it targets **all loaded files**. Format/settings/output are global in both cases.
+  - **Docs**: new `docs/{en,fr}/user/presets.html`, linked from both indexes. i18n FR complete.
+  - **Pre-release history**: shipped as `v1.17.0-rc1` then `-rc2` (both `--prerelease`, invisible to the in-app
+    updater) for Sèb to validate before this stable. Embedded FFmpeg unchanged (`2026-06-15-git-44d082edc8`).
 
 - **v1.16.0 (preserve subfolder structure + 2 FFmpeg fixes) — published 2026-06-16, tag `v1.16.0`.**
   - **Feature (opt-in, off by default): preserve the original subfolder structure on output.** New
