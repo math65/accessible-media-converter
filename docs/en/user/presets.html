@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encoding presets - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span>Encoding presets</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">User guide</p>
+      <h1>Encoding presets</h1>
+      <p>
+        A preset is a saved set of conversion settings that you can reuse in two
+        clicks. Prepare a "Podcast" or "Audiobook" profile once, then apply it
+        whenever you need it instead of adjusting every option by hand.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#open">Open the presets window</a></li>
+        <li><a href="#contains">What a preset contains</a></li>
+        <li><a href="#manage">Save, apply, and manage presets</a></li>
+        <li><a href="#selection">Apply to selected files only</a></li>
+        <li><a href="#share">Import and export</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="open">
+      <h2>Open the presets window</h2>
+      <p>You can open the presets manager from three places:</p>
+      <ul>
+        <li>The <strong>Presets...</strong> button, next to the <strong>Settings / Quality</strong> button.</li>
+        <li>A <strong>Presets...</strong> button on the start screen, available <strong>even with no file loaded</strong> &mdash; handy to import a preset before adding anything.</li>
+        <li>The file list: <strong>right-click</strong> (or the Menu key / Shift+F10) and choose <strong>Manage Presets...</strong></li>
+      </ul>
+      <p>
+        Presets are grouped by the active tab: audio presets appear on the Audio
+        tab, video presets on the Video tab, and image presets on the Image tab.
+      </p>
+    </section>
+
+    <section class="section" id="contains">
+      <h2>What a preset contains</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Output format</strong>
+          For example MP3, AAC, M4B, MP4, JPEG&hellip;
+        </li>
+        <li>
+          <strong>Encoding settings</strong>
+          Quality, bitrate, mono/stereo, and every other option from the
+          Settings / Quality window.
+        </li>
+        <li>
+          <strong>Output destination</strong>
+          The output folder and the "keep the original subfolder structure" option.
+        </li>
+        <li>
+          <strong>Metadata template</strong>
+          A set of shared tags (genre, artist, album&hellip;) applied to your files.
+          Images have no metadata template.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="manage">
+      <h2>Save, apply, and manage presets</h2>
+      <p>The presets window lists your presets by name and offers:</p>
+      <ul class="summary-list">
+        <li>
+          <strong>Save current settings as preset</strong>
+          Captures the current format, encoding settings, and output destination
+          under a name you choose.
+        </li>
+        <li>
+          <strong>Apply</strong>
+          Restores the selected preset in one step. You can also double-click a
+          preset in the list to apply it.
+        </li>
+        <li>
+          <strong>Replace with current settings</strong>
+          Overwrites the selected preset with your current settings, keeping its
+          name and metadata template.
+        </li>
+        <li>
+          <strong>Edit metadata</strong>
+          Edits the preset's shared-tag template (not available for images).
+        </li>
+        <li>
+          <strong>Rename</strong> and <strong>Delete</strong>
+          Manage the list. Names are case-insensitive.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="selection">
+      <h2>Apply to selected files only</h2>
+      <p>
+        Applying a preset always sets the output format, encoding settings, and
+        output destination globally &mdash; that is what a preset is for. The
+        <strong>metadata template</strong> behaves differently depending on how
+        you opened the window:
+      </p>
+      <ul>
+        <li>From the <strong>Presets...</strong> button, the metadata is applied to <strong>every loaded file</strong>.</li>
+        <li>From the file list <strong>right-click</strong> menu, the metadata is applied only to the <strong>selected files</strong>.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="share">
+      <h2>Import and export</h2>
+      <p>
+        <strong>Export</strong> saves your presets to a file you can back up or
+        copy to another computer; <strong>Import</strong> reads them back in. On
+        import, if a name already exists you are asked whether to overwrite, keep
+        both, or skip.
+      </p>
+      <p>
+        When you export, you can <strong>choose what to include</strong>. The
+        output folder and the metadata template can be left out &mdash; the output
+        folder in particular rarely makes sense from one computer to another. The
+        format and encoding settings are always included.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Read next:
+        <a href="audio-conversion.html">Audio conversion</a>,
+        <a href="video-conversion.html">Video conversion</a> or
+        <a href="preferences-and-support.html">Preferences, support, and updates</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

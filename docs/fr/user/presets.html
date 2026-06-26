@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presets d'encodage - Accessible Media Converter</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="page">
+    <div class="breadcrumb">
+      <a href="../index.html">Accueil</a>
+      <span>Presets d'encodage</span>
+    </div>
+
+    <header class="hero">
+      <p class="eyebrow">Guide utilisateur</p>
+      <h1>Presets d'encodage</h1>
+      <p>
+        Un preset est un ensemble de réglages de conversion enregistré, que vous
+        réutilisez en deux clics. Préparez une fois un profil « Podcast » ou
+        « Livre audio », puis appliquez-le quand vous en avez besoin au lieu de
+        régler chaque option à la main.
+      </p>
+    </header>
+
+    <section class="toc">
+      <h2>Sur cette page</h2>
+      <ul>
+        <li><a href="#open">Ouvrir la fenêtre des presets</a></li>
+        <li><a href="#contains">Ce que contient un preset</a></li>
+        <li><a href="#manage">Enregistrer, appliquer et gérer les presets</a></li>
+        <li><a href="#selection">Appliquer aux fichiers sélectionnés</a></li>
+        <li><a href="#share">Importer et exporter</a></li>
+      </ul>
+    </section>
+
+    <section class="section" id="open">
+      <h2>Ouvrir la fenêtre des presets</h2>
+      <p>La gestion des presets s'ouvre depuis trois endroits :</p>
+      <ul>
+        <li>Le bouton <strong>Presets…</strong>, à côté du bouton <strong>Réglages / Qualité</strong>.</li>
+        <li>Un bouton <strong>Presets…</strong> sur l'écran d'accueil, disponible <strong>même sans fichier chargé</strong> &mdash; pratique pour importer un preset avant d'ajouter quoi que ce soit.</li>
+        <li>La liste des fichiers : <strong>clic droit</strong> (ou touche Menu / Maj+F10) puis <strong>Gérer les presets…</strong></li>
+      </ul>
+      <p>
+        Les presets sont regroupés par onglet actif : les presets audio
+        apparaissent sur l'onglet Audio, les presets vidéo sur l'onglet Vidéo et
+        les presets image sur l'onglet Image.
+      </p>
+    </section>
+
+    <section class="section" id="contains">
+      <h2>Ce que contient un preset</h2>
+      <ul class="summary-list">
+        <li>
+          <strong>Format de sortie</strong>
+          Par exemple MP3, AAC, M4B, MP4, JPEG&hellip;
+        </li>
+        <li>
+          <strong>Réglages d'encodage</strong>
+          Qualité, débit, mono/stéréo, et toutes les autres options de la fenêtre
+          Réglages / Qualité.
+        </li>
+        <li>
+          <strong>Destination de sortie</strong>
+          Le dossier de sortie et l'option « conserver l'arborescence des
+          sous-dossiers d'origine ».
+        </li>
+        <li>
+          <strong>Modèle de métadonnées</strong>
+          Un ensemble de tags communs (genre, artiste, album&hellip;) appliqués à
+          vos fichiers. Les images n'ont pas de modèle de métadonnées.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="manage">
+      <h2>Enregistrer, appliquer et gérer les presets</h2>
+      <p>La fenêtre des presets liste vos presets par nom et propose :</p>
+      <ul class="summary-list">
+        <li>
+          <strong>Enregistrer les réglages actuels dans un preset</strong>
+          Capture le format, les réglages d'encodage et la destination de sortie
+          actuels sous un nom que vous choisissez.
+        </li>
+        <li>
+          <strong>Appliquer</strong>
+          Restaure le preset sélectionné en une étape. Vous pouvez aussi
+          double-cliquer un preset dans la liste pour l'appliquer.
+        </li>
+        <li>
+          <strong>Remplacer par les réglages actuels</strong>
+          Écrase le preset sélectionné avec vos réglages actuels, en conservant
+          son nom et son modèle de métadonnées.
+        </li>
+        <li>
+          <strong>Modifier les métadonnées</strong>
+          Modifie le modèle de tags communs du preset (indisponible pour les images).
+        </li>
+        <li>
+          <strong>Renommer</strong> et <strong>Supprimer</strong>
+          Gèrent la liste. Les noms ne tiennent pas compte de la casse.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" id="selection">
+      <h2>Appliquer aux fichiers sélectionnés</h2>
+      <p>
+        Appliquer un preset définit toujours le format de sortie, les réglages
+        d'encodage et la destination de sortie de manière globale &mdash; c'est le
+        but d'un preset. Le <strong>modèle de métadonnées</strong>, lui, se
+        comporte différemment selon la façon dont vous avez ouvert la fenêtre :
+      </p>
+      <ul>
+        <li>Depuis le bouton <strong>Presets…</strong>, les métadonnées sont appliquées à <strong>tous les fichiers chargés</strong>.</li>
+        <li>Depuis le menu <strong>clic droit</strong> de la liste, les métadonnées ne sont appliquées qu'aux <strong>fichiers sélectionnés</strong>.</li>
+      </ul>
+    </section>
+
+    <section class="section" id="share">
+      <h2>Importer et exporter</h2>
+      <p>
+        <strong>Exporter</strong> enregistre vos presets dans un fichier que vous
+        pouvez sauvegarder ou copier sur un autre ordinateur ;
+        <strong>Importer</strong> les relit. À l'import, si un nom existe déjà, on
+        vous demande s'il faut remplacer, conserver les deux, ou ignorer.
+      </p>
+      <p>
+        À l'export, vous pouvez <strong>choisir ce qui est inclus</strong>. Le
+        dossier de sortie et le modèle de métadonnées peuvent être laissés de
+        côté &mdash; le dossier de sortie, en particulier, est rarement pertinent
+        d'un ordinateur à l'autre. Le format et les réglages d'encodage sont
+        toujours inclus.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>
+        À lire ensuite :
+        <a href="audio-conversion.html">Conversion audio</a>,
+        <a href="video-conversion.html">Conversion vidéo</a> ou
+        <a href="preferences-and-support.html">Préférences, support et mises à jour</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

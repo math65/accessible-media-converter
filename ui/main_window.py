@@ -1017,9 +1017,12 @@ class MainWindow(wx.Frame):
                 self.Bind(wx.EVT_MENU, lambda e: self.on_reset_output_settings(target_indices), item_reset_output)
 
         # Presets — also reachable from the list, on every tab (Seb request).
+        # From the context menu, applying a preset scopes its metadata template
+        # to the right-click selection (the general button stays global).
         menu.AppendSeparator()
         item_presets = menu.Append(wx.ID_ANY, _("Manage Presets..."))
-        self.Bind(wx.EVT_MENU, self.on_open_presets, item_presets)
+        preset_targets = self._resolve_metadata_target_indices(list_ctrl, index)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_open_presets(e, preset_targets), item_presets)
 
         if menu.GetMenuItemCount() == 0:
             menu.Destroy()
@@ -1553,7 +1556,12 @@ class MainWindow(wx.Frame):
             f'last_format_{self.current_tab}', defaults.get(self.current_tab, 'mp3')
         )
 
-    def on_open_presets(self, event):
+    def on_open_presets(self, event, target_indices=None):
+        # ``target_indices`` scopes the metadata template to specific files: the
+        # context-menu entry passes the right-click selection (Seb wants the menu
+        # to act on the selected files), while the general buttons pass None and
+        # apply the template to every loaded file. Format/settings/output prefs
+        # are global regardless — that is the nature of a preset.
         fmt_key = self._active_format_key()
         current_output = {
             'output_mode': self.settings_store.get('output_mode', 'source'),
@@ -1571,9 +1579,9 @@ class MainWindow(wx.Frame):
         preset = dlg.result_preset if applied else None
         dlg.Destroy()
         if preset:
-            self._apply_preset(preset)
+            self._apply_preset(preset, target_indices)
 
-    def _apply_preset(self, preset):
+    def _apply_preset(self, preset, target_indices=None):
         fmt_key = preset['format']
         # A preset is a snapshot poured back into the existing settings_store: set
         # the format's encoding settings, the global output prefs, and (if present)
@@ -1587,7 +1595,7 @@ class MainWindow(wx.Frame):
         self._save_config()
         self._update_formats_dropdown()
 
-        meta_count = self._apply_preset_metadata(preset.get('metadata'))
+        meta_count = self._apply_preset_metadata(preset.get('metadata'), target_indices)
         clean = build_format_label(fmt_key, context=self.current_tab)
         if meta_count:
             self._set_status(
@@ -1600,18 +1608,23 @@ class MainWindow(wx.Frame):
                 _("Preset \"{name}\" applied ({format}).").format(name=preset['name'], format=clean)
             )
 
-    def _apply_preset_metadata(self, tags_template):
+    def _apply_preset_metadata(self, tags_template, target_indices=None):
         if not tags_template:
             return 0
         list_ctrl, data = self._get_current_media_collection()
-        for index, meta in enumerate(data):
+        if target_indices is None:
+            indices = list(range(len(data)))
+        else:
+            indices = [i for i in target_indices if 0 <= i < len(data)]
+        for index in indices:
+            meta = data[index]
             existing = normalize_metadata_overrides(getattr(meta, 'metadata_overrides', None))
             tags = dict(existing.get('tags', {}))
             tags.update(tags_template)
             cover = existing.get('cover', {'action': 'keep'})
             meta.metadata_overrides = normalize_metadata_overrides({'tags': tags, 'cover': cover})
             list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
-        return len(data)
+        return len(indices)
 
     def on_edit_output_settings(self, indices):
         """Définit un format/qualité de sortie spécifique pour le(s) fichier(s)
