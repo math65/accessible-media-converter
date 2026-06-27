@@ -115,11 +115,37 @@ def parse_version_tuple(value):
     return tuple(parts[:3])
 
 
+def parse_version_key(value):
+    """Total order over version strings, prerelease-aware (SemVer-style).
+
+    A prerelease (``1.17.0-rc2``) sorts BELOW its final release (``1.17.0``), so
+    a stable build published after a prerelease is correctly seen as newer. This
+    is what lets a user running ``1.17.0-rc2`` be offered the ``1.17.0`` stable —
+    provided the prerelease build carries the ``-rcN`` suffix in ``APP_VERSION``.
+    """
+    normalized = normalize_version(value)
+    release_part, separator, prerelease_part = normalized.partition("-")
+    release_tuple = parse_version_tuple(release_part)
+    if not separator or not prerelease_part:
+        # Final release: higher precedence than any prerelease of the same number.
+        return (release_tuple, (1,), ())
+
+    identifiers = []
+    for token in re.findall(r"\d+|[A-Za-z]+", prerelease_part):
+        if token.isdigit():
+            # Numeric identifiers rank below alphabetic ones (SemVer §11), and
+            # compare numerically: rc10 > rc2.
+            identifiers.append((0, int(token), ""))
+        else:
+            identifiers.append((1, 0, token.lower()))
+    return (release_tuple, (0,), tuple(identifiers))
+
+
 def is_release_newer(remote_version, current_version=APP_VERSION):
-    return parse_version_tuple(remote_version) > parse_version_tuple(current_version)
+    return parse_version_key(remote_version) > parse_version_key(current_version)
 
 
-def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS, lang=None):
+def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS, lang=None, include_prereleases=False):
     headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": f"{APP_EXE_NAME}/{APP_VERSION}",
@@ -140,19 +166,24 @@ def fetch_latest_release(timeout=HTTP_TIMEOUT_SECONDS, lang=None):
     except json.JSONDecodeError as exc:
         raise UpdateCheckError(_translate("GitHub returned an invalid update response.")) from exc
 
-    return parse_release_info(payload, lang=lang)
+    return parse_release_info(payload, lang=lang, include_prereleases=include_prereleases)
 
 
-def parse_release_info(payload, lang=None):
-    stable_releases = _extract_stable_releases(payload)
-    if not stable_releases:
+def parse_release_info(payload, lang=None, include_prereleases=False):
+    candidate_releases = _extract_candidate_releases(payload, include_prereleases)
+    if not candidate_releases:
         raise UpdateCheckError(_translate("GitHub returned an invalid update response."))
 
-    latest_release = stable_releases[0]
+    # Pick the highest version among the candidates rather than trusting GitHub's
+    # publish order, so a stable can outrank an earlier-listed prerelease (and
+    # vice-versa).
+    candidate_releases.sort(key=lambda item: parse_version_key(item.get("tag_name")), reverse=True)
+
+    latest_release = candidate_releases[0]
     tag_name = str(latest_release.get("tag_name") or "").strip()
     version = normalize_version(tag_name)
     html_url = str(latest_release.get("html_url") or APP_GITHUB_RELEASES_PAGE).strip() or APP_GITHUB_RELEASES_PAGE
-    body = build_combined_release_notes(stable_releases, lang=lang)
+    body = build_combined_release_notes(candidate_releases, lang=lang)
     published_at = str(latest_release.get("published_at") or "").strip()
     asset_name, asset_url, asset_digest = find_setup_asset(latest_release.get("assets"))
 
@@ -171,18 +202,20 @@ def parse_release_info(payload, lang=None):
     )
 
 
-def _extract_stable_releases(payload):
+def _extract_candidate_releases(payload, include_prereleases=False):
     if not isinstance(payload, list):
         return []
 
-    stable_releases = []
+    candidates = []
     for item in payload:
         if not isinstance(item, dict):
             continue
-        if item.get("draft") or item.get("prerelease"):
+        if item.get("draft"):
             continue
-        stable_releases.append(item)
-    return stable_releases
+        if item.get("prerelease") and not include_prereleases:
+            continue
+        candidates.append(item)
+    return candidates
 
 
 def build_combined_release_notes(releases, current_version=APP_VERSION, lang=None):

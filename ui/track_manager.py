@@ -81,7 +81,7 @@ def _row_disposition_label(disposition_name):
     return _(DISPOSITION_ROW_LABELS.get(disposition_name, disposition_name.replace("_", " ").title()))
 
 
-def _serialize_audio_track(track):
+def serialize_audio_track(track):
     return {
         "original_index": track.index,
         "codec_name": track.codec_name,
@@ -451,7 +451,7 @@ class AudioExtractTrackDialog(wx.Dialog):
         super().__init__(parent, title=_("Choose Audio Track...") + f" - {file_meta.filename}", size=(640, 420))
         self.SetName(_("Audio extract track dialog"))
 
-        self.tracks = [_serialize_audio_track(track) for track in file_meta.audio_tracks]
+        self.tracks = [serialize_audio_track(track) for track in file_meta.audio_tracks]
 
         self.lbl_intro = wx.StaticText(
             self,

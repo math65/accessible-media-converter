@@ -155,6 +155,70 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
+- **Track disposition cleanup (in development, not yet released).** The per-type disposition
+  checkbox lists in `core/track_settings.py` were wrong (Sèb/Mathieu spotted audio showing BOTH
+  "Audio Description" and "Descriptions"). Reworked via a web-research workflow against primary
+  sources (FFmpeg `libavformat/avformat.h` disposition comments + Matroska RFC 9559). New per-type
+  sets — **video**: `default` only (dropped `original`/`comment` — no consumer meaning on a video
+  stream); **audio** base `default`,`visual_impaired` (audio description), advanced `dub`,`original`,
+  `comment` (dropped `descriptions` = the bug, plus `lyrics`/`karaoke`/`clean_effects`/`non_diegetic`
+  = no consumer use / no Matroska mapping; `hearing_impaired` also dropped from audio — rare/confusing
+  "boosted-dialogue" mix, kept on subtitles only); **subtitle** base
+  `default`,`forced`,`hearing_impaired`, advanced `original`,`comment`,`dub`,`captions`,`descriptions`.
+  Key facts: `visual_impaired` = audio-description AUDIO flag; `descriptions` = textual video
+  description, a TEXT/subtitle flag (never audio). Subtitle "advanced" flags are **preserved from
+  source but hidden** (TrackPanel shows only base for subtitles), so niche flags survive a remux
+  without cluttering the UI. Dispositions emit generically in `core/conversion.py`
+  (`-disposition:<v|a|s>:<idx> a+b+c`), so removing a flag from the list drops it from the form AND
+  the output. Legacy stored entries referencing removed flags normalize away gracefully. See
+  [[reference_track_dispositions]] in auto-memory.
+
+- **Batch track management (in development, not yet released).** The two video-tab track
+  context-menu actions now **follow the selection** (Sèb request: choosing/managing audio tracks
+  was per-file only). Mirrors the existing "Edit Metadata (N files)…" pattern via
+  `_resolve_metadata_target_indices`.
+  - **`ui/main_window.py`**: `on_open_track_manager(index, target_indices=None)` and
+    `on_choose_audio_extract_track(index, target_indices=None)` now propagate the reference file's
+    result to every selected file; menu labels read "Manage Tracks (N files)…" / "Choose Audio
+    Track (N files)…". `target_indices` is hoisted once in the menu builder (also reused for the
+    presets entry). Both handlers keep their single-file behaviour when only one row is targeted.
+  - **Matching rules** (heterogeneous selections) — both **by track position**, no language
+    heuristics (Mathieu/Sèb decision: extraction keeps ONE track and the dialog already lists every
+    track, so position both matches the mental model and tells two same-language tracks apart, e.g.
+    FR original vs FR audio-description = different rows). **Manage Tracks** copies a deepcopy of the
+    `track_settings` config to each file — each re-normalizes it against its own streams by
+    `original_index` via `normalize_track_settings`. **Choose Audio Track** uses helper
+    `_match_audio_track_for_extract`: applies the chosen track by its **ordinal among the audio
+    tracks** (NOT raw `original_index`, which shifts with video/subtitle stream counts) — i.e. the
+    Nth audio track of each file; files with fewer tracks are left untouched and counted in the
+    status message. An earlier language+disposition matcher was scrapped as over-engineered.
+  - **`ui/track_manager.py`**: `_serialize_audio_track` → public `serialize_audio_track` (reused by
+    the batch matcher to serialize a matched track into the `audio_extract_track` dict; conversion
+    already resolves that dict by `original_index` with a graceful fallback). i18n FR + EN/FR
+    video-conversion docs ("Apply to several files at once").
+
+- **Opt-in pre-releases (in development, not yet released).** New Preferences checkbox
+  `include_prereleases` (default **off**). When on, the update check considers GitHub
+  **prereleases** (beta / rc) in addition to stable, so testers (Sèb) can opt into early builds
+  from inside the app instead of installing them by hand.
+  - **`core/updater.py`**: version comparison is now **prerelease-aware** (SemVer-style). New
+    `parse_version_key()` returns `(release_tuple, stable_marker, prerelease_ids)` where a final
+    release sorts **above** any prerelease of the same number (`1.17.0-rc2 < 1.17.0`), numeric
+    prerelease ids compare numerically (`rc10 > rc2`). `is_release_newer()` uses it.
+    `_extract_stable_releases` → `_extract_candidate_releases(payload, include_prereleases)` (drafts
+    always excluded; prereleases excluded unless opted in). `parse_release_info` / `fetch_latest_release`
+    gained `include_prereleases=False`; `parse_release_info` now picks the **highest version key** among
+    candidates rather than trusting GitHub's publish order.
+  - **CRITICAL process requirement** for the "stable arrives after a prerelease → offered as update"
+    half: the **prerelease build must carry the suffix in `APP_VERSION`** (e.g. `APP_VERSION =
+    "1.17.0-rc2"`), otherwise the installed rc reports `1.17.0` and the comparison can't tell it apart
+    from the stable. `APP_VERSION_WIN` stays purely numeric (`1.17.0.0`) for the Windows file version.
+    This also means a user can flip the toggle **off** after installing an rc and still get the matching
+    stable (it's strictly newer), never a downgrade.
+  - **Plumbing**: `core/formatting.py` default + normalization; `ui/preferences_dialog.py` checkbox;
+    `ui/main_window.py` passes `include_prereleases` from `settings_store` to both `fetch_latest_release`
+    call sites (`_update_check_worker`, the report-gate worker). i18n FR + EN/FR preferences docs.
+
 - **v1.17.0 (encoding presets) — published 2026-06-26, tag `v1.17.0`.** First-class **encoding presets**
   (save / apply / replace / rename / delete / import / export), tester Sèb request. A preset is a snapshot
   poured back into the existing `settings_store` on apply — **no new conversion path**.

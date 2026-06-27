@@ -8,16 +8,31 @@ TRACK_TYPE_CONFIG_KEYS = {
 }
 CONFIG_KEY_TO_TRACK_TYPE = {value: key for key, value in TRACK_TYPE_CONFIG_KEYS.items()}
 
+# Dispositions exposées par type de piste. Établi par recherche sur les sources
+# primaires (FFmpeg libavformat/avformat.h + Matroska RFC 9559) : seuls les
+# drapeaux réellement *signifiants* pour un type donné sont proposés.
+#   - vidéo : seul `default` a un sens grand public sur un flux vidéo.
+#   - audio : `visual_impaired` = piste d'audiodescription (clé pour le public
+#     aveugle). `descriptions` est un drapeau de TEXTE (description textuelle de
+#     la vidéo) — il n'a rien à faire sur l'audio (c'était le bug repéré).
+#     `hearing_impaired` n'est PAS proposé sur l'audio (mix « dialogue renforcé »
+#     trop rare et trompeur) — réservé aux sous-titres (SME/SDH).
+#   - sous-titre : `forced` est réservé aux sous-titres (RFC 9559) ;
+#     `hearing_impaired` = SME/SDH.
+# Rappel UI (cf. TrackPanel) : pour les sous-titres, seuls les drapeaux "base"
+# sont affichés ; les "advanced" des sous-titres restent **préservés depuis la
+# source mais masqués** (niche : original/comment/dub/captions/descriptions).
+# Pour vidéo/audio, base + advanced sont tous affichés.
 BASE_DISPOSITIONS_BY_TYPE = {
     "video": ("default",),
     "audio": ("default", "visual_impaired"),
-    "subtitle": ("default", "forced", "hearing_impaired", "captions", "descriptions"),
+    "subtitle": ("default", "forced", "hearing_impaired"),
 }
 
 ADVANCED_DISPOSITIONS_BY_TYPE = {
-    "video": ("original", "comment"),
-    "audio": ("dub", "original", "comment", "lyrics", "karaoke", "clean_effects", "non_diegetic", "descriptions"),
-    "subtitle": ("original", "comment", "lyrics"),
+    "video": (),
+    "audio": ("dub", "original", "comment"),
+    "subtitle": ("original", "comment", "dub", "captions", "descriptions"),
 }
 
 EDITABLE_DISPOSITIONS_BY_TYPE = {

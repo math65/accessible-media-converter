@@ -201,6 +201,7 @@ APP_DEFAULT_SETTINGS = {
     "ffmpeg_threads": DEFAULT_FFMPEG_THREADS,
     "continue_on_error": True,
     "check_updates_on_startup": True,
+    "include_prereleases": False,  # accepter les pré-versions (rc/beta) dans le check de MAJ
     "preserve_metadata": False,
     "m4b_chapter_naming": DEFAULT_M4B_CHAPTER_NAMING,
     "ui_language": AUTO_LANGUAGE_CODE,
@@ -397,6 +398,9 @@ def normalize_settings_store(settings_store):
     )
     normalized["check_updates_on_startup"] = bool(
         normalized.get("check_updates_on_startup", APP_DEFAULT_SETTINGS["check_updates_on_startup"])
+    )
+    normalized["include_prereleases"] = bool(
+        normalized.get("include_prereleases", APP_DEFAULT_SETTINGS["include_prereleases"])
     )
     normalized["preserve_metadata"] = bool(
         normalized.get("preserve_metadata", APP_DEFAULT_SETTINGS["preserve_metadata"])

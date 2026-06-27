@@ -146,6 +146,27 @@
         For video-to-audio conversion, the application uses only one audio track.
         If several tracks exist, a dedicated selector lets you choose which one to extract.
       </p>
+      <h3>Apply to several files at once</h3>
+      <p>
+        Both track actions follow your selection. Select several video files (Ctrl+click or
+        Shift+click), then right-click: the menu reads <strong>Manage Tracks (N files)…</strong>
+        or <strong>Choose Audio Track (N files)…</strong>. Make your choices once on the
+        reference file and they are applied to every selected file.
+      </p>
+      <ul>
+        <li>
+          <strong>Manage Tracks</strong> applies your keep/remove and disposition choices to
+          each file by <strong>track position</strong> — ideal for a series whose episodes share
+          the same track layout.
+        </li>
+        <li>
+          <strong>Choose Audio Track</strong> applies the chosen track by its <strong>position</strong>
+          (the Nth audio track) to each file. Because each track is its own row, this also tells two
+          same-language tracks apart — for example the original French (1st) and the French audio
+          description (2nd). Files that have fewer audio tracks are left untouched and reported in the
+          status bar.
+        </li>
+      </ul>
       <div class="callout">
         If no track action appears on right-click, check the selected output format first
         and confirm that the selected file is actually a video file.

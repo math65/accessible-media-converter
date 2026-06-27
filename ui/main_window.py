@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import re
@@ -63,7 +64,7 @@ from ui.settings_dialog import SettingsDialog
 from ui.preferences_dialog import PreferencesDialog
 from ui.presets_dialog import PresetsDialog
 from ui.support_dialog import SupportContactDialog
-from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog
+from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog, serialize_audio_track
 from ui.update_dialog import UpdateDialog
 
 SUPPORTED_MEDIA_EXTENSIONS = {
@@ -637,7 +638,10 @@ class MainWindow(wx.Frame):
         release_info = None
         error_message = None
         try:
-            release_info = fetch_latest_release(lang=get_current_language_code())
+            release_info = fetch_latest_release(
+                lang=get_current_language_code(),
+                include_prereleases=bool(self.settings_store.get('include_prereleases', False)),
+            )
         except UpdateCheckError as exc:
             error_message = str(exc)
         except Exception:
@@ -706,7 +710,10 @@ class MainWindow(wx.Frame):
         def worker():
             release_info = None
             try:
-                release_info = fetch_latest_release(lang=get_current_language_code())
+                release_info = fetch_latest_release(
+                    lang=get_current_language_code(),
+                    include_prereleases=bool(self.settings_store.get('include_prereleases', False)),
+                )
             except Exception:
                 logging.info("Update gate: update check failed; allowing the report.")
                 release_info = None
@@ -978,17 +985,28 @@ class MainWindow(wx.Frame):
         if show_track or show_audio_track or show_metadata:
             menu.AppendSeparator()
 
+        # Track actions follow the selection like Edit Metadata does (Seb request):
+        # applied to a multi-selection they propagate to every selected file.
+        target_indices = self._resolve_metadata_target_indices(list_ctrl, index)
+
         if show_track:
-            item_tracks = menu.Append(wx.ID_ANY, _("Manage Tracks..."))
-            self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index), item_tracks)
+            if len(target_indices) > 1:
+                track_label = _("Manage Tracks ({count} files)...").format(count=len(target_indices))
+            else:
+                track_label = _("Manage Tracks...")
+            item_tracks = menu.Append(wx.ID_ANY, track_label)
+            self.Bind(wx.EVT_MENU, lambda e: self.on_open_track_manager(index, target_indices), item_tracks)
         if show_audio_track:
-            item_audio_track = menu.Append(wx.ID_ANY, _("Choose Audio Track..."))
-            self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index), item_audio_track)
+            if len(target_indices) > 1:
+                audio_track_label = _("Choose Audio Track ({count} files)...").format(count=len(target_indices))
+            else:
+                audio_track_label = _("Choose Audio Track...")
+            item_audio_track = menu.Append(wx.ID_ANY, audio_track_label)
+            self.Bind(wx.EVT_MENU, lambda e: self.on_choose_audio_extract_track(index, target_indices), item_audio_track)
 
         is_cue = getattr(meta, 'cue_sheet', None) is not None
 
         if show_metadata:
-            target_indices = self._resolve_metadata_target_indices(list_ctrl, index)
             if show_track or show_audio_track:
                 menu.AppendSeparator()
             if is_cue:
@@ -1021,8 +1039,7 @@ class MainWindow(wx.Frame):
         # to the right-click selection (the general button stays global).
         menu.AppendSeparator()
         item_presets = menu.Append(wx.ID_ANY, _("Manage Presets..."))
-        preset_targets = self._resolve_metadata_target_indices(list_ctrl, index)
-        self.Bind(wx.EVT_MENU, lambda e: self.on_open_presets(e, preset_targets), item_presets)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_open_presets(e, target_indices), item_presets)
 
         if menu.GetMenuItemCount() == 0:
             menu.Destroy()
@@ -1093,37 +1110,99 @@ class MainWindow(wx.Frame):
 
         return list_ctrl, data, index, popup_position
 
-    def on_open_track_manager(self, index):
-        if self.current_tab == 'audio':
-            meta = self.audio_data[index]
-        else:
-            meta = self.video_data[index]
-            
+    def on_open_track_manager(self, index, target_indices=None):
+        target_list, data = self._get_current_media_collection()
+        meta = data[index]
+
         dlg = TrackManagerDialog(self, meta)
         if dlg.ShowModal() == wx.ID_OK:
             config = dlg.get_configuration()
-            meta.track_settings = config 
-            _, data = self._get_current_media_collection()
-            target_list = self.panel_audio_list.list_ctrl if self.current_tab == 'audio' else self.panel_video_list.list_ctrl
-            target_list.SetItem(index, 2, self._get_media_status_label(data[index]))
-                
+            targets = target_indices if target_indices and len(target_indices) > 1 else [index]
+            applied = 0
+            for list_index in targets:
+                if not (0 <= list_index < len(data)):
+                    continue
+                # Each file re-normalizes the config against its own streams (by
+                # track position / original_index), so a series of episodes with
+                # the same layout all get the same keep/disposition choices.
+                data[list_index].track_settings = copy.deepcopy(config)
+                target_list.SetItem(list_index, 2, self._get_media_status_label(data[list_index]))
+                applied += 1
+            if applied > 1:
+                self._set_status(_("Track settings applied to {count} files.").format(count=applied))
+
         dlg.Destroy()
 
-    def on_choose_audio_extract_track(self, index):
+    def on_choose_audio_extract_track(self, index, target_indices=None):
         meta = self.video_data[index]
 
         dlg = AudioExtractTrackDialog(self, meta, getattr(meta, 'audio_extract_track', None))
         if dlg.ShowModal() == wx.ID_OK:
             selected_track = dlg.get_selected_track()
             if selected_track:
-                meta.audio_extract_track = selected_track
-                self.panel_video_list.list_ctrl.SetItem(index, 2, self._get_media_status_label(meta))
-                self._set_status(
-                    _("Audio extraction track selected: {track}").format(
-                        track=self._describe_audio_extract_track(selected_track)
+                targets = target_indices if target_indices and len(target_indices) > 1 else [index]
+                list_ctrl = self.panel_video_list.list_ctrl
+                applied = 0
+                unmatched = 0
+                for list_index in targets:
+                    if not (0 <= list_index < len(self.video_data)):
+                        continue
+                    target_meta = self.video_data[list_index]
+                    if list_index == index:
+                        # Reference file: the chosen track is literally one of its own.
+                        matched = selected_track
+                    else:
+                        track = self._match_audio_track_for_extract(target_meta, selected_track, meta)
+                        if track is None:
+                            unmatched += 1
+                            continue
+                        matched = serialize_audio_track(track)
+                    target_meta.audio_extract_track = matched
+                    list_ctrl.SetItem(list_index, 2, self._get_media_status_label(target_meta))
+                    applied += 1
+
+                if len(targets) > 1:
+                    if unmatched:
+                        self._set_status(
+                            _("Audio track applied to {applied} files ({unmatched} without a matching track).").format(
+                                applied=applied, unmatched=unmatched
+                            )
+                        )
+                    else:
+                        self._set_status(
+                            _("Audio track applied to {applied} files.").format(applied=applied)
+                        )
+                else:
+                    self._set_status(
+                        _("Audio extraction track selected: {track}").format(
+                            track=self._describe_audio_extract_track(selected_track)
+                        )
                     )
-                )
         dlg.Destroy()
+
+    def _match_audio_track_for_extract(self, target_meta, selected_track, reference_meta):
+        """Find, in ``target_meta``, the audio track at the same position as the choice.
+
+        Audio extraction keeps a single track, so the choice is applied by its
+        **ordinal among the audio tracks** (the Nth audio track), not by language:
+        this distinguishes two same-language tracks on its own — e.g. the original
+        French (1st) versus the French audio description (2nd) are different rows —
+        and matches how "Manage Tracks" propagates. Uses the audio-track ordinal
+        rather than the raw stream index, which shifts with the number of
+        video/subtitle streams. Returns None when the file has fewer tracks.
+        """
+        ref_tracks = getattr(reference_meta, 'audio_tracks', []) or []
+        target_tracks = getattr(target_meta, 'audio_tracks', []) or []
+        ref_index = selected_track.get('original_index')
+
+        ref_ordinal = next(
+            (position for position, track in enumerate(ref_tracks)
+             if getattr(track, 'index', None) == ref_index),
+            None,
+        )
+        if ref_ordinal is not None and ref_ordinal < len(target_tracks):
+            return target_tracks[ref_ordinal]
+        return None
 
     def _resolve_metadata_target_indices(self, list_ctrl, index):
         # The keyboard context menu (Applications key / Shift+F10) keeps the

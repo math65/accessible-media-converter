@@ -35,6 +35,7 @@ class PreferencesDialog(wx.Dialog):
         self.ffmpeg_threads = self.settings.get('ffmpeg_threads', DEFAULT_FFMPEG_THREADS)
         self.continue_on_error = bool(self.settings.get('continue_on_error', True))
         self.check_updates_on_startup = bool(self.settings.get('check_updates_on_startup', True))
+        self.include_prereleases = bool(self.settings.get('include_prereleases', False))
         self.preserve_metadata = bool(self.settings.get('preserve_metadata', False))
         self.preserve_folder_structure = bool(self.settings.get('preserve_folder_structure', False))
         self.m4b_chapter_naming = self.settings.get('m4b_chapter_naming', DEFAULT_M4B_CHAPTER_NAMING)
@@ -211,6 +212,21 @@ class PreferencesDialog(wx.Dialog):
         )
         execution_sizer.Add(self.chk_check_updates_on_startup, 0, wx.ALL, 5)
 
+        self.chk_include_prereleases = wx.CheckBox(
+            panel,
+            label=_("Also offer pre-release versions (beta/release candidates)"),
+        )
+        self.chk_include_prereleases.SetName(
+            _("Also offer pre-release versions (beta/release candidates)")
+        )
+        self.chk_include_prereleases.SetToolTip(
+            _(
+                "Receive early test versions in addition to stable releases. When a "
+                "stable version is later published, it is offered as an update too."
+            )
+        )
+        execution_sizer.Add(self.chk_include_prereleases, 0, wx.ALL, 5)
+
         vbox.Add(language_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
         vbox.Add(output_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
         vbox.Add(execution_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
@@ -245,6 +261,7 @@ class PreferencesDialog(wx.Dialog):
         self.chk_open_output_folder.SetValue(self.open_output_folder_after_batch)
         self.chk_continue_on_error.SetValue(self.continue_on_error)
         self.chk_check_updates_on_startup.SetValue(self.check_updates_on_startup)
+        self.chk_include_prereleases.SetValue(self.include_prereleases)
         self.chk_preserve_metadata.SetValue(self.preserve_metadata)
         self.chk_preserve_folder_structure.SetValue(self.preserve_folder_structure)
         self._update_controls()
@@ -330,6 +347,7 @@ class PreferencesDialog(wx.Dialog):
             'ffmpeg_threads': self.ffmpeg_thread_values[self.choice_ffmpeg_threads.GetSelection()],
             'continue_on_error': self.chk_continue_on_error.GetValue(),
             'check_updates_on_startup': self.chk_check_updates_on_startup.GetValue(),
+            'include_prereleases': self.chk_include_prereleases.GetValue(),
             'preserve_metadata': self.chk_preserve_metadata.GetValue(),
             'preserve_folder_structure': self.chk_preserve_folder_structure.GetValue(),
             'm4b_chapter_naming': self.m4b_chapter_naming_modes[
