@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.17.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.18.0`.
 
 ## Running and building
 
@@ -155,7 +155,13 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
-- **Track disposition cleanup (in development, not yet released).** The per-type disposition
+- **v1.18.0 — published 2026-06-27, tag `v1.18.0`, commit `47bf0ce`.** Bundles the three features
+  below (opt-in pre-releases, batch track management, track disposition cleanup) plus an **embedded
+  FFmpeg bump to `8.1.2`** (GyanD stable tag, via `/update-ffmpeg`). First release validated by
+  Mathieu in real use (batch track management on the test fixtures). The `/release` skill was
+  expanded this cycle to document stable-vs-beta version bumping (the `-rcN` suffix requirement).
+
+- **Track disposition cleanup (v1.18.0).** The per-type disposition
   checkbox lists in `core/track_settings.py` were wrong (Sèb/Mathieu spotted audio showing BOTH
   "Audio Description" and "Descriptions"). Reworked via a web-research workflow against primary
   sources (FFmpeg `libavformat/avformat.h` disposition comments + Matroska RFC 9559). New per-type
@@ -173,7 +179,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   the output. Legacy stored entries referencing removed flags normalize away gracefully. See
   [[reference_track_dispositions]] in auto-memory.
 
-- **Batch track management (in development, not yet released).** The two video-tab track
+- **Batch track management (v1.18.0).** The two video-tab track
   context-menu actions now **follow the selection** (Sèb request: choosing/managing audio tracks
   was per-file only). Mirrors the existing "Edit Metadata (N files)…" pattern via
   `_resolve_metadata_target_indices`.
@@ -197,7 +203,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
     already resolves that dict by `original_index` with a graceful fallback). i18n FR + EN/FR
     video-conversion docs ("Apply to several files at once").
 
-- **Opt-in pre-releases (in development, not yet released).** New Preferences checkbox
+- **Opt-in pre-releases (v1.18.0).** New Preferences checkbox
   `include_prereleases` (default **off**). When on, the update check considers GitHub
   **prereleases** (beta / rc) in addition to stable, so testers (Sèb) can opt into early builds
   from inside the app instead of installing them by hand.
