@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.18.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.19.0`.
 
 ## Running and building
 
@@ -154,6 +154,21 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.19.0 — published 2026-06-29, tag `v1.19.0`, commit `d8aab05`.** Ships the **DownAccess ↔ AMC
+  integration** (Downie→Permute pairing: DownAccess downloads, AMC converts). The DownAccess side was
+  already shipped (it launches `AccessibleMediaConverter.exe "<path>"`); this release is the AMC-side
+  follow-up from the handoff note `DOWNACCESS_INTEGRATION.md` (committed).
+  - **Reliability fix**: `MainWindow.add_external_paths` (`ui/main_window.py`) no longer **drops**
+    files received from outside (DownAccess, or the Explorer "Convert with…" verb) while a conversion
+    is running. They are queued in `self._pending_external_paths` (with a status message) and drained
+    by the new `_drain_pending_external_paths()`, called from both `_on_batch_complete` and
+    `_on_merge_complete` after `is_converting` clears. The Explorer single-instance relay
+    (`_on_external_watch_tick`) already routes through `add_external_paths`, so it's covered too.
+  - **Reciprocity**: new Help menu entry "Download Media (DownAccess)…" opening `DOWNACCESS_RELEASES_URL`
+    (`core/app_info.py`, `https://github.com/math65/downaccess/releases`), mirroring "View on GitHub…"
+    (reuses `open_release_page`). i18n FR added. Embedded FFmpeg unchanged (`8.1.2`).
+  - ⚠️ Published **without** real-world NVDA validation (to confirm a posteriori).
 
 - **v1.18.0 — published 2026-06-27, tag `v1.18.0`, commit `47bf0ce`.** Bundles the three features
   below (opt-in pre-releases, batch track management, track disposition cleanup) plus an **embedded
