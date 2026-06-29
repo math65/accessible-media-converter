@@ -24,3 +24,6 @@ APP_GITHUB_RELEASES_PAGE = (
 APP_GITHUB_REPOSITORY_URL = (
     f"https://github.com/{APP_GITHUB_OWNER}/{APP_GITHUB_REPOSITORY}"
 )
+# Companion app: DownAccess downloads media from the web; AMC converts it
+# (Downie -> Permute pairing). Promoted from the Help menu.
+DOWNACCESS_RELEASES_URL = "https://github.com/math65/downaccess/releases"

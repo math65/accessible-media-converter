@@ -9,7 +9,7 @@ import uuid
 import wx
 
 from core import announce
-from core.app_info import APP_ABOUT_TAGLINE, APP_GITHUB_REPOSITORY_URL, APP_NAME, APP_VERSION
+from core.app_info import APP_ABOUT_TAGLINE, APP_GITHUB_REPOSITORY_URL, APP_NAME, APP_VERSION, DOWNACCESS_RELEASES_URL
 from core.batch_manager import (
     JOB_STATE_DONE,
     JOB_STATE_ERROR,
@@ -145,6 +145,7 @@ class MainWindow(wx.Frame):
         self._report_gate_in_progress = False
         self._report_gate_busy = None
         self._pending_close_after_stop = False
+        self._pending_external_paths = []
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         self._merge_task = None
@@ -214,6 +215,7 @@ class MainWindow(wx.Frame):
         help_menu = wx.Menu()
         item_documentation = help_menu.Append(wx.ID_ANY, _("&Documentation..."))
         item_github = help_menu.Append(wx.ID_ANY, _("View on &GitHub..."))
+        item_downaccess = help_menu.Append(wx.ID_ANY, _("Download Media (&DownAccess)..."))
         help_menu.AppendSeparator()
         item_check_updates = help_menu.Append(wx.ID_ANY, _("Check for &Updates..."))
         help_menu.AppendSeparator()
@@ -231,6 +233,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_preferences, item_prefs)
         self.Bind(wx.EVT_MENU, self.on_open_documentation, item_documentation)
         self.Bind(wx.EVT_MENU, self.on_open_github, item_github)
+        self.Bind(wx.EVT_MENU, self.on_open_downaccess, item_downaccess)
         self.Bind(wx.EVT_MENU, self.on_check_updates, item_check_updates)
         self.Bind(wx.EVT_MENU, self.on_contact_support, item_contact_support)
         self.Bind(wx.EVT_MENU, self.on_about, item_about)
@@ -787,6 +790,16 @@ class MainWindow(wx.Frame):
         ligne de commande / menu contextuel de l'explorateur). Réutilise la même
         logique que le collage : collecte récursive puis import."""
         if self.is_converting:
+            # Ne pas jeter les fichiers reçus pendant une conversion : les mettre
+            # en file et les drainer à la fin (l'ajout à la liste ne peut pas muter
+            # les ListCtrl/métadonnées pendant que le batch tourne).
+            self._pending_external_paths.extend(input_paths)
+            self._set_status(
+                _(
+                    "{count} file(s) received; they will be added when the current "
+                    "conversion finishes."
+                ).format(count=len(input_paths))
+            )
             return
 
         files_to_add = self._collect_media_paths(input_paths)
@@ -800,6 +813,15 @@ class MainWindow(wx.Frame):
         if focus_target:
             tab_name, list_ctrl, index = focus_target
             wx.CallAfter(self._focus_added_media_list_item, tab_name, list_ctrl, index)
+
+    def _drain_pending_external_paths(self):
+        """Traite les chemins externes reçus pendant une conversion une fois
+        celle-ci terminée."""
+        if self.is_converting or not self._pending_external_paths:
+            return
+        paths = self._pending_external_paths
+        self._pending_external_paths = []
+        self.add_external_paths(paths)
 
     def start_external_paths_watcher(self):
         """Surveille le fichier relais de l'instance unique : les instances
@@ -2051,6 +2073,7 @@ class MainWindow(wx.Frame):
         self.is_converting = False
         self.stop_requested = False
         self._merge_task = None
+        wx.CallAfter(self._drain_pending_external_paths)
 
         self.btn_stop.Hide()
         self.btn_convert.Show()
@@ -2284,6 +2307,7 @@ class MainWindow(wx.Frame):
         self.stop_requested = False
         self.batch_manager = None
         self._current_batch_list_ctrl = None
+        wx.CallAfter(self._drain_pending_external_paths)
         
         self.btn_stop.Hide()
         self.btn_convert.Show()
@@ -2349,6 +2373,18 @@ class MainWindow(wx.Frame):
             logging.exception("Unable to open the GitHub repository page.")
             wx.MessageBox(
                 _("Unable to open the GitHub repository page."),
+                _("Error"),
+                wx.ICON_ERROR,
+                self,
+            )
+
+    def on_open_downaccess(self, e):
+        try:
+            open_release_page(DOWNACCESS_RELEASES_URL)
+        except Exception:
+            logging.exception("Unable to open the DownAccess releases page.")
+            wx.MessageBox(
+                _("Unable to open the DownAccess page."),
                 _("Error"),
                 wx.ICON_ERROR,
                 self,
