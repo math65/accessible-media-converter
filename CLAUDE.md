@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.19.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.0-rc1` (beta / pre-release; last stable `1.19.0`).
 
 ## Running and building
 
@@ -154,6 +154,22 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.0-rc1 — BETA (pre-release), branch `feature/segment-editor`, not yet on master.** Ships the
+  **file cutter / segment editor** (memory [[project_feature_video_trim]]): a right-click **"Cut /
+  Split…"** action on an audio/video file opens a dedicated `wx.Frame` editor (`ui/segment_editor.py`,
+  menu bar). Model in `core/segments.py` (regions keep/discard, paving `[0,duration]`); export in
+  `core/segment_export.py` (`SegmentExportTask` — one file: copy-concat vs reencode `filter_complex`) and
+  via `BatchConversionManager._append_segment_jobs` (N separate files). Audio engine `core/audio_player.py`
+  (single persistent PortAudio stream, one engine thread — churn caused native segfaults; sounddevice, no
+  numpy, no COM); montage-mode playback (skip discarded, from current position), verify-cut (real export
+  join), REAPER-style scrub, silence jump (`core/silence.py`), fine step, per-track preview, undo/redo,
+  save/open `.amccut` project, format+quality dialog at export (editor stays open after export). New dep
+  **sounddevice** (+cffi/pycparser) bundled in the spec (`sounddevice`+`_sounddevice_data` PortAudio DLL).
+  Prefs `cutter_announce_transport`/`cutter_announce_position`. **`APP_VERSION="1.20.0-rc1"`** carries the
+  rc suffix (updater rule, [[project_prerelease_optin]]); `APP_VERSION_WIN="1.20.0.0"`. Pipeline validated
+  by an automated end-to-end pass (real exports: audio/video, copy+reencode, separate files); **NVDA
+  real-use validation pending** (Mathieu). Publish as GitHub **prerelease** (`--prerelease`).
 
 - **v1.19.0 — published 2026-06-29, tag `v1.19.0`, commit `d8aab05`.** Ships the **DownAccess ↔ AMC
   integration** (Downie→Permute pairing: DownAccess downloads, AMC converts). The DownAccess side was
