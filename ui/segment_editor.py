@@ -146,7 +146,8 @@ class SegmentEditorDialog(wx.Dialog):
         nav_btns = wx.BoxSizer(wx.HORIZONTAL)
         btn_goto = wx.Button(panel, label=_("Go"))
         btn_goto.Bind(wx.EVT_BUTTON, lambda e: self._do_goto())
-        self.btn_play = wx.Button(panel, label=_("Play / Pause (Space)"))
+        self.btn_play = wx.Button(panel, label=_("Play / Stop (Space)"))
+        self.btn_play.SetToolTip(_("Stop returns to the position where playback started."))
         self.btn_play.Bind(wx.EVT_BUTTON, lambda e: self._toggle_play())
         btn_play_seg = wx.Button(panel, label=_("Play current segment"))
         btn_play_seg.Bind(wx.EVT_BUTTON, lambda e: self._play_current_segment())
@@ -309,8 +310,7 @@ class SegmentEditorDialog(wx.Dialog):
 
     def _toggle_play(self):
         if self.player.is_playing():
-            self.player.stop()
-            speak(_("Paused"))
+            self._stop_and_return()
             return
         start = self.position_ms if self.position_ms < self.duration_ms else 0
         speak(_("Playing"))
@@ -319,6 +319,13 @@ class SegmentEditorDialog(wx.Dialog):
             on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
             on_finished=lambda: wx.CallAfter(self._on_play_finished),
         )
+
+    def _stop_and_return(self):
+        """Stop : coupe la lecture et **revient au curseur d'édition** (le point où
+        la lecture a démarré), qui n'a pas bougé pendant l'écoute."""
+        self.player.stop()
+        self.txt_position.ChangeValue(format_timecode(self.position_ms))
+        speak(_("Stopped, back at {time}").format(time=format_timecode(self.position_ms)))
 
     def _play_current_segment(self):
         index = self._selected_index()
@@ -339,11 +346,13 @@ class SegmentEditorDialog(wx.Dialog):
         )
 
     def _on_playhead(self, ms):
-        # Mise à jour silencieuse pendant la lecture (pas d'annonce à chaque tick).
-        self.position_ms = max(0, min(int(ms), self.duration_ms))
-        self.txt_position.ChangeValue(format_timecode(self.position_ms))
+        # Affiche la tête de lecture EN LECTURE seulement (visuel, silencieux) : le
+        # curseur d'édition self.position_ms ne bouge pas, pour que Stop y revienne.
+        if self.player.is_playing():
+            self.txt_position.ChangeValue(format_timecode(max(0, min(int(ms), self.duration_ms))))
 
     def _on_play_finished(self):
+        # Fin naturelle de l'écoute : on ré-affiche le curseur d'édition.
         self.txt_position.ChangeValue(format_timecode(self.position_ms))
 
     def on_scrub_toggle(self, event):
@@ -460,10 +469,11 @@ class SegmentEditorDialog(wx.Dialog):
             return
 
         transport = focus is self.txt_position
-        in_list = focus is self.list_ctrl
 
-        # Marquage / segments : depuis le champ Position ou la liste.
-        if transport or in_list:
+        # Marquage / segments : partout sauf dans le menu « Pas » et le mode d'export
+        # (où les lettres servent à la sélection rapide) et le champ « Aller à »
+        # (déjà écarté). Fonctionne donc aussi quand le focus est sur un bouton.
+        if focus not in (self.choice_step, self.radio_mode):
             if key in (ord('S'), ord('s')):
                 self._mark_start(); return
             if key in (ord('E'), ord('e')):
@@ -475,22 +485,23 @@ class SegmentEditorDialog(wx.Dialog):
             if key == wx.WXK_DELETE:
                 self._remove_selected_boundary(); return
 
-        # Navigation temporelle : uniquement depuis le champ Position (pour ne pas
-        # capturer les flèches de la liste, du RadioBox, etc.).
-        if transport:
-            if key == wx.WXK_SPACE:
-                self._toggle_play(); return
+        # Espace = Lecture / Stop, depuis le champ Position (ailleurs, Espace doit
+        # activer le bouton ou la case à cocher qui a le focus).
+        if transport and key == wx.WXK_SPACE:
+            self._toggle_play(); return
+
+        # Navigation temporelle : active PARTOUT sauf dans les contrôles qui se
+        # servent nativement des flèches (liste des segments, menu « Pas », mode
+        # d'export) — et le champ « Aller à », déjà écarté plus haut. Ainsi les
+        # flèches avancent/reculent même quand le focus est sur un bouton.
+        if focus not in (self.choice_step, self.radio_mode, self.list_ctrl):
             if key == wx.WXK_LEFT:
-                if event.ControlDown():
-                    self._seek_to(self._prev_boundary())
-                else:
-                    self._seek_to(self.position_ms - self.step_ms)
+                self._seek_to(self._prev_boundary() if event.ControlDown()
+                              else self.position_ms - self.step_ms)
                 return
             if key == wx.WXK_RIGHT:
-                if event.ControlDown():
-                    self._seek_to(self._next_boundary())
-                else:
-                    self._seek_to(self.position_ms + self.step_ms)
+                self._seek_to(self._next_boundary() if event.ControlDown()
+                              else self.position_ms + self.step_ms)
                 return
             if key == wx.WXK_HOME:
                 self._seek_to(0); return

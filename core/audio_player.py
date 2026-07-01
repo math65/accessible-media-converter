@@ -133,7 +133,10 @@ class AudioPlayer:
                     raise _Superseded
                 self._process = process
 
-            stream = sd.RawOutputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, dtype='int16')
+            # latency='low' : réduit le pré-remplissage du tampon → démarrage plus
+            # réactif (l'arrêt net est géré par abort() dans le finally).
+            stream = sd.RawOutputStream(
+                samplerate=SAMPLE_RATE, channels=CHANNELS, dtype='int16', latency='low')
             stream.start()
             bytes_written = 0
             last_report_ms = -_POSITION_INTERVAL_MS
@@ -172,7 +175,13 @@ class AudioPlayer:
         finally:
             if stream is not None:
                 try:
-                    stream.stop()
+                    # Fin naturelle : stop() laisse le tampon se vider. Annulation
+                    # (pause/stop/scrub) : abort() coupe net → pas de latence d'arrêt.
+                    # (Même thread que la création du flux → sûr pour PortAudio.)
+                    if completed:
+                        stream.stop()
+                    else:
+                        stream.abort()
                     stream.close()
                 except Exception:
                     pass
