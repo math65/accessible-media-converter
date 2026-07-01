@@ -11,11 +11,12 @@ from core.ffmpeg_helpers import (
     apply_audio_codec_args,
     apply_common_audio_options,
     apply_metadata_preservation,
+    apply_video_codec_args,
     get_ffmpeg_path,
     is_transport_stream,
     parse_ffmpeg_threads,
+    resolve_audio_codec_key,
 )
-from core.formatting import get_effective_audio_codec
 
 
 def _translate(msgid):
@@ -51,15 +52,8 @@ class MergeTask:
                 logging.exception("Impossible d'interrompre FFmpeg (fusion).")
 
     def _apply_audio_codec_settings(self, cmd):
-        if self.target_format in VIDEO_CONTAINER_OUTPUTS:
-            codec_key = get_effective_audio_codec(self.target_format, self.settings)
-        elif self.target_format == 'm4b':
-            codec_key = 'aac'  # conteneur MP4/ipod encodé en AAC
-        else:
-            codec_key = self.target_format
-
         apply_common_audio_options(cmd, self.settings)
-        apply_audio_codec_args(cmd, codec_key, self.settings)
+        apply_audio_codec_args(cmd, resolve_audio_codec_key(self.target_format, self.settings), self.settings)
 
         if (
             self.settings.get("audio_normalize_streaming", False)
@@ -153,17 +147,7 @@ class MergeTask:
                 cmd.extend(['-i', meta_path])
 
             if self.target_format in VIDEO_CONTAINER_OUTPUTS:
-                video_mode = self.settings.get('video_mode', 'convert')
-                if video_mode == 'copy':
-                    cmd.extend(['-c:v', 'copy'])
-                else:
-                    crf = str(self.settings.get('video_crf', 23))
-                    encoder_preset = str(self.settings.get('video_encoder_preset', 'medium') or 'medium')
-                    pixel_format = str(self.settings.get('video_pixel_format', 'yuv420p') or 'yuv420p')
-                    cmd.extend(['-c:v', 'libx264', '-crf', crf, '-preset', encoder_preset, '-pix_fmt', pixel_format])
-                    if pixel_format == 'yuv420p':
-                        video_profile = str(self.settings.get('video_profile', 'high') or 'high')
-                        cmd.extend(['-profile:v', video_profile])
+                apply_video_codec_args(cmd, self.settings)
                 audio_mode = self.settings.get('audio_mode', 'convert')
                 if audio_mode == 'copy':
                     cmd.extend(['-c:a', 'copy'])

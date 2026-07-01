@@ -40,6 +40,13 @@ from core.formatting import (
 )
 from core.cue import cuesheet_from_chapters, finalize_tracks, parse_cue_text
 from core.merge import MergeTask
+from core.segment_export import SegmentExportTask
+from core.segments import kept_regions
+from ui.segment_editor import (
+    EXPORT_MODE_ONE_FILE,
+    EXPORT_MODE_SEPARATE,
+    SegmentEditorDialog,
+)
 from core.single_instance import drain_paths
 from core.speech import speak
 from core.i18n import AUTO_LANGUAGE_CODE, get_current_language_code, normalize_ui_language
@@ -149,6 +156,7 @@ class MainWindow(wx.Frame):
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         self._merge_task = None
+        self._segment_task = None
         self._error_report_dialog = None
         
         self.prober = FileProber()
@@ -1056,6 +1064,19 @@ class MainWindow(wx.Frame):
                 item_reset_output = menu.Append(wx.ID_ANY, _("Reset Output Settings"))
                 self.Bind(wx.EVT_MENU, lambda e: self.on_reset_output_settings(target_indices), item_reset_output)
 
+        # Découpage manuel : couper une vidéo / rediviser un audio (retirer les
+        # pubs, extraire des passages). Média temporel seulement (pas d'image, pas
+        # de cue) et par fichier — le découpage est intrinsèquement mono-fichier.
+        if (
+            self.current_tab in ('audio', 'video')
+            and not is_cue
+            and not getattr(meta, 'is_image', False)
+            and getattr(meta, 'duration', 0)
+        ):
+            menu.AppendSeparator()
+            item_cut = menu.Append(wx.ID_ANY, _("Cut / Split..."))
+            self.Bind(wx.EVT_MENU, lambda e: self.on_open_segment_editor(index), item_cut)
+
         # Presets — also reachable from the list, on every tab (Seb request).
         # From the context menu, applying a preset scopes its metadata template
         # to the right-click selection (the general button stays global).
@@ -1876,6 +1897,8 @@ class MainWindow(wx.Frame):
             self.batch_manager.stop()
         if self._merge_task:
             self._merge_task.stop()
+        if self._segment_task:
+            self._segment_task.stop()
         self._set_status(_("Stop requested."))
 
     def on_close_window(self, event):
@@ -2100,6 +2123,187 @@ class MainWindow(wx.Frame):
                 wx.ICON_ERROR,
             )
             self._set_status(_("Merge failed."))
+
+    # ------------------------------------------------------------- Cut / Split
+    def on_open_segment_editor(self, index):
+        """Ouvre l'éditeur de segments sur un fichier, puis lance l'export choisi
+        (N fichiers séparés via le batch, ou 1 fichier reconcaténé)."""
+        if self.is_converting:
+            return
+        list_ctrl, data = self._get_current_media_collection()
+        if index < 0 or index >= len(data):
+            return
+        meta = data[index]
+        if getattr(meta, 'cue_sheet', None) is not None or getattr(meta, 'is_image', False):
+            return
+        if not getattr(meta, 'duration', 0):
+            wx.MessageBox(_("This file has no known duration and cannot be cut."),
+                          _("Cannot cut"), wx.ICON_WARNING, self)
+            return
+
+        dlg = SegmentEditorDialog(self, meta)
+        result = dlg.ShowModal()
+        plan = dlg.plan
+        mode = dlg.export_mode
+        dlg.Destroy()
+        if result != wx.ID_OK:
+            return
+
+        fmt_key, settings = self._resolve_active_format_settings()
+        if fmt_key is None:
+            return
+
+        if mode == EXPORT_MODE_SEPARATE:
+            self._start_segment_split(meta, plan, list_ctrl, fmt_key, settings)
+        else:
+            self._start_segment_join(meta, plan, fmt_key, settings)
+
+    def _resolve_active_format_settings(self):
+        idx = self.combo_format.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return None, None
+        fmt_key = self.current_fmt_keys_active[idx]
+        settings = dict(self.settings_store.get(fmt_key, {}))
+        settings['ffmpeg_threads'] = self.settings_store.get('ffmpeg_threads', 'auto')
+        settings['preserve_metadata'] = self.settings_store.get('preserve_metadata', False)
+        return fmt_key, settings
+
+    def _resolve_batch_output_dir(self):
+        """(custom_out, proceed) — logique source / custom / ask de on_convert."""
+        output_mode = self.settings_store.get('output_mode', 'source')
+        if output_mode == 'custom':
+            custom_out = self.settings_store.get('custom_output_path', '')
+            if not custom_out or not os.path.exists(custom_out):
+                wx.MessageBox(_("Custom folder not found. Using source folder."),
+                              _("Warning"), wx.ICON_WARNING)
+                return None, True
+            return custom_out, True
+        if output_mode == 'ask':
+            with wx.DirDialog(self, _("Select Output Folder"), style=wx.DD_DEFAULT_STYLE) as dlg:
+                if dlg.ShowModal() == wx.ID_OK:
+                    return dlg.GetPath(), True
+                return None, False
+        return None, True
+
+    def _begin_busy_ui(self, status_label, list_ctrl=None):
+        """Transition d'UI « occupé » partagée (boutons/jauge/statut)."""
+        self.is_converting = True
+        self.stop_requested = False
+        self._current_batch_list_ctrl = list_ctrl
+        self.btn_convert.Hide()
+        self.btn_merge.Hide()
+        self.btn_stop.Show()
+        self.btn_stop.Enable(True)
+        self.btn_stop.SetLabel(_("Stop"))
+        self.gauge.SetValue(0)
+        self.gauge.Show()
+        self.lbl_progress.SetLabel(status_label)
+        self.lbl_progress.Show()
+        self.content_panel.Layout()
+        self._set_status(status_label)
+        self._update_ui_state()
+
+    def _start_segment_split(self, meta, plan, list_ctrl, fmt_key, settings):
+        custom_out, proceed = self._resolve_batch_output_dir()
+        if not proceed:
+            return
+        meta.segment_plan = plan
+        try:
+            manager = BatchConversionManager(
+                [meta], fmt_key, settings,
+                output_dir=custom_out,
+                max_concurrent=self.settings_store.get('max_concurrent_jobs', 2),
+                output_policy=self.settings_store.get('existing_output_policy', 'rename'),
+                continue_on_error=self.settings_store.get('continue_on_error', True),
+                preserve_structure=self.settings_store.get('preserve_folder_structure', False),
+                on_job_update=lambda payload: wx.CallAfter(self._on_batch_job_update, payload),
+                on_batch_update=lambda payload: wx.CallAfter(self._on_batch_progress_update, payload),
+                on_batch_complete=lambda payload: wx.CallAfter(self._on_batch_complete, payload),
+            )
+        finally:
+            # Le plan est déjà figé dans les jobs à la construction ; on l'efface
+            # pour ne pas re-découper ce fichier au prochain « Convertir » global.
+            meta.segment_plan = None
+        self.batch_manager = manager
+        self._begin_busy_ui(_("Cutting..."), list_ctrl=list_ctrl)
+        manager.start()
+
+    def _start_segment_join(self, meta, plan, fmt_key, settings):
+        regions = kept_regions(plan)
+        if not regions:
+            return
+        ext = get_output_extension(fmt_key)
+        stem = os.path.splitext(os.path.basename(meta.full_path))[0]
+        default_name = f"{stem} (cut).{ext}"
+        default_dir = os.path.dirname(meta.full_path) or os.getcwd()
+        if self.settings_store.get('output_mode', 'source') == 'custom':
+            candidate = self.settings_store.get('custom_output_path', '')
+            if candidate and os.path.isdir(candidate):
+                default_dir = candidate
+
+        with wx.FileDialog(self, _("Select Output File"), defaultDir=default_dir,
+                           defaultFile=default_name,
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
+            if dlg.ShowModal() == wx.ID_CANCEL:
+                return
+            output_path = dlg.GetPath()
+
+        self._segment_task = SegmentExportTask(meta, regions, fmt_key, settings, output_path)
+        self._begin_busy_ui(_("Cutting..."))
+
+        def _run():
+            success = True
+            error_msg = ""
+            try:
+                self._segment_task.run(
+                    progress_callback=lambda pct: wx.CallAfter(self._on_segment_export_progress, pct),
+                    stop_check_callback=lambda: self.stop_requested,
+                )
+            except Exception as exc:
+                success = False
+                error_msg = str(exc)
+            wx.CallAfter(self._on_segment_export_complete, success, error_msg)
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _on_segment_export_progress(self, percent):
+        self.gauge.SetValue(percent)
+        label = _("Cutting...") + f" {percent}%"
+        self.lbl_progress.SetLabel(label)
+        self._set_status(label)
+
+    def _on_segment_export_complete(self, success, error_msg):
+        should_close = self._pending_close_after_stop
+        self._pending_close_after_stop = False
+        self.is_converting = False
+        self.stop_requested = False
+        self._segment_task = None
+        wx.CallAfter(self._drain_pending_external_paths)
+
+        self.btn_stop.Hide()
+        self.btn_convert.Show()
+        self.btn_merge.Show()
+        self.gauge.Hide()
+        self.lbl_progress.Hide()
+        self.content_panel.Layout()
+        self._update_ui_state()
+
+        if should_close:
+            self.Destroy()
+            return
+
+        if success:
+            wx.MessageBox(_("Cut complete."), _("Success"))
+            self._set_status(_("Cut complete."))
+        elif error_msg == "Stopped by user":
+            self._set_status(_("Stop requested."))
+        else:
+            wx.MessageBox(
+                _("Cut failed.") + (f"\n{error_msg}" if error_msg else ""),
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            self._set_status(_("Cut failed."))
 
     def _format_batch_job_status(self, payload):
         state = payload.get('state')

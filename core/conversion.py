@@ -11,12 +11,14 @@ from core.ffmpeg_helpers import (
     apply_audio_codec_args,
     apply_common_audio_options,
     apply_metadata_preservation,
+    apply_video_codec_args,
     get_ffmpeg_path,
     get_ffprobe_path,
     is_transport_stream,
     parse_ffmpeg_threads,
+    resolve_audio_codec_key,
 )
-from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
+from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS
 from core.metadata_edit import (
     build_tag_metadata_args,
     cover_stream_args,
@@ -107,6 +109,26 @@ def build_cue_track_output_path(image_path, album, number, total, title, target_
     extension = get_output_extension(target_format)
     safe_title = sanitize_filename(title) if title else _translate("Track {number}").format(number=number)
     return os.path.join(album_dir, f"{number:0{width}d} - {safe_title}.{extension}")
+
+
+def build_segment_output_path(input_path, number, total, label, target_format,
+                              custom_output_dir=None, relative_dir=""):
+    """Chemin d'un segment découpé manuellement : <dossier>/<nom> - <label|part NN>.ext.
+
+    Contrairement au split de cue, pas de sous-dossier album : les morceaux d'un
+    même fichier restent à côté de la source (ou dans le dossier de sortie choisi).
+    """
+    base_dir = resolve_output_dir(input_path, custom_output_dir=custom_output_dir)
+    if relative_dir and custom_output_dir and os.path.isdir(custom_output_dir):
+        base_dir = os.path.join(base_dir, relative_dir)
+    stem = sanitize_filename(os.path.splitext(os.path.basename(input_path))[0])
+    extension = get_output_extension(target_format)
+    if label:
+        suffix = sanitize_filename(label)
+    else:
+        width = max(2, len(str(total)))
+        suffix = _translate("part {number}").format(number=f"{number:0{width}d}")
+    return os.path.join(base_dir, f"{stem} - {suffix}.{extension}")
 
 
 class ConversionTask:
@@ -251,11 +273,7 @@ class ConversionTask:
         logging.info("Normalisation streaming appliquee sur la sortie audio.")
 
     def _get_target_audio_codec(self):
-        if self.target_format in VIDEO_CONTAINER_OUTPUTS:
-            return get_effective_audio_codec(self.target_format, self.settings)
-        if self.target_format == 'm4b':
-            return 'aac'  # le M4B est un conteneur MP4 encodé en AAC
-        return self.target_format
+        return resolve_audio_codec_key(self.target_format, self.settings)
 
     def _apply_encoded_audio_settings(self, cmd, mapped_container_tracks):
         apply_common_audio_options(cmd, self.settings)
@@ -550,23 +568,7 @@ class ConversionTask:
 
         used_cover_copy = False
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
-            video_mode = self.settings.get('video_mode', 'convert')
-            if video_mode == 'copy':
-                cmd.extend(['-c:v', 'copy'])
-            else:
-                crf = str(self.settings.get('video_crf', 23))
-                encoder_preset = str(self.settings.get('video_encoder_preset', 'medium') or 'medium')
-                pixel_format = str(self.settings.get('video_pixel_format', 'yuv420p') or 'yuv420p')
-                cmd.extend(['-c:v', 'libx264', '-crf', crf, '-preset', encoder_preset, '-pix_fmt', pixel_format])
-
-                if pixel_format == 'yuv420p':
-                    video_profile = str(self.settings.get('video_profile', 'high') or 'high')
-                    cmd.extend(['-profile:v', video_profile])
-                else:
-                    logging.info(
-                        "Profil H.264 ignoré pour le pixel format %s afin d'éviter une combinaison invalide.",
-                        pixel_format,
-                    )
+            apply_video_codec_args(cmd, self.settings)
 
             if mapped_container_tracks and mapped_container_tracks.get("subtitle"):
                 if self.target_format in ['mp4', 'mov']:

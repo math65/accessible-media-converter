@@ -84,6 +84,47 @@ def apply_common_audio_options(cmd, settings):
         cmd.extend(['-ac', '1'])
 
 
+def resolve_audio_codec_key(target_format, settings):
+    """Clé de codec audio effective pour un format de sortie.
+
+    Un conteneur vidéo délègue à ``get_effective_audio_codec`` (aac/…), le M4B est
+    un MP4 encodé en AAC, sinon le format audio est sa propre clé. Partagé par
+    ConversionTask, MergeTask et SegmentExportTask pour éviter la divergence.
+    """
+    # Import paresseux : formatting est un module de plus haut niveau ; on évite
+    # tout risque de cycle à l'import de ce module bas niveau.
+    from core.formatting import get_effective_audio_codec
+
+    if target_format in VIDEO_CONTAINER_OUTPUTS:
+        return get_effective_audio_codec(target_format, settings)
+    if target_format == 'm4b':
+        return 'aac'
+    return target_format
+
+
+def apply_video_codec_args(cmd, settings):
+    """Émet les arguments d'encodage vidéo H.264 (ou ``-c:v copy``) selon les
+    réglages. Partagé par ConversionTask, MergeTask et SegmentExportTask.
+    """
+    if settings.get('video_mode', 'convert') == 'copy':
+        cmd.extend(['-c:v', 'copy'])
+        return
+
+    crf = str(settings.get('video_crf', 23))
+    encoder_preset = str(settings.get('video_encoder_preset', 'medium') or 'medium')
+    pixel_format = str(settings.get('video_pixel_format', 'yuv420p') or 'yuv420p')
+    cmd.extend(['-c:v', 'libx264', '-crf', crf, '-preset', encoder_preset, '-pix_fmt', pixel_format])
+
+    if pixel_format == 'yuv420p':
+        video_profile = str(settings.get('video_profile', 'high') or 'high')
+        cmd.extend(['-profile:v', video_profile])
+    else:
+        logging.info(
+            "Profil H.264 ignoré pour le pixel format %s afin d'éviter une combinaison invalide.",
+            pixel_format,
+        )
+
+
 def apply_audio_codec_args(cmd, codec_key, settings):
     if codec_key == 'mp3':
         cmd.extend(['-c:a', 'libmp3lame'])

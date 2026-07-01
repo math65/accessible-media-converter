@@ -77,6 +77,11 @@ class MediaMetadata:
         self.embedded_chapters = None
         self.cue_error = None
         self.source_format_name = ""
+        # Découpage manuel : core.segments.SegmentPlan posé par l'éditeur de
+        # segments (Cut / Split). Quand présent, ce media est découpé en N sorties
+        # (une par région gardée) via batch_manager, ou reconcaténé en 1 fichier
+        # (SegmentExportTask) selon le mode d'export choisi.
+        self.segment_plan = None
 
     @property
     def has_audio(self): return len(self.audio_tracks) > 0

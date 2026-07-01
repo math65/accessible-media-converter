@@ -5,7 +5,13 @@ import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 
-from core.conversion import ConversionTask, build_cue_track_output_path, build_output_path
+from core.conversion import (
+    ConversionTask,
+    build_cue_track_output_path,
+    build_output_path,
+    build_segment_output_path,
+)
+from core.segments import kept_regions
 
 
 def _translate(msgid):
@@ -104,11 +110,68 @@ class BatchConversionManager:
         reserved_paths = set()
         jobs = []
         for meta in self.media_list:
-            if getattr(meta, 'cue_sheet', None) is not None:
+            if getattr(meta, 'segment_plan', None) is not None:
+                self._append_segment_jobs(jobs, meta, reserved_paths)
+            elif getattr(meta, 'cue_sheet', None) is not None:
                 self._append_cue_jobs(jobs, meta, reserved_paths)
             else:
                 self._append_normal_job(jobs, meta, reserved_paths)
         return jobs
+
+    def _append_segment_jobs(self, jobs, meta, reserved_paths):
+        """Développe un plan de découpage manuel en un job par région gardée
+        (-ss/-t sur le fichier source). Utilisé pour l'export « N fichiers » ; le
+        mode « 1 fichier reconcaténé » passe lui par SegmentExportTask, hors batch."""
+        target_format, job_settings = self._resolve_job_format_settings(meta)
+        regions = kept_regions(meta.segment_plan)
+
+        if not regions:
+            jobs.append(BatchJob(
+                index=len(jobs), meta=meta, target_format=target_format, settings=job_settings,
+                output_path=None, weight=1.0, state=JOB_STATE_ERROR,
+                error_message=_translate("At least one segment must be kept."),
+            ))
+            return
+
+        total = len(regions)
+        for position, (start_ms, end_ms) in enumerate(regions, start=1):
+            segment = self._segment_for_region(meta, start_ms, end_ms)
+            label = segment.label if segment is not None else ""
+            base_output_path = build_segment_output_path(
+                meta.full_path, position, total, label, target_format,
+                custom_output_dir=self.output_dir,
+                relative_dir=self._meta_relative_dir(meta),
+            )
+            resolved_output_path, skip_reason = self._reserve_output_path(
+                base_output_path, reserved_paths, meta.full_path,
+            )
+            weight = max((end_ms - start_ms) / 1000.0, 0.1)
+            job = BatchJob(
+                index=len(jobs),
+                meta=meta,
+                target_format=target_format,
+                settings=job_settings,
+                output_path=resolved_output_path,
+                weight=weight,
+                input_path=meta.full_path,
+                clip=(start_ms, end_ms),
+                tag_overrides={'title': label} if label else None,
+            )
+            if skip_reason:
+                job.state = JOB_STATE_SKIPPED
+                job.progress = 100
+                job.skip_reason = skip_reason
+            jobs.append(job)
+
+    @staticmethod
+    def _segment_for_region(meta, start_ms, end_ms):
+        """Retrouve le segment source d'une région gardée (pour récupérer son
+        label). Les régions gardées adjacentes ayant été fusionnées, on identifie
+        par le début."""
+        for seg in getattr(meta.segment_plan, 'segments', []):
+            if seg.keep and seg.start_ms == start_ms:
+                return seg
+        return None
 
     def _append_normal_job(self, jobs, meta, reserved_paths):
         target_format, job_settings = self._resolve_job_format_settings(meta)
