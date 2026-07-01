@@ -112,7 +112,6 @@ class SegmentEditorFrame(wx.Frame):
         self._montage_queue = []     # régions gardées restant à jouer (mode montage)
         self._skip_discarded = False # mode montage : la lecture saute les parties jetées
         self._dirty = False          # découpes modifiées depuis dernier export/enregistrement
-        self._pending_export = None  # (mode, fmt_key, settings) appliqué à la fermeture
         self.player = AudioPlayer()
 
         self._build_menu()
@@ -121,10 +120,9 @@ class SegmentEditorFrame(wx.Frame):
         self._update_status()
         self._start_silence_detection()
 
-        # L'éditeur bloque la fenêtre principale tant qu'il est ouvert.
-        if parent is not None:
-            parent.Disable()
-
+        # L'éditeur est une fenêtre indépendante : il ne bloque PAS la fenêtre
+        # principale, pour pouvoir lancer un export (progression côté fenêtre
+        # principale) tout en gardant l'éditeur ouvert et continuer à ajuster.
         self.Bind(wx.EVT_CHAR_HOOK, self.on_char_hook)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.CentreOnParent()
@@ -885,30 +883,34 @@ class SegmentEditorFrame(wx.Frame):
 
     # ------------------------------------------------------------------ export / close
     def _request_export(self, mode):
+        if not callable(self.on_export_cb):
+            return
         error = segmods.validate(self.plan)
         if error:
             speak(error)
             wx.MessageBox(error, _("Cannot export"), wx.ICON_WARNING, self)
             return
-        # Choix du format/qualité PENDANT que l'éditeur est ouvert (parenté ici) :
-        # si l'utilisateur annule, on ne ferme pas → aucune découpe perdue.
+        # Choix du format/qualité (parenté à l'éditeur). Annuler → on ne fait rien.
         fmt_key = settings = None
         if callable(self.on_choose_settings):
             fmt_key, settings = self.on_choose_settings(self, self.meta)
             if fmt_key is None:
-                return  # annulé : on reste ouvert
-        self._pending_export = (mode, fmt_key, settings)
-        # L'export réel (choix du fichier de sortie + conversion) est fait par
-        # l'appelant après la fermeture (parent réactivé).
+                return
         self.player.stop()
-        self.Close()
+        # L'export se lance SANS fermer l'éditeur : la fenêtre reste ouverte pour
+        # ré-exporter ou continuer à ajuster. La progression s'affiche côté fenêtre
+        # principale.
+        launched = self.on_export_cb(self.meta, self.plan, mode, fmt_key, settings)
+        if launched:
+            self._dirty = False
+            speak(_("Export started"))
 
     def on_close(self, event):
         # Confirmation si des découpes non exportées / non enregistrées seraient
-        # perdues (Alt+F4, Ctrl+W…). L'export a déjà mis _pending_export.
-        if self._pending_export is None and self._dirty:
+        # perdues (Alt+F4, Ctrl+W…).
+        if self._dirty:
             resp = wx.MessageBox(
-                _("Close without exporting? Your cuts will be lost."),
+                _("Close without saving? Your cuts will be lost."),
                 _("Cut / Split"), wx.YES_NO | wx.ICON_WARNING, self)
             if resp != wx.YES:
                 if hasattr(event, 'CanVeto') and event.CanVeto():
@@ -917,16 +919,7 @@ class SegmentEditorFrame(wx.Frame):
 
         self._closed = True
         self.player.shutdown()  # ferme le flux + termine le thread moteur
-        parent = self.GetParent()
-        if parent is not None:
-            parent.Enable()
-            parent.Raise()
-        pending = self._pending_export
-        meta, plan, cb = self.meta, self.plan, self.on_export_cb
         self.Destroy()
-        if pending is not None and cb is not None:
-            mode, fmt_key, settings = pending
-            wx.CallAfter(cb, meta, plan, mode, fmt_key, settings)
 
     # ------------------------------------------------------------------ clavier
     def on_char_hook(self, event):

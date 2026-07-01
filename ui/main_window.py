@@ -2182,13 +2182,19 @@ class MainWindow(wx.Frame):
         return fmt_key, settings
 
     def _run_segment_export(self, meta, plan, mode, fmt_key, settings):
+        """Lance l'export du découpage. Retourne True s'il a démarré (l'éditeur reste
+        ouvert et efface son état « modifié »), False si annulé/refusé."""
         if not fmt_key:
-            return
+            return False
+        if self.is_converting:
+            wx.MessageBox(
+                _("A conversion is already running. Please wait for it to finish."),
+                _("Please wait"), wx.ICON_INFORMATION)
+            return False
         if mode == EXPORT_MODE_SEPARATE:
             list_ctrl, _data = self._get_current_media_collection()
-            self._start_segment_split(meta, plan, list_ctrl, fmt_key, settings)
-        else:
-            self._start_segment_join(meta, plan, fmt_key, settings)
+            return self._start_segment_split(meta, plan, list_ctrl, fmt_key, settings)
+        return self._start_segment_join(meta, plan, fmt_key, settings)
 
     def _resolve_active_format_settings(self):
         idx = self.combo_format.GetSelection()
@@ -2238,7 +2244,7 @@ class MainWindow(wx.Frame):
     def _start_segment_split(self, meta, plan, list_ctrl, fmt_key, settings):
         custom_out, proceed = self._resolve_batch_output_dir()
         if not proceed:
-            return
+            return False
         meta.segment_plan = plan
         try:
             manager = BatchConversionManager(
@@ -2259,11 +2265,12 @@ class MainWindow(wx.Frame):
         self.batch_manager = manager
         self._begin_busy_ui(_("Cutting..."), list_ctrl=list_ctrl)
         manager.start()
+        return True
 
     def _start_segment_join(self, meta, plan, fmt_key, settings):
         regions = kept_regions(plan)
         if not regions:
-            return
+            return False
         ext = get_output_extension(fmt_key)
         stem = os.path.splitext(os.path.basename(meta.full_path))[0]
         default_name = f"{stem} (cut).{ext}"
@@ -2277,7 +2284,7 @@ class MainWindow(wx.Frame):
                            defaultFile=default_name,
                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
             if dlg.ShowModal() == wx.ID_CANCEL:
-                return
+                return False
             output_path = dlg.GetPath()
 
         self._segment_task = SegmentExportTask(meta, regions, fmt_key, settings, output_path)
@@ -2297,6 +2304,7 @@ class MainWindow(wx.Frame):
             wx.CallAfter(self._on_segment_export_complete, success, error_msg)
 
         threading.Thread(target=_run, daemon=True).start()
+        return True
 
     def _on_segment_export_progress(self, percent):
         self.gauge.SetValue(percent)

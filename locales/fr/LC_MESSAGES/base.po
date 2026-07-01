@@ -6,7 +6,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ui/main_window.py:245 ui/segment_editor.py:148
+#: ui/main_window.py:245 ui/segment_editor.py:146
 msgid "&File"
 msgstr "&Fichier"
 
@@ -22,7 +22,7 @@ msgstr "Ajouter un &dossier..."
 msgid "E&xit"
 msgstr "&Quitter"
 
-#: ui/main_window.py:246 ui/segment_editor.py:219
+#: ui/main_window.py:246 ui/segment_editor.py:217
 msgid "&Edit"
 msgstr "&Édition"
 
@@ -46,7 +46,7 @@ msgstr "&Supprimer la sélection"
 msgid "Preferences"
 msgstr "Préférences"
 
-#: ui/main_window.py:247 ui/segment_editor.py:232
+#: ui/main_window.py:247 ui/segment_editor.py:230
 msgid "&Help"
 msgstr "&Aide"
 
@@ -409,7 +409,7 @@ msgid "Copy report"
 msgstr "Copier le rapport"
 
 #: ui/announcement_dialog.py:40 ui/presets_dialog.py:108
-#: ui/segment_editor.py:147 ui/update_dialog.py:92 ui/update_dialog.py:93
+#: ui/segment_editor.py:145 ui/update_dialog.py:92 ui/update_dialog.py:93
 msgid "Close"
 msgstr "Fermer"
 
@@ -579,7 +579,7 @@ msgstr "&Lancer la conversion"
 msgid "Start conversion"
 msgstr "Lancer la conversion"
 
-#: ui/main_window.py:1964 ui/main_window.py:2055 ui/main_window.py:2229
+#: ui/main_window.py:1964 ui/main_window.py:2055 ui/main_window.py:2235
 #: ui/main_window.py:327
 msgid "Stop"
 msgstr "Arrêter"
@@ -664,7 +664,7 @@ msgstr "Format de sortie sélectionné : {format}"
 msgid "Settings updated for format: {format}"
 msgstr "Réglages mis à jour pour le format : {format}"
 
-#: ui/main_window.py:2364 ui/main_window.py:470
+#: ui/main_window.py:2372 ui/main_window.py:470
 msgid "Ready"
 msgstr "Prêt"
 
@@ -688,11 +688,11 @@ msgstr "Préparation de la conversion..."
 msgid "Conversion started."
 msgstr "Conversion démarrée."
 
-#: ui/main_window.py:2343
+#: ui/main_window.py:2351
 msgid "Converting..."
 msgstr "Conversion en cours..."
 
-#: ui/main_window.py:2351 ui/main_window.py:2579
+#: ui/main_window.py:2359 ui/main_window.py:2587
 msgid "Done"
 msgstr "Terminé"
 
@@ -700,19 +700,19 @@ msgstr "Terminé"
 msgid "Stopping..."
 msgstr "Arrêt en cours..."
 
-#: ui/main_window.py:1898 ui/main_window.py:2114 ui/main_window.py:2331
+#: ui/main_window.py:1898 ui/main_window.py:2114 ui/main_window.py:2339
 msgid "Stop requested."
 msgstr "Arrêt demandé."
 
-#: ui/main_window.py:2357
+#: ui/main_window.py:2365
 msgid "Stopped by user"
 msgstr "Arrêté par l'utilisateur"
 
-#: ui/main_window.py:2567
+#: ui/main_window.py:2575
 msgid "All tasks completed!"
 msgstr "Toutes les tâches sont terminées !"
 
-#: ui/main_window.py:2568
+#: ui/main_window.py:2576
 msgid "All tasks completed successfully."
 msgstr "Toutes les tâches sont terminées avec succès."
 
@@ -784,23 +784,23 @@ msgstr "Liste vidée."
 msgid "Open Media"
 msgstr "Ouvrir un média"
 
-#: ui/main_window.py:2111 ui/main_window.py:2328 ui/main_window.py:2567
+#: ui/main_window.py:2111 ui/main_window.py:2336 ui/main_window.py:2575
 msgid "Success"
 msgstr "Succès"
 
-#: ui/main_window.py:1337 ui/main_window.py:2118 ui/main_window.py:2335
-#: ui/main_window.py:2355 ui/main_window.py:2612 ui/main_window.py:2624
+#: ui/main_window.py:1337 ui/main_window.py:2118 ui/main_window.py:2343
+#: ui/main_window.py:2363 ui/main_window.py:2620 ui/main_window.py:2632
 #: ui/main_window.py:518 ui/main_window.py:543 ui/main_window.py:665
-#: ui/main_window.py:673 ui/segment_editor.py:685 ui/segment_editor.py:703
+#: ui/main_window.py:673 ui/segment_editor.py:683 ui/segment_editor.py:701
 msgid "Error"
 msgstr "Erreur"
 
-#: ui/main_window.py:1949 ui/main_window.py:2210 ui/main_window.py:526
+#: ui/main_window.py:1949 ui/main_window.py:2216 ui/main_window.py:526
 #: ui/main_window.py:627 ui/track_manager.py:436
 msgid "Warning"
 msgstr "Attention"
 
-#: ui/main_window.py:1949 ui/main_window.py:2209
+#: ui/main_window.py:1949 ui/main_window.py:2215
 msgid "Custom folder not found. Using source folder."
 msgstr "Dossier personnalisé introuvable. Utilisation du dossier source."
 
@@ -845,7 +845,7 @@ msgstr ""
 msgid "Confirm Exit"
 msgstr "Confirmer la fermeture"
 
-#: ui/main_window.py:2642
+#: ui/main_window.py:2650
 msgid "About"
 msgstr "À propos"
 
@@ -1291,7 +1291,7 @@ msgstr "Enregistrer les préférences"
 msgid "Cancel preferences"
 msgstr "Annuler les préférences"
 
-#: ui/main_window.py:1952 ui/main_window.py:2026 ui/main_window.py:2214
+#: ui/main_window.py:1952 ui/main_window.py:2026 ui/main_window.py:2220
 #: ui/preferences_dialog.py:322
 msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
@@ -1351,7 +1351,7 @@ msgstr ""
 "Utilisez Espace pour conserver ou retirer une piste. Utilisez Ctrl+Haut et "
 "Ctrl+Bas pour la réordonner."
 
-#: ui/segment_editor.py:256 ui/track_manager.py:147
+#: ui/segment_editor.py:254 ui/track_manager.py:147
 msgid "#"
 msgstr "N°"
 
@@ -1425,23 +1425,23 @@ msgid "Forced"
 msgstr "Forcée"
 
 # --- BATCH PARALLELE ---
-#: ui/main_window.py:2349
+#: ui/main_window.py:2357
 msgid "Queued"
 msgstr "En file d'attente"
 
-#: ui/main_window.py:2363
+#: ui/main_window.py:2371
 msgid "Skipped"
 msgstr "Ignoré"
 
-#: ui/main_window.py:2360
+#: ui/main_window.py:2368
 msgid "Skipped (Exists)"
 msgstr "Ignoré (déjà présent)"
 
-#: ui/main_window.py:2362
+#: ui/main_window.py:2370
 msgid "Skipped (Batch stopped)"
 msgstr "Ignoré (batch interrompu)"
 
-#: ui/main_window.py:2380
+#: ui/main_window.py:2388
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error"
@@ -1449,7 +1449,7 @@ msgstr ""
 "{progress}% - {running} en cours / {queued} en attente / {done} terminés / "
 "{skipped} ignorés / {error} erreurs"
 
-#: ui/main_window.py:2384
+#: ui/main_window.py:2392
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error / {stopped} stopped"
@@ -1457,11 +1457,11 @@ msgstr ""
 "{progress}% - {running} en cours / {queued} en attente / {done} terminés / "
 "{skipped} ignorés / {error} erreurs / {stopped} arrêtés"
 
-#: ui/main_window.py:2559
+#: ui/main_window.py:2567
 msgid "Batch stopped by user."
 msgstr "Batch arrêté par l'utilisateur."
 
-#: ui/main_window.py:2571
+#: ui/main_window.py:2579
 msgid ""
 "Batch completed.\n"
 "\n"
@@ -1475,7 +1475,7 @@ msgstr ""
 "Ignorés : {skipped}\n"
 "Erreurs : {error}"
 
-#: ui/main_window.py:2581
+#: ui/main_window.py:2589
 msgid "Batch finished: {done} done / {skipped} skipped / {error} error"
 msgstr "Batch terminé : {done} terminés / {skipped} ignorés / {error} erreurs"
 
@@ -1628,15 +1628,15 @@ msgstr "&Documentation..."
 msgid "View on &GitHub..."
 msgstr "Voir sur &GitHub..."
 
-#: ui/main_window.py:2611
+#: ui/main_window.py:2619
 msgid "Unable to open the GitHub repository page."
 msgstr "Impossible d'ouvrir la page GitHub du dépôt."
 
-#: ui/main_window.py:2603
+#: ui/main_window.py:2611
 msgid "Documentation"
 msgstr "Documentation"
 
-#: ui/main_window.py:2595
+#: ui/main_window.py:2603
 msgid ""
 "The local documentation files were not found.\n"
 "\n"
@@ -1648,7 +1648,7 @@ msgstr ""
 "Fichier attendu :\n"
 "{path}"
 
-#: ui/main_window.py:2599
+#: ui/main_window.py:2607
 msgid ""
 "The local documentation could not be opened.\n"
 "\n"
@@ -1660,7 +1660,7 @@ msgstr ""
 "Fichier :\n"
 "{path}"
 
-#: ui/main_window.py:2465
+#: ui/main_window.py:2473
 msgid ""
 "{paths}\n"
 "...and {count} more file(s)."
@@ -1668,7 +1668,7 @@ msgstr ""
 "{paths}\n"
 "...et {count} fichier(s) supplémentaire(s)."
 
-#: ui/main_window.py:2494
+#: ui/main_window.py:2502
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -1684,7 +1684,7 @@ msgstr ""
 "\n"
 "Voulez-vous le supprimer ?"
 
-#: ui/main_window.py:2498
+#: ui/main_window.py:2506
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -1700,11 +1700,11 @@ msgstr ""
 "\n"
 "Voulez-vous les supprimer ?"
 
-#: ui/main_window.py:2508 ui/main_window.py:2534
+#: ui/main_window.py:2516 ui/main_window.py:2542
 msgid "Delete Partial Files"
 msgstr "Supprimer les fichiers partiels"
 
-#: ui/main_window.py:2531
+#: ui/main_window.py:2539
 msgid ""
 "Some partially generated files could not be deleted.\n"
 "\n"
@@ -1782,11 +1782,11 @@ msgstr "Fusionner les fichiers"
 msgid "Merging files..."
 msgstr "Fusion en cours..."
 
-#: ui/main_window.py:2039 ui/main_window.py:2276
+#: ui/main_window.py:2039 ui/main_window.py:2283
 msgid "Select Output File"
 msgstr "Choisir le fichier de sortie"
 
-#: ui/main_window.py:2346 ui/main_window.py:2398
+#: ui/main_window.py:2354 ui/main_window.py:2406
 msgid "{eta} remaining"
 msgstr "{eta} restant"
 
@@ -1991,7 +1991,7 @@ msgstr ""
 msgid "{tab} tab selected."
 msgstr "Onglet {tab} sélectionné."
 
-#: ui/main_window.py:2354
+#: ui/main_window.py:2362
 msgid "Error (file not found)"
 msgstr "Erreur (fichier introuvable)"
 
@@ -2442,7 +2442,7 @@ msgstr "Ce fichier sera découpé en {count} pistes."
 msgid "To split"
 msgstr "À découper"
 
-#: core/conversion.py:110 ui/main_window.py:1830 ui/segment_editor.py:436
+#: core/conversion.py:110 ui/main_window.py:1830 ui/segment_editor.py:434
 msgid "Track {number}"
 msgstr "Piste {number}"
 
@@ -2740,7 +2740,7 @@ msgstr "Réglages de pistes appliqués à {count} fichiers."
 msgid "Download Media (&DownAccess)..."
 msgstr "Télécharger des médias (&DownAccess)..."
 
-#: ui/main_window.py:2623
+#: ui/main_window.py:2631
 msgid "Unable to open the DownAccess page."
 msgstr "Impossible d'ouvrir la page DownAccess."
 
@@ -2784,7 +2784,7 @@ msgstr "Découpage impossible"
 msgid "Cannot export"
 msgstr "Export impossible"
 
-#: ui/segment_editor.py:251
+#: ui/segment_editor.py:249
 msgid "Current position"
 msgstr "Position courante"
 
@@ -2796,104 +2796,104 @@ msgstr "Couper / Diviser — {name}"
 msgid "Cut / Split..."
 msgstr "Couper / Diviser..."
 
-#: ui/segment_editor.py:551
+#: ui/segment_editor.py:549
 msgid "Cut added at {time}"
 msgstr "Coupe ajoutée à {time}"
 
-#: ui/main_window.py:2328 ui/main_window.py:2329
+#: ui/main_window.py:2336 ui/main_window.py:2337
 msgid "Cut complete."
 msgstr "Découpage terminé."
 
-#: ui/main_window.py:2334 ui/main_window.py:2338
+#: ui/main_window.py:2342 ui/main_window.py:2346
 msgid "Cut failed."
 msgstr "Échec du découpage."
 
-#: ui/segment_editor.py:604
+#: ui/segment_editor.py:602
 msgid "Cut removed; segments merged"
 msgstr "Coupe retirée ; segments fusionnés"
 
-#: ui/main_window.py:2260 ui/main_window.py:2284 ui/main_window.py:2303
+#: ui/main_window.py:2266 ui/main_window.py:2291 ui/main_window.py:2311
 msgid "Cutting..."
 msgstr "Découpage en cours..."
 
-#: ui/segment_editor.py:300
+#: ui/segment_editor.py:298
 msgid "Discard"
 msgstr "Jeter"
 
-#: ui/segment_editor.py:574
+#: ui/segment_editor.py:572
 msgid "Discard region created from {start} to {end}"
 msgstr "Région à jeter créée de {start} à {end}"
 
-#: ui/segment_editor.py:259
+#: ui/segment_editor.py:257
 msgid "Duration"
 msgstr "Durée"
 
-#: ui/segment_editor.py:258
+#: ui/segment_editor.py:256
 msgid "End"
 msgstr "Fin"
 
-#: ui/segment_editor.py:531
+#: ui/segment_editor.py:529
 msgid "Go to position"
 msgstr "Aller à la position"
 
-#: ui/segment_editor.py:530
+#: ui/segment_editor.py:528
 msgid "Go to position (HH:MM:SS.mmm):"
 msgstr "Aller à la position (HH:MM:SS.mmm) :"
 
-#: ui/segment_editor.py:536 ui/segment_editor.py:538
+#: ui/segment_editor.py:534 ui/segment_editor.py:536
 msgid "Invalid time"
 msgstr "Heure invalide"
 
-#: ui/segment_editor.py:300
+#: ui/segment_editor.py:298
 msgid "Keep"
 msgstr "Garder"
 
-#: ui/segment_editor.py:559
+#: ui/segment_editor.py:557
 msgid "Mark a region start first"
 msgstr "Marquez d'abord un début de région"
 
-#: ui/segment_editor.py:546
+#: ui/segment_editor.py:544
 msgid "No cut added here"
 msgstr "Aucune coupe ajoutée ici"
 
-#: ui/segment_editor.py:420 ui/segment_editor.py:580 ui/segment_editor.py:594
-#: ui/segment_editor.py:609 ui/segment_editor.py:618
+#: ui/segment_editor.py:418 ui/segment_editor.py:578 ui/segment_editor.py:592
+#: ui/segment_editor.py:607 ui/segment_editor.py:616
 msgid "No segment selected"
 msgstr "Aucun segment sélectionné"
 
-#: ui/segment_editor.py:537
+#: ui/segment_editor.py:535
 msgid "Please enter a valid time (HH:MM:SS.mmm)."
 msgstr "Veuillez entrer une heure valide (HH:MM:SS.mmm)."
 
-#: ui/segment_editor.py:564
+#: ui/segment_editor.py:562
 msgid "Region start and end are identical"
 msgstr "Le début et la fin de la région sont identiques"
 
-#: ui/segment_editor.py:555
+#: ui/segment_editor.py:553
 msgid "Region start marked at {time}"
 msgstr "Début de région marqué à {time}"
 
-#: ui/segment_editor.py:588
+#: ui/segment_editor.py:586
 msgid "Segment {index}: {state}"
 msgstr "Segment {index} : {state}"
 
-#: ui/segment_editor.py:255
+#: ui/segment_editor.py:253
 msgid "Segments"
 msgstr "Segments"
 
-#: ui/segment_editor.py:257
+#: ui/segment_editor.py:255
 msgid "Start"
 msgstr "Début"
 
-#: ui/segment_editor.py:260
+#: ui/segment_editor.py:258
 msgid "State"
 msgstr "État"
 
-#: ui/segment_editor.py:201
+#: ui/segment_editor.py:199
 msgid "Step"
 msgstr "Pas"
 
-#: ui/segment_editor.py:597
+#: ui/segment_editor.py:595
 msgid "The last segment has no following cut to remove"
 msgstr "Le dernier segment n'a pas de coupe suivante à retirer"
 
@@ -2905,15 +2905,15 @@ msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 msgid "This file has no known duration and cannot be split."
 msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 
-#: ui/segment_editor.py:246
+#: ui/segment_editor.py:244
 msgid "Total duration: {duration}"
 msgstr "Durée totale : {duration}"
 
-#: ui/segment_editor.py:326 ui/segment_editor.py:589
+#: ui/segment_editor.py:324 ui/segment_editor.py:587
 msgid "discard"
 msgstr "à jeter"
 
-#: ui/segment_editor.py:326 ui/segment_editor.py:589
+#: ui/segment_editor.py:324 ui/segment_editor.py:587
 msgid "keep"
 msgstr "à garder"
 
@@ -2921,287 +2921,283 @@ msgstr "à garder"
 msgid "part {number}"
 msgstr "partie {number}"
 
-#: ui/segment_editor.py:327
+#: ui/segment_editor.py:325
 msgid "{time} — segment {index} of {total}, {state}"
 msgstr "{time} — segment {index} sur {total}, {state}"
 
-#: ui/segment_editor.py:155
+#: ui/segment_editor.py:153
 msgid "Play current segment"
 msgstr "Lire le segment courant"
 
-#: ui/segment_editor.py:389 ui/segment_editor.py:400
+#: ui/segment_editor.py:387 ui/segment_editor.py:398
 msgid "Playing"
 msgstr "Lecture"
 
-#: ui/segment_editor.py:426
+#: ui/segment_editor.py:424
 msgid "Playing segment {index}"
 msgstr "Lecture du segment {index}"
 
-#: ui/segment_editor.py:469
+#: ui/segment_editor.py:467
 msgid "Scrub off"
 msgstr "Scrub désactivé"
 
-#: ui/segment_editor.py:469
+#: ui/segment_editor.py:467
 msgid "Scrub on"
 msgstr "Scrub activé"
 
-#: ui/segment_editor.py:161
+#: ui/segment_editor.py:159
 msgid "Scrub on move (audio preview)"
 msgstr "Scrub à la navigation (aperçu audio)"
 
-#: ui/segment_editor.py:387
+#: ui/segment_editor.py:385
 msgid "Stopped, back at {time}"
 msgstr "Arrêté, retour à {time}"
 
-#: ui/segment_editor.py:398
+#: ui/segment_editor.py:396
 msgid "Paused at {time}"
 msgstr "En pause à {time}"
 
-#: ui/segment_editor.py:202
+#: ui/segment_editor.py:200
 msgid "&Navigation"
 msgstr "&Navigation"
 
-#: ui/segment_editor.py:176
+#: ui/segment_editor.py:174
 msgid "&Playback"
 msgstr "&Lecture"
 
-#: ui/segment_editor.py:179
+#: ui/segment_editor.py:177
 msgid "Backward"
 msgstr "Reculer"
 
-#: ui/segment_editor.py:305 ui/segment_editor.py:451 ui/segment_editor.py:459
+#: ui/segment_editor.py:303 ui/segment_editor.py:449 ui/segment_editor.py:457
 msgid "Current position: {time}"
 msgstr "Position courante : {time}"
 
-#: ui/segment_editor.py:139
+#: ui/segment_editor.py:137
 msgid "Export as one file (remove discarded segments)"
 msgstr "Exporter en un seul fichier (retirer les segments jetés)"
 
-#: ui/segment_editor.py:141
+#: ui/segment_editor.py:139
 msgid "Export as separate files (one per kept region)"
 msgstr "Exporter en fichiers séparés (un par région gardée)"
 
-#: ui/segment_editor.py:180
+#: ui/segment_editor.py:178
 msgid "Forward"
 msgstr "Avancer"
 
-#: ui/segment_editor.py:184
+#: ui/segment_editor.py:182
 msgid "Go to end"
 msgstr "Aller à la fin"
 
-#: ui/segment_editor.py:185
+#: ui/segment_editor.py:183
 msgid "Go to position..."
 msgstr "Aller à la position..."
 
-#: ui/segment_editor.py:183
+#: ui/segment_editor.py:181
 msgid "Go to start"
 msgstr "Aller au début"
 
-#: ui/segment_editor.py:211
+#: ui/segment_editor.py:209
 msgid "Keep / Discard segment"
 msgstr "Garder / Jeter le segment"
 
-#: ui/segment_editor.py:209
+#: ui/segment_editor.py:207
 msgid "Mark region end"
 msgstr "Marquer la fin de région"
 
-#: ui/segment_editor.py:208
+#: ui/segment_editor.py:206
 msgid "Mark region start"
 msgstr "Marquer le début de région"
 
-#: ui/segment_editor.py:182
+#: ui/segment_editor.py:180
 msgid "Next cut"
 msgstr "Coupe suivante"
 
-#: ui/segment_editor.py:154
+#: ui/segment_editor.py:152
 msgid "Pause / Resume"
 msgstr "Pause / Reprise"
 
-#: ui/segment_editor.py:153
+#: ui/segment_editor.py:151
 msgid "Play / Stop"
 msgstr "Lecture / Stop"
 
-#: ui/segment_editor.py:181
+#: ui/segment_editor.py:179
 msgid "Previous cut"
 msgstr "Coupe précédente"
 
-#: ui/segment_editor.py:477
+#: ui/segment_editor.py:475
 msgid "Step: {step}"
 msgstr "Pas : {step}"
 
-#: ui/segment_editor.py:309
+#: ui/segment_editor.py:307
 msgid "Step: {step}   |   Kept regions: {kept}"
 msgstr "Pas : {step}   |   Régions gardées : {kept}"
 
-#: ui/segment_editor.py:228
+#: ui/segment_editor.py:226
 msgid "&Options"
 msgstr "&Options"
 
-#: ui/segment_editor.py:210
+#: ui/segment_editor.py:208
 msgid "Add a cut here"
 msgstr "Ajouter une coupe ici"
 
-#: ui/segment_editor.py:222
+#: ui/segment_editor.py:220
 msgid "Announce playback actions"
 msgstr "Annoncer les actions de lecture"
 
-#: ui/segment_editor.py:225
+#: ui/segment_editor.py:223
 msgid "Announce position when moving"
 msgstr "Annoncer la position lors des déplacements"
 
-#: ui/segment_editor.py:192
+#: ui/segment_editor.py:190
 msgid "Coarser step"
 msgstr "Pas plus grand"
 
-#: ui/segment_editor.py:191
+#: ui/segment_editor.py:189
 msgid "Finer step"
 msgstr "Pas plus fin"
 
-#: ui/segment_editor.py:231 ui/segment_editor.py:527
+#: ui/segment_editor.py:229 ui/segment_editor.py:525
 msgid "Keyboard shortcuts"
 msgstr "Raccourcis clavier"
 
-#: ui/segment_editor.py:496
+#: ui/segment_editor.py:494
 msgid "Playback announcements off"
 msgstr "Annonces de lecture désactivées"
 
-#: ui/segment_editor.py:495
+#: ui/segment_editor.py:493
 msgid "Playback announcements on"
 msgstr "Annonces de lecture activées"
 
-#: ui/segment_editor.py:503
+#: ui/segment_editor.py:501
 msgid "Position announcements off"
 msgstr "Annonces de position désactivées"
 
-#: ui/segment_editor.py:502
+#: ui/segment_editor.py:500
 msgid "Position announcements on"
 msgstr "Annonces de position activées"
 
-#: ui/segment_editor.py:444
+#: ui/segment_editor.py:442
 msgid "Default audio track"
 msgstr "Piste audio par défaut"
 
-#: ui/segment_editor.py:169
+#: ui/segment_editor.py:167
 msgid "Default track"
 msgstr "Piste par défaut"
 
-#: ui/segment_editor.py:175
+#: ui/segment_editor.py:173
 msgid "Preview audio track"
 msgstr "Piste audio de l'aperçu"
 
-#: ui/segment_editor.py:446
+#: ui/segment_editor.py:444
 msgid "Preview audio track {number}"
 msgstr "Aperçu sur la piste audio {number}"
 
-#: ui/segment_editor.py:311
+#: ui/segment_editor.py:309
 msgid "   |   Silences: {count}"
 msgstr "   |   Silences : {count}"
 
-#: ui/segment_editor.py:631
+#: ui/segment_editor.py:629
 msgid "Boundary moved to {time}"
 msgstr "Coupe déplacée à {time}"
 
-#: ui/segment_editor.py:749
+#: ui/segment_editor.py:747
 msgid "Detecting silences, please wait"
 msgstr "Détection des silences en cours, patientez"
 
-#: ui/segment_editor.py:217
+#: ui/segment_editor.py:215
 msgid "Move segment end to current position"
 msgstr "Caler la fin du segment sur la position courante"
 
-#: ui/segment_editor.py:215
+#: ui/segment_editor.py:213
 msgid "Move segment start to current position"
 msgstr "Caler le début du segment sur la position courante"
 
-#: ui/segment_editor.py:188
+#: ui/segment_editor.py:186
 msgid "Next silence"
 msgstr "Silence suivant"
 
-#: ui/segment_editor.py:761
+#: ui/segment_editor.py:759
 msgid "No more silence"
 msgstr "Plus de silence"
 
-#: ui/segment_editor.py:752
+#: ui/segment_editor.py:750
 msgid "No silence detected"
 msgstr "Aucun silence détecté"
 
-#: ui/segment_editor.py:655
+#: ui/segment_editor.py:653
 msgid "Nothing to redo"
 msgstr "Rien à refaire"
 
-#: ui/segment_editor.py:644
+#: ui/segment_editor.py:642
 msgid "Nothing to undo"
 msgstr "Rien à annuler"
 
-#: ui/segment_editor.py:187
+#: ui/segment_editor.py:185
 msgid "Previous silence"
 msgstr "Silence précédent"
 
-#: ui/segment_editor.py:206
+#: ui/segment_editor.py:204
 msgid "Redo"
 msgstr "Refaire"
 
-#: ui/segment_editor.py:662
+#: ui/segment_editor.py:660
 msgid "Redone"
 msgstr "Refait"
 
-#: ui/segment_editor.py:626
+#: ui/segment_editor.py:624
 msgid "This boundary cannot be moved here"
 msgstr "Cette coupe ne peut pas être déplacée ici"
 
-#: ui/segment_editor.py:205
+#: ui/segment_editor.py:203
 msgid "Undo"
 msgstr "Annuler"
 
-#: ui/segment_editor.py:651
+#: ui/segment_editor.py:649
 msgid "Undone"
 msgstr "Annulé"
 
-#: ui/segment_editor.py:805
+#: ui/segment_editor.py:803
 msgid "No cut to check here"
 msgstr "Aucune coupe à vérifier ici"
 
-#: ui/segment_editor.py:807
+#: ui/segment_editor.py:805
 msgid "No removal here (continuous playback)"
 msgstr "Aucune suppression ici (lecture continue)"
 
-#: ui/segment_editor.py:816
+#: ui/segment_editor.py:814
 msgid "Simulating join: {a} to {b}"
 msgstr "Simulation du raccord : {a} vers {b}"
 
-#: ui/segment_editor.py:159
+#: ui/segment_editor.py:157
 msgid "Verify the cut (real export join)"
 msgstr "Vérifier la coupe (raccord réel de l'export)"
 
-#: ui/segment_editor.py:212
+#: ui/segment_editor.py:210
 msgid "Merge with next segment (remove cut)"
 msgstr "Fusionner avec le segment suivant (retirer la coupe)"
 
-#: ui/segment_editor.py:850
+#: ui/segment_editor.py:848
 msgid "Nothing to play (all discarded)"
 msgstr "Rien à jouer (tout est à jeter)"
 
-#: ui/segment_editor.py:389 ui/segment_editor.py:400
+#: ui/segment_editor.py:387 ui/segment_editor.py:398
 msgid "Playing the result"
 msgstr "Lecture du montage"
 
-#: ui/segment_editor.py:911
-msgid "Close without exporting? Your cuts will be lost."
-msgstr "Fermer sans exporter ? Vos découpes seront perdues."
-
-#: ui/segment_editor.py:702
+#: ui/segment_editor.py:700
 msgid "Could not open the project."
 msgstr "Impossible d'ouvrir le projet."
 
-#: ui/segment_editor.py:684
+#: ui/segment_editor.py:682
 msgid "Could not save the project."
 msgstr "Impossible d'enregistrer le projet."
 
-#: ui/segment_editor.py:912
+#: ui/segment_editor.py:914
 msgid "Cut / Split"
 msgstr "Couper / Diviser"
 
-#: ui/segment_editor.py:668 ui/segment_editor.py:693
+#: ui/segment_editor.py:666 ui/segment_editor.py:691
 msgid "Cut project (*.amccut)"
 msgstr "Projet de découpe (*.amccut)"
 
@@ -3209,11 +3205,11 @@ msgstr "Projet de découpe (*.amccut)"
 msgid "Export settings"
 msgstr "Réglages d'export"
 
-#: ui/segment_editor.py:692 ui/segment_editor.py:710
+#: ui/segment_editor.py:690 ui/segment_editor.py:708
 msgid "Open project"
 msgstr "Ouvrir un projet"
 
-#: ui/segment_editor.py:145
+#: ui/segment_editor.py:143
 msgid "Open project..."
 msgstr "Ouvrir un projet..."
 
@@ -3221,32 +3217,32 @@ msgstr "Ouvrir un projet..."
 msgid "Output format for the export:"
 msgstr "Format de sortie pour l'export :"
 
-#: ui/segment_editor.py:720
+#: ui/segment_editor.py:718
 msgid "Project opened"
 msgstr "Projet ouvert"
 
-#: ui/segment_editor.py:688
+#: ui/segment_editor.py:686
 msgid "Project saved"
 msgstr "Projet enregistré"
 
-#: ui/segment_editor.py:689
+#: ui/segment_editor.py:687
 msgid "Project saved."
 msgstr "Projet enregistré."
 
-#: ui/segment_editor.py:667
+#: ui/segment_editor.py:665
 msgid "Save project"
 msgstr "Enregistrer le projet"
 
-#: ui/segment_editor.py:144
+#: ui/segment_editor.py:142
 msgid "Save project..."
 msgstr "Enregistrer le projet..."
 
-#: ui/segment_editor.py:708
+#: ui/segment_editor.py:706
 msgid "This project was made for a different file ({name}). Load it anyway?"
 msgstr ""
 "Ce projet a été fait pour un autre fichier ({name}). Le charger quand même ?"
 
-#: ui/segment_editor.py:506
+#: ui/segment_editor.py:504
 msgid ""
 "Keyboard shortcuts:\n"
 "\n"
@@ -3290,17 +3286,36 @@ msgstr ""
 "Ctrl+S / Ctrl+O : enregistrer / ouvrir un projet\n"
 "Ctrl+G : aller à une position   Ctrl+W : fermer"
 
-#: ui/segment_editor.py:410
+#: ui/segment_editor.py:408
 msgid "Montage mode off (play everything)"
 msgstr "Mode montage désactivé (tout lire)"
 
-#: ui/segment_editor.py:409
+#: ui/segment_editor.py:407
 msgid "Montage mode on (discarded parts skipped)"
 msgstr "Mode montage activé (parties jetées sautées)"
 
-#: ui/segment_editor.py:157
+#: ui/segment_editor.py:155
 msgid "Montage mode: skip discarded parts"
 msgstr "Mode montage : sauter les parties jetées"
+
+#: ui/main_window.py:2191
+msgid "A conversion is already running. Please wait for it to finish."
+msgstr "Une conversion est déjà en cours. Veuillez attendre la fin."
+
+#: ui/segment_editor.py:913
+msgid "Close without saving? Your cuts will be lost."
+msgstr "Fermer sans enregistrer ? Vos découpes seront perdues."
+
+#: ui/segment_editor.py:906
+msgid "Export started"
+msgstr "Export lancé"
+
+#: ui/main_window.py:2192
+msgid "Please wait"
+msgstr "Veuillez patienter"
+
+#~ msgid "Close without exporting? Your cuts will be lost."
+#~ msgstr "Fermer sans exporter ? Vos découpes seront perdues."
 
 #~ msgid "Play the result (skip discarded parts)"
 #~ msgstr "Lire le montage (sauter les parties jetées)"
