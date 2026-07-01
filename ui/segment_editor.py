@@ -77,19 +77,23 @@ def parse_timecode(text):
 
 
 class SegmentEditorFrame(wx.Frame):
-    def __init__(self, parent, meta, on_export):
+    def __init__(self, parent, meta, on_export, settings_store=None):
         title = _("Cut / Split — {name}").format(name=os.path.basename(meta.full_path))
         super().__init__(parent, title=title, size=(720, 520),
                          style=wx.DEFAULT_FRAME_STYLE)
 
         self.meta = meta
         self.on_export_cb = on_export
+        self._settings = settings_store if isinstance(settings_store, dict) else {}
         self.duration_ms = int(round(float(getattr(meta, 'duration', 0) or 0) * 1000))
         self.plan = segmods.new_plan(self.duration_ms)
         self.position_ms = 0
         self.step_ms = _STEP_CHOICES[_DEFAULT_STEP_INDEX][1]
         self._region_start_ms = None
         self._scrub_enabled = False
+        # Options d'annonces vocales (mémorisées dans settings_store).
+        self._opt_announce_transport = bool(self._settings.get('cutter_announce_transport', True))
+        self._opt_announce_position = bool(self._settings.get('cutter_announce_position', True))
         self._play_anchor_ms = 0      # point de départ de la lecture (Stop y revient)
         self._last_playhead_ms = 0    # dernière tête de lecture connue (Pause s'y pose)
         self.player = AudioPlayer()
@@ -144,6 +148,9 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_nav, _("Go to position...") + "\tCtrl+G", lambda e: self._do_goto())
         m_nav.AppendSeparator()
         m_step = wx.Menu()
+        self._append(m_step, _("Finer step") + "  (-)", lambda e: self._change_step(-1))
+        self._append(m_step, _("Coarser step") + "  (+)", lambda e: self._change_step(+1))
+        m_step.AppendSeparator()
         self._step_items = []
         for index, (label, _ms) in enumerate(_STEP_CHOICES):
             item = m_step.AppendRadioItem(wx.ID_ANY, label())
@@ -157,10 +164,23 @@ class SegmentEditorFrame(wx.Frame):
         m_edit = wx.Menu()
         self._append(m_edit, _("Mark region start") + "  (S)", lambda e: self._mark_start())
         self._append(m_edit, _("Mark region end") + "  (E)", lambda e: self._mark_end())
-        self._append(m_edit, _("Cut here") + "  (X)", lambda e: self._cut_here())
+        self._append(m_edit, _("Add a cut here") + "  (X)", lambda e: self._cut_here())
         self._append(m_edit, _("Keep / Discard segment") + "  (K)", lambda e: self._toggle_selected_keep())
         self._append(m_edit, _("Remove cut") + "  (Del)", lambda e: self._remove_selected_boundary())
         bar.Append(m_edit, _("&Edit"))
+
+        m_opt = wx.Menu()
+        self.item_opt_transport = m_opt.AppendCheckItem(wx.ID_ANY, _("Announce playback actions"))
+        self.item_opt_transport.Check(self._opt_announce_transport)
+        self.Bind(wx.EVT_MENU, self.on_toggle_announce_transport, self.item_opt_transport)
+        self.item_opt_position = m_opt.AppendCheckItem(wx.ID_ANY, _("Announce position when moving"))
+        self.item_opt_position.Check(self._opt_announce_position)
+        self.Bind(wx.EVT_MENU, self.on_toggle_announce_position, self.item_opt_position)
+        bar.Append(m_opt, _("&Options"))
+
+        m_help = wx.Menu()
+        self._append(m_help, _("Keyboard shortcuts") + "\tF1", lambda e: self._show_shortcuts())
+        bar.Append(m_help, _("&Help"))
 
         self.SetMenuBar(bar)
 
@@ -247,6 +267,8 @@ class SegmentEditorFrame(wx.Frame):
         return _DEFAULT_STEP_INDEX
 
     def _announce_position(self):
+        if not self._opt_announce_position:
+            return
         seg_index = self._segment_index_at(self.position_ms)
         if self.plan.segments:
             seg = self.plan.segments[seg_index]
@@ -286,15 +308,19 @@ class SegmentEditorFrame(wx.Frame):
             on_finished=lambda: wx.CallAfter(self._on_play_finished),
         )
 
+    def _say_transport(self, message):
+        if self._opt_announce_transport:
+            speak(message)
+
     def _toggle_play(self):
         """Espace : Lecture / Stop. Stop revient à l'ancre (point de départ)."""
         if self.player.is_playing():
             self.player.stop()
             self.position_ms = self._play_anchor_ms
             self._sync_position_label()
-            speak(_("Stopped, back at {time}").format(time=format_timecode(self.position_ms)))
+            self._say_transport(_("Stopped, back at {time}").format(time=format_timecode(self.position_ms)))
         else:
-            speak(_("Playing"))
+            self._say_transport(_("Playing"))
             self._play_from(self.position_ms)
 
     def _toggle_pause(self):
@@ -303,9 +329,9 @@ class SegmentEditorFrame(wx.Frame):
             self.player.stop()
             self.position_ms = max(0, min(int(self._last_playhead_ms), self.duration_ms))
             self._sync_position_label()
-            speak(_("Paused at {time}").format(time=format_timecode(self.position_ms)))
+            self._say_transport(_("Paused at {time}").format(time=format_timecode(self.position_ms)))
         else:
-            speak(_("Playing"))
+            self._say_transport(_("Playing"))
             self._play_from(self.position_ms)
 
     def _play_current_segment(self):
@@ -319,7 +345,7 @@ class SegmentEditorFrame(wx.Frame):
         self._stop_if_playing()
         self.position_ms = seg.start_ms
         self._sync_position_label()
-        speak(_("Playing segment {index}").format(index=index + 1))
+        self._say_transport(_("Playing segment {index}").format(index=index + 1))
         self._play_from(seg.start_ms, end_ms=seg.end_ms)
 
     def _sync_position_label(self):
@@ -350,6 +376,51 @@ class SegmentEditorFrame(wx.Frame):
             self._step_items[index].Check(True)
         self._update_status()
         speak(_("Step: {step}").format(step=_STEP_CHOICES[index][0]()))
+
+    def _change_step(self, delta):
+        """Pas plus fin (delta -1) ou plus grand (delta +1), borné à la liste."""
+        new_index = max(0, min(self._step_index() + delta, len(_STEP_CHOICES) - 1))
+        self._set_step(new_index)
+
+    # -------------------------------------------------------------- options / aide
+    def _persist(self):
+        parent = self.GetParent()
+        saver = getattr(parent, '_save_config', None)
+        if callable(saver):
+            saver()
+
+    def on_toggle_announce_transport(self, event):
+        self._opt_announce_transport = self.item_opt_transport.IsChecked()
+        self._settings['cutter_announce_transport'] = self._opt_announce_transport
+        self._persist()
+        speak(_("Playback announcements on") if self._opt_announce_transport
+              else _("Playback announcements off"))
+
+    def on_toggle_announce_position(self, event):
+        self._opt_announce_position = self.item_opt_position.IsChecked()
+        self._settings['cutter_announce_position'] = self._opt_announce_position
+        self._persist()
+        speak(_("Position announcements on") if self._opt_announce_position
+              else _("Position announcements off"))
+
+    def _show_shortcuts(self):
+        text = _(
+            "Keyboard shortcuts:\n\n"
+            "Up / Down: select a segment\n"
+            "Left / Right: move by the step\n"
+            "Ctrl+Left / Ctrl+Right: previous / next cut\n"
+            "Home / End: start / end\n"
+            "+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
+            "Space: Play / Stop (Stop returns to the start point)\n"
+            "Ctrl+Space: Pause / Resume\n"
+            "S: mark region start   E: mark region end (creates a discard region)\n"
+            "X: add a cut here\n"
+            "K: keep / discard the selected segment\n"
+            "Delete: remove a cut (merge segments)\n"
+            "Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
+            "Ctrl+G: go to a position   Ctrl+W: close"
+        )
+        wx.MessageBox(text, _("Keyboard shortcuts"), wx.ICON_INFORMATION, self)
 
     def _do_goto(self):
         with wx.TextEntryDialog(self, _("Go to position (HH:MM:SS.mmm):"),
@@ -477,6 +548,17 @@ class SegmentEditorFrame(wx.Frame):
         # Espace = Lecture / Stop (on remplace le rôle natif de la liste).
         if key == wx.WXK_SPACE and not event.ControlDown():
             self._toggle_play(); return
+
+        # Changer le pas : Ctrl+Haut/Bas ou +/- (pavé numérique inclus). Haut/+ =
+        # pas plus grand ; Bas/- = pas plus fin. (Haut/Bas seuls restent à la liste.)
+        if event.ControlDown() and key == wx.WXK_UP:
+            self._change_step(+1); return
+        if event.ControlDown() and key == wx.WXK_DOWN:
+            self._change_step(-1); return
+        if key in (wx.WXK_NUMPAD_ADD, ord('+')):
+            self._change_step(+1); return
+        if key in (wx.WXK_NUMPAD_SUBTRACT, ord('-')):
+            self._change_step(-1); return
 
         # Marquage / segments.
         if key in (ord('S'), ord('s')):

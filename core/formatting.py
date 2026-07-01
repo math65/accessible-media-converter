@@ -203,6 +203,9 @@ APP_DEFAULT_SETTINGS = {
     "check_updates_on_startup": True,
     "include_prereleases": False,  # accepter les pré-versions (rc/beta) dans le check de MAJ
     "preserve_metadata": False,
+    # Éditeur de découpe : annonces vocales (NVDA) — mémorisées entre sessions.
+    "cutter_announce_transport": True,   # annoncer Lecture / Stop / Pause
+    "cutter_announce_position": True,    # annoncer la position lors des déplacements
     "m4b_chapter_naming": DEFAULT_M4B_CHAPTER_NAMING,
     "ui_language": AUTO_LANGUAGE_CODE,
     "install_id": "",              # identifiant anonyme d'installation (généré au 1er lancement)
@@ -404,6 +407,12 @@ def normalize_settings_store(settings_store):
     )
     normalized["preserve_metadata"] = bool(
         normalized.get("preserve_metadata", APP_DEFAULT_SETTINGS["preserve_metadata"])
+    )
+    normalized["cutter_announce_transport"] = bool(
+        normalized.get("cutter_announce_transport", APP_DEFAULT_SETTINGS["cutter_announce_transport"])
+    )
+    normalized["cutter_announce_position"] = bool(
+        normalized.get("cutter_announce_position", APP_DEFAULT_SETTINGS["cutter_announce_position"])
     )
     normalized["preserve_folder_structure"] = bool(
         normalized.get("preserve_folder_structure", APP_DEFAULT_SETTINGS["preserve_folder_structure"])

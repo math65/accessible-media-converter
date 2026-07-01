@@ -2140,7 +2140,7 @@ class MainWindow(wx.Frame):
         # Le Frame se montre lui-même et désactive la fenêtre principale ; à sa
         # fermeture il rappelle _run_segment_export(meta, plan, mode) si un export
         # a été demandé, sinon rien (annulation).
-        SegmentEditorFrame(self, meta, self._run_segment_export)
+        SegmentEditorFrame(self, meta, self._run_segment_export, settings_store=self.settings_store)
 
     def _run_segment_export(self, meta, plan, mode):
         fmt_key, settings = self._resolve_active_format_settings()

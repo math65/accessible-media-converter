@@ -6,7 +6,7 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ui/main_window.py:245 ui/segment_editor.py:124
+#: ui/main_window.py:245 ui/segment_editor.py:128
 msgid "&File"
 msgstr "&Fichier"
 
@@ -22,7 +22,7 @@ msgstr "Ajouter un &dossier..."
 msgid "E&xit"
 msgstr "&Quitter"
 
-#: ui/main_window.py:246 ui/segment_editor.py:163
+#: ui/main_window.py:246 ui/segment_editor.py:170
 msgid "&Edit"
 msgstr "&Édition"
 
@@ -46,7 +46,7 @@ msgstr "&Supprimer la sélection"
 msgid "Preferences"
 msgstr "Préférences"
 
-#: ui/main_window.py:247
+#: ui/main_window.py:247 ui/segment_editor.py:183
 msgid "&Help"
 msgstr "&Aide"
 
@@ -409,7 +409,7 @@ msgid "Copy report"
 msgstr "Copier le rapport"
 
 #: ui/announcement_dialog.py:40 ui/presets_dialog.py:108
-#: ui/segment_editor.py:123 ui/update_dialog.py:92 ui/update_dialog.py:93
+#: ui/segment_editor.py:127 ui/update_dialog.py:92 ui/update_dialog.py:93
 msgid "Close"
 msgstr "Fermer"
 
@@ -592,67 +592,67 @@ msgstr "Arrêter la conversion"
 msgid "Media Files"
 msgstr "Fichiers média"
 
-#: core/formatting.py:268
+#: core/formatting.py:271
 msgid "MP3 - Audio"
 msgstr "MP3 - Audio"
 
-#: core/formatting.py:256
+#: core/formatting.py:259
 msgid "MP3 - Audio (Extract)"
 msgstr "MP3 - Audio (extraction)"
 
-#: core/formatting.py:257
+#: core/formatting.py:260
 msgid "AAC - Audio (Extract)"
 msgstr "AAC - Audio (extraction)"
 
-#: core/formatting.py:269
+#: core/formatting.py:272
 msgid "AAC - Audio (M4A)"
 msgstr "AAC - Audio (M4A)"
 
-#: core/formatting.py:271
+#: core/formatting.py:274
 msgid "WAV - Audio (Lossless)"
 msgstr "WAV - Audio (sans perte)"
 
-#: core/formatting.py:259
+#: core/formatting.py:262
 msgid "WAV - Audio (Extract)"
 msgstr "WAV - Audio (extraction)"
 
-#: core/formatting.py:272
+#: core/formatting.py:275
 msgid "FLAC - Audio (Lossless)"
 msgstr "FLAC - Audio (sans perte)"
 
-#: core/formatting.py:260
+#: core/formatting.py:263
 msgid "FLAC - Audio (Extract)"
 msgstr "FLAC - Audio (extraction)"
 
-#: core/formatting.py:273
+#: core/formatting.py:276
 msgid "ALAC - Audio (Apple Lossless)"
 msgstr "ALAC - Audio (sans perte Apple)"
 
-#: core/formatting.py:261
+#: core/formatting.py:264
 msgid "ALAC - Audio (Extract)"
 msgstr "ALAC - Audio (extraction)"
 
-#: core/formatting.py:274
+#: core/formatting.py:277
 msgid "OGG - Audio (Vorbis)"
 msgstr "OGG - Audio (Vorbis)"
 
-#: core/formatting.py:262
+#: core/formatting.py:265
 msgid "OGG - Audio (Extract)"
 msgstr "OGG - Audio (extraction)"
 
-#: core/formatting.py:275
+#: core/formatting.py:278
 msgid "WMA - Audio (Legacy)"
 msgstr "WMA - Audio (ancien)"
 
-#: core/formatting.py:263
+#: core/formatting.py:266
 msgid "WMA - Audio (Extract)"
 msgstr "WMA - Audio (extraction)"
 
-#: core/formatting.py:276
+#: core/formatting.py:279
 msgid "MP4 - Video (H.264)"
 msgstr "MP4 - Vidéo (H.264)"
 
-#: core/formatting.py:277
+#: core/formatting.py:280
 msgid "MKV - Video"
 msgstr "MKV - Vidéo"
 
@@ -850,44 +850,44 @@ msgid "About"
 msgstr "À propos"
 
 # --- RÉSUMÉS DE FORMATS ---
-#: core/formatting.py:580
+#: core/formatting.py:589
 msgid "CBR {bitrate}"
 msgstr "CBR {bitrate}"
 
-#: core/formatting.py:569
+#: core/formatting.py:578
 msgid "VBR Q{quality}"
 msgstr "VBR Q{quality}"
 
-#: core/formatting.py:548
+#: core/formatting.py:557
 msgid "Copy"
 msgstr "Copie"
 
-#: core/formatting.py:242 core/formatting.py:552 core/formatting.py:553
+#: core/formatting.py:245 core/formatting.py:561 core/formatting.py:562
 #: ui/settings_dialog.py:795
 msgid "Lossless"
 msgstr "Sans perte"
 
-#: core/formatting.py:529 core/formatting.py:540
+#: core/formatting.py:538 core/formatting.py:549
 msgid "Normalized -16 LUFS"
 msgstr "Normalisé -16 LUFS"
 
-#: core/formatting.py:590
+#: core/formatting.py:599
 msgid "Stereo"
 msgstr "Stéréo"
 
-#: core/formatting.py:517
+#: core/formatting.py:526
 msgid "Video: Copy"
 msgstr "Vidéo : copie"
 
-#: core/formatting.py:519
+#: core/formatting.py:528
 msgid "H.264 CRF {crf}"
 msgstr "H.264 CRF {crf}"
 
-#: core/formatting.py:525
+#: core/formatting.py:534
 msgid "Audio: Copy"
 msgstr "Audio : copie"
 
-#: core/formatting.py:530
+#: core/formatting.py:539
 msgid "Audio: {summary}"
 msgstr "Audio : {summary}"
 
@@ -984,11 +984,11 @@ msgstr "Configuration des canaux de sortie."
 msgid "Stereo (Downmix)"
 msgstr "Stéréo (mixage réduit)"
 
-#: core/formatting.py:592 ui/settings_dialog.py:136
+#: core/formatting.py:601 ui/settings_dialog.py:136
 msgid "Mono"
 msgstr "Mono"
 
-#: core/formatting.py:593 ui/settings_dialog.py:136
+#: core/formatting.py:602 ui/settings_dialog.py:136
 msgid "Original Channels"
 msgstr "Canaux d'origine"
 
@@ -1020,7 +1020,7 @@ msgstr "Débit :"
 msgid "Bitrate"
 msgstr "Débit"
 
-#: core/formatting.py:559
+#: core/formatting.py:568
 msgid "Bitrate {bitrate}"
 msgstr "Débit {bitrate}"
 
@@ -1214,19 +1214,19 @@ msgstr "Format de pixel"
 msgid "Choose the output pixel format."
 msgstr "Choisissez le format de pixel de sortie."
 
-#: core/formatting.py:288
+#: core/formatting.py:291
 msgid "AAC"
 msgstr "AAC"
 
-#: core/formatting.py:289
+#: core/formatting.py:292
 msgid "MP3"
 msgstr "MP3"
 
-#: core/formatting.py:290
+#: core/formatting.py:293
 msgid "Opus"
 msgstr "Opus"
 
-#: core/formatting.py:291
+#: core/formatting.py:294
 msgid "FLAC"
 msgstr "FLAC"
 
@@ -1351,7 +1351,7 @@ msgstr ""
 "Utilisez Espace pour conserver ou retirer une piste. Utilisez Ctrl+Haut et "
 "Ctrl+Bas pour la réordonner."
 
-#: ui/segment_editor.py:187 ui/track_manager.py:147
+#: ui/segment_editor.py:207 ui/track_manager.py:147
 msgid "#"
 msgstr "N°"
 
@@ -1864,7 +1864,7 @@ msgstr "Impossible d'envoyer le rapport d'erreur pour le moment."
 msgid "Unknown file"
 msgstr "Fichier inconnu"
 
-#: core/formatting.py:230
+#: core/formatting.py:233
 msgid "BMP - Image (Uncompressed)"
 msgstr "BMP - Image (Non compressée)"
 
@@ -1884,7 +1884,7 @@ msgstr "Niveau de compression (0-9) :"
 msgid "Compression level"
 msgstr "Niveau de compression"
 
-#: core/formatting.py:239 core/formatting.py:245
+#: core/formatting.py:242 core/formatting.py:248
 msgid "Compression {c}"
 msgstr "Compression {c}"
 
@@ -1920,7 +1920,7 @@ msgstr "Qualité de l'image"
 msgid "Image settings panel"
 msgstr "Panneau des réglages image"
 
-#: core/formatting.py:226
+#: core/formatting.py:229
 msgid "JPEG - Image"
 msgstr "JPEG - Image"
 
@@ -1932,7 +1932,7 @@ msgstr "Mode sans perte"
 msgid "None"
 msgstr "Aucune"
 
-#: core/formatting.py:227
+#: core/formatting.py:230
 msgid "PNG - Image (Lossless)"
 msgstr "PNG - Image (Sans perte)"
 
@@ -1948,7 +1948,7 @@ msgstr "Qualité (1-100) :"
 msgid "Quality from 1 (lowest) to 100 (highest)."
 msgstr "Qualité de 1 (la plus basse) à 100 (la plus haute)."
 
-#: core/formatting.py:237 core/formatting.py:243
+#: core/formatting.py:240 core/formatting.py:246
 msgid "Quality {q}"
 msgstr "Qualité {q}"
 
@@ -1960,7 +1960,7 @@ msgstr "Redimensionnement"
 msgid "Resize:"
 msgstr "Redimensionnement :"
 
-#: core/formatting.py:229
+#: core/formatting.py:232
 msgid "TIFF - Image (Lossless)"
 msgstr "TIFF - Image (Sans perte)"
 
@@ -1968,7 +1968,7 @@ msgstr "TIFF - Image (Sans perte)"
 msgid "TIFF compression"
 msgstr "Compression TIFF"
 
-#: core/formatting.py:247
+#: core/formatting.py:250
 msgid "Uncompressed"
 msgstr "Non compressée"
 
@@ -1976,7 +1976,7 @@ msgstr "Non compressée"
 msgid "Use Tab to navigate image options."
 msgstr "Utilisez Tab pour naviguer entre les options image."
 
-#: core/formatting.py:228
+#: core/formatting.py:231
 msgid "WebP - Image"
 msgstr "WebP - Image"
 
@@ -2291,11 +2291,11 @@ msgstr ""
 "Comment les chapitres sont nommés lors de la fusion de fichiers en livre "
 "audio M4B."
 
-#: core/formatting.py:258
+#: core/formatting.py:261
 msgid "M4B - Audio (Extract)"
 msgstr "M4B - Audio (extraction)"
 
-#: core/formatting.py:270
+#: core/formatting.py:273
 msgid "M4B - Audiobook (Chapters)"
 msgstr "M4B - Livre audio (Chapitres)"
 
@@ -2311,7 +2311,7 @@ msgstr "Titre, sinon nom de fichier"
 msgid "Title, otherwise number"
 msgstr "Titre, sinon numéro"
 
-#: core/formatting.py:578
+#: core/formatting.py:587
 msgid "ABR {bitrate}"
 msgstr "ABR {bitrate}"
 
@@ -2780,11 +2780,11 @@ msgstr "Au moins un segment doit être conservé."
 msgid "Cannot cut"
 msgstr "Découpage impossible"
 
-#: ui/segment_editor.py:451
+#: ui/segment_editor.py:522
 msgid "Cannot export"
 msgstr "Export impossible"
 
-#: ui/segment_editor.py:182
+#: ui/segment_editor.py:202
 msgid "Current position"
 msgstr "Position courante"
 
@@ -2796,7 +2796,7 @@ msgstr "Couper / Diviser — {name}"
 msgid "Cut / Split..."
 msgstr "Couper / Diviser..."
 
-#: ui/segment_editor.py:374
+#: ui/segment_editor.py:445
 msgid "Cut added at {time}"
 msgstr "Coupe ajoutée à {time}"
 
@@ -2808,7 +2808,7 @@ msgstr "Découpage terminé."
 msgid "Cut failed."
 msgstr "Échec du découpage."
 
-#: ui/segment_editor.py:421
+#: ui/segment_editor.py:492
 msgid "Cut removed; segments merged"
 msgstr "Coupe retirée ; segments fusionnés"
 
@@ -2816,84 +2816,84 @@ msgstr "Coupe retirée ; segments fusionnés"
 msgid "Cutting..."
 msgstr "Découpage en cours..."
 
-#: ui/segment_editor.py:231
+#: ui/segment_editor.py:251
 msgid "Discard"
 msgstr "Jeter"
 
-#: ui/segment_editor.py:395
+#: ui/segment_editor.py:466
 msgid "Discard region created from {start} to {end}"
 msgstr "Région à jeter créée de {start} à {end}"
 
-#: ui/segment_editor.py:190
+#: ui/segment_editor.py:210
 msgid "Duration"
 msgstr "Durée"
 
-#: ui/segment_editor.py:189
+#: ui/segment_editor.py:209
 msgid "End"
 msgstr "Fin"
 
-#: ui/segment_editor.py:356
+#: ui/segment_editor.py:427
 msgid "Go to position"
 msgstr "Aller à la position"
 
-#: ui/segment_editor.py:355
+#: ui/segment_editor.py:426
 msgid "Go to position (HH:MM:SS.mmm):"
 msgstr "Aller à la position (HH:MM:SS.mmm) :"
 
-#: ui/segment_editor.py:361 ui/segment_editor.py:363
+#: ui/segment_editor.py:432 ui/segment_editor.py:434
 msgid "Invalid time"
 msgstr "Heure invalide"
 
-#: ui/segment_editor.py:231
+#: ui/segment_editor.py:251
 msgid "Keep"
 msgstr "Garder"
 
-#: ui/segment_editor.py:382
+#: ui/segment_editor.py:453
 msgid "Mark a region start first"
 msgstr "Marquez d'abord un début de région"
 
-#: ui/segment_editor.py:370
+#: ui/segment_editor.py:441
 msgid "No cut added here"
 msgstr "Aucune coupe ajoutée ici"
 
-#: ui/segment_editor.py:316 ui/segment_editor.py:401 ui/segment_editor.py:413
-#: ui/segment_editor.py:426
+#: ui/segment_editor.py:342 ui/segment_editor.py:472 ui/segment_editor.py:484
+#: ui/segment_editor.py:497
 msgid "No segment selected"
 msgstr "Aucun segment sélectionné"
 
-#: ui/segment_editor.py:362
+#: ui/segment_editor.py:433
 msgid "Please enter a valid time (HH:MM:SS.mmm)."
 msgstr "Veuillez entrer une heure valide (HH:MM:SS.mmm)."
 
-#: ui/segment_editor.py:387
+#: ui/segment_editor.py:458
 msgid "Region start and end are identical"
 msgstr "Le début et la fin de la région sont identiques"
 
-#: ui/segment_editor.py:378
+#: ui/segment_editor.py:449
 msgid "Region start marked at {time}"
 msgstr "Début de région marqué à {time}"
 
-#: ui/segment_editor.py:407
+#: ui/segment_editor.py:478
 msgid "Segment {index}: {state}"
 msgstr "Segment {index} : {state}"
 
-#: ui/segment_editor.py:186
+#: ui/segment_editor.py:206
 msgid "Segments"
 msgstr "Segments"
 
-#: ui/segment_editor.py:188
+#: ui/segment_editor.py:208
 msgid "Start"
 msgstr "Début"
 
-#: ui/segment_editor.py:191
+#: ui/segment_editor.py:211
 msgid "State"
 msgstr "État"
 
-#: ui/segment_editor.py:154
+#: ui/segment_editor.py:161
 msgid "Step"
 msgstr "Pas"
 
-#: ui/segment_editor.py:416
+#: ui/segment_editor.py:487
 msgid "The last segment has no following cut to remove"
 msgstr "Le dernier segment n'a pas de coupe suivante à retirer"
 
@@ -2905,15 +2905,15 @@ msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 msgid "This file has no known duration and cannot be split."
 msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 
-#: ui/segment_editor.py:177
+#: ui/segment_editor.py:197
 msgid "Total duration: {duration}"
 msgstr "Durée totale : {duration}"
 
-#: ui/segment_editor.py:253 ui/segment_editor.py:408
+#: ui/segment_editor.py:275 ui/segment_editor.py:479
 msgid "discard"
 msgstr "à jeter"
 
-#: ui/segment_editor.py:253 ui/segment_editor.py:408
+#: ui/segment_editor.py:275 ui/segment_editor.py:479
 msgid "keep"
 msgstr "à garder"
 
@@ -2921,126 +2921,203 @@ msgstr "à garder"
 msgid "part {number}"
 msgstr "partie {number}"
 
-#: ui/segment_editor.py:254
+#: ui/segment_editor.py:276
 msgid "{time} — segment {index} of {total}, {state}"
 msgstr "{time} — segment {index} sur {total}, {state}"
 
-#: ui/segment_editor.py:131
+#: ui/segment_editor.py:135
 msgid "Play current segment"
 msgstr "Lire le segment courant"
 
-#: ui/segment_editor.py:297 ui/segment_editor.py:308
+#: ui/segment_editor.py:323 ui/segment_editor.py:334
 msgid "Playing"
 msgstr "Lecture"
 
-#: ui/segment_editor.py:322
+#: ui/segment_editor.py:348
 msgid "Playing segment {index}"
 msgstr "Lecture du segment {index}"
 
-#: ui/segment_editor.py:344
+#: ui/segment_editor.py:370
 msgid "Scrub off"
 msgstr "Scrub désactivé"
 
-#: ui/segment_editor.py:344
+#: ui/segment_editor.py:370
 msgid "Scrub on"
 msgstr "Scrub activé"
 
-#: ui/segment_editor.py:133
+#: ui/segment_editor.py:137
 msgid "Scrub on move (audio preview)"
 msgstr "Scrub à la navigation (aperçu audio)"
 
-#: ui/segment_editor.py:295
+#: ui/segment_editor.py:321
 msgid "Stopped, back at {time}"
 msgstr "Arrêté, retour à {time}"
 
-#: ui/segment_editor.py:306
+#: ui/segment_editor.py:332
 msgid "Paused at {time}"
 msgstr "En pause à {time}"
 
-#: ui/segment_editor.py:155
+#: ui/segment_editor.py:162
 msgid "&Navigation"
 msgstr "&Navigation"
 
-#: ui/segment_editor.py:135
+#: ui/segment_editor.py:139
 msgid "&Playback"
 msgstr "&Lecture"
 
-#: ui/segment_editor.py:138
+#: ui/segment_editor.py:142
 msgid "Backward"
 msgstr "Reculer"
 
-#: ui/segment_editor.py:236 ui/segment_editor.py:262 ui/segment_editor.py:326
-#: ui/segment_editor.py:334
+#: ui/segment_editor.py:256 ui/segment_editor.py:284 ui/segment_editor.py:352
+#: ui/segment_editor.py:360
 msgid "Current position: {time}"
 msgstr "Position courante : {time}"
 
-#: ui/segment_editor.py:160
-msgid "Cut here"
-msgstr "Couper ici"
-
-#: ui/segment_editor.py:118
+#: ui/segment_editor.py:122
 msgid "Export as one file (remove discarded segments)"
 msgstr "Exporter en un seul fichier (retirer les segments jetés)"
 
-#: ui/segment_editor.py:120
+#: ui/segment_editor.py:124
 msgid "Export as separate files (one per kept region)"
 msgstr "Exporter en fichiers séparés (un par région gardée)"
 
-#: ui/segment_editor.py:139
+#: ui/segment_editor.py:143
 msgid "Forward"
 msgstr "Avancer"
 
-#: ui/segment_editor.py:143
+#: ui/segment_editor.py:147
 msgid "Go to end"
 msgstr "Aller à la fin"
 
-#: ui/segment_editor.py:144
+#: ui/segment_editor.py:148
 msgid "Go to position..."
 msgstr "Aller à la position..."
 
-#: ui/segment_editor.py:142
+#: ui/segment_editor.py:146
 msgid "Go to start"
 msgstr "Aller au début"
 
-#: ui/segment_editor.py:161
+#: ui/segment_editor.py:168
 msgid "Keep / Discard segment"
 msgstr "Garder / Jeter le segment"
 
-#: ui/segment_editor.py:159
+#: ui/segment_editor.py:166
 msgid "Mark region end"
 msgstr "Marquer la fin de région"
 
-#: ui/segment_editor.py:158
+#: ui/segment_editor.py:165
 msgid "Mark region start"
 msgstr "Marquer le début de région"
 
-#: ui/segment_editor.py:141
+#: ui/segment_editor.py:145
 msgid "Next cut"
 msgstr "Coupe suivante"
 
-#: ui/segment_editor.py:130
+#: ui/segment_editor.py:134
 msgid "Pause / Resume"
 msgstr "Pause / Reprise"
 
-#: ui/segment_editor.py:129
+#: ui/segment_editor.py:133
 msgid "Play / Stop"
 msgstr "Lecture / Stop"
 
-#: ui/segment_editor.py:140
+#: ui/segment_editor.py:144
 msgid "Previous cut"
 msgstr "Coupe précédente"
 
-#: ui/segment_editor.py:162
+#: ui/segment_editor.py:169
 msgid "Remove cut"
 msgstr "Retirer la coupe"
 
-#: ui/segment_editor.py:352
+#: ui/segment_editor.py:378
 msgid "Step: {step}"
 msgstr "Pas : {step}"
 
-#: ui/segment_editor.py:240
+#: ui/segment_editor.py:260
 msgid "Step: {step}   |   Kept regions: {kept}"
 msgstr "Pas : {step}   |   Régions gardées : {kept}"
+
+#: ui/segment_editor.py:179
+msgid "&Options"
+msgstr "&Options"
+
+#: ui/segment_editor.py:167
+msgid "Add a cut here"
+msgstr "Ajouter une coupe ici"
+
+#: ui/segment_editor.py:173
+msgid "Announce playback actions"
+msgstr "Annoncer les actions de lecture"
+
+#: ui/segment_editor.py:176
+msgid "Announce position when moving"
+msgstr "Annoncer la position lors des déplacements"
+
+#: ui/segment_editor.py:152
+msgid "Coarser step"
+msgstr "Pas plus grand"
+
+#: ui/segment_editor.py:151
+msgid "Finer step"
+msgstr "Pas plus fin"
+
+#: ui/segment_editor.py:182 ui/segment_editor.py:423
+msgid "Keyboard shortcuts"
+msgstr "Raccourcis clavier"
+
+#: ui/segment_editor.py:407
+msgid ""
+"Keyboard shortcuts:\n"
+"\n"
+"Up / Down: select a segment\n"
+"Left / Right: move by the step\n"
+"Ctrl+Left / Ctrl+Right: previous / next cut\n"
+"Home / End: start / end\n"
+"+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
+"Space: Play / Stop (Stop returns to the start point)\n"
+"Ctrl+Space: Pause / Resume\n"
+"S: mark region start   E: mark region end (creates a discard region)\n"
+"X: add a cut here\n"
+"K: keep / discard the selected segment\n"
+"Delete: remove a cut (merge segments)\n"
+"Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
+"Ctrl+G: go to a position   Ctrl+W: close"
+msgstr ""
+"Raccourcis clavier :\n"
+"\n"
+"Haut / Bas : choisir un segment\n"
+"Gauche / Droite : se déplacer du pas\n"
+"Ctrl+Gauche / Ctrl+Droite : coupe précédente / suivante\n"
+"Origine / Fin : début / fin\n"
+"+ / - (ou Ctrl+Haut / Ctrl+Bas) : pas plus grand / plus fin\n"
+"Espace : Lecture / Stop (Stop revient au point de départ)\n"
+"Ctrl+Espace : Pause / Reprise\n"
+"S : marquer le début   E : marquer la fin (crée une région à jeter)\n"
+"X : ajouter une coupe ici\n"
+"K : garder / jeter le segment sélectionné\n"
+"Suppr : retirer une coupe (fusionne les segments)\n"
+"Ctrl+E : exporter en un fichier   Ctrl+Maj+E : exporter en fichiers séparés\n"
+"Ctrl+G : aller à une position   Ctrl+W : fermer"
+
+#: ui/segment_editor.py:397
+msgid "Playback announcements off"
+msgstr "Annonces de lecture désactivées"
+
+#: ui/segment_editor.py:396
+msgid "Playback announcements on"
+msgstr "Annonces de lecture activées"
+
+#: ui/segment_editor.py:404
+msgid "Position announcements off"
+msgstr "Annonces de position désactivées"
+
+#: ui/segment_editor.py:403
+msgid "Position announcements on"
+msgstr "Annonces de position activées"
+
+#~ msgid "Cut here"
+#~ msgstr "Couper ici"
 
 #~ msgid ""
 #~ "Arrow keys move by the step; Home/End go to start/end; Ctrl+Left/Right jump "
