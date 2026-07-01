@@ -107,6 +107,7 @@ class SegmentEditorFrame(wx.Frame):
         self._silence_points = []    # milieux des silences (repères de navigation)
         self._silence_ready = False  # détection terminée ?
         self._closed = False
+        self._montage_queue = []     # régions gardées restant à jouer (mode montage)
         self.player = AudioPlayer()
         self._pending_export_mode = None  # mode demandé, appliqué à la fermeture
 
@@ -145,6 +146,8 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_play, _("Play / Stop") + "  (Space)", lambda e: self._toggle_play())
         self._append(m_play, _("Pause / Resume") + "  (Ctrl+Space)", lambda e: self._toggle_pause())
         self._append(m_play, _("Play current segment"), lambda e: self._play_current_segment())
+        self._append(m_play, _("Play the result (skip discarded parts)") + "  (M)",
+                     lambda e: self._play_montage())
         self._append(m_play, _("Verify the cut (real export join)") + "  (V)", lambda e: self._verify_cut())
         m_play.AppendSeparator()
         self.item_scrub = m_play.AppendCheckItem(wx.ID_ANY, _("Scrub on move (audio preview)"))
@@ -198,7 +201,8 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_edit, _("Mark region end") + "  (E)", lambda e: self._mark_end())
         self._append(m_edit, _("Add a cut here") + "  (X)", lambda e: self._cut_here())
         self._append(m_edit, _("Keep / Discard segment") + "  (K)", lambda e: self._toggle_selected_keep())
-        self._append(m_edit, _("Remove cut") + "  (Del)", lambda e: self._remove_selected_boundary())
+        self._append(m_edit, _("Merge with next segment (remove cut)") + "  (Del)",
+                     lambda e: self._remove_selected_boundary())
         m_edit.AppendSeparator()
         self._append(m_edit, _("Move segment start to current position"),
                      lambda e: self._set_selected_boundary(start=True))
@@ -480,6 +484,7 @@ class SegmentEditorFrame(wx.Frame):
             "+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
             "Space: Play / Stop (Stop returns to the start point)\n"
             "Ctrl+Space: Pause / Resume\n"
+            "M: play the result (skip discarded parts)\n"
             "V: verify the cut (hear the real export join)\n"
             "S: mark region start   E: mark region end (creates a discard region)\n"
             "X: add a cut here\n"
@@ -737,6 +742,32 @@ class SegmentEditorFrame(wx.Frame):
             audio_index=self._preview_audio_index,
         )
 
+    # ---------------------------------------------------------------- montage
+    def _play_montage(self):
+        """Écoute le RÉSULTAT : joue à la suite uniquement les régions gardées (les
+        parties à jeter sont sautées), comme le fichier exporté « un seul fichier »."""
+        regions = segmods.kept_regions(self.plan)
+        if not regions:
+            speak(_("Nothing to play (all discarded)"))
+            return
+        self._montage_queue = list(regions)
+        self._say_transport(_("Playing the result"))
+        self._play_next_montage_region()
+
+    def _play_next_montage_region(self):
+        if not self._montage_queue:
+            self._on_play_finished()
+            return
+        start_ms, end_ms = self._montage_queue.pop(0)
+        self._play_anchor_ms = start_ms
+        self._last_playhead_ms = start_ms
+        self.player.play(
+            self.meta.full_path, start_ms=start_ms, end_ms=end_ms,
+            on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
+            on_finished=lambda: wx.CallAfter(self._play_next_montage_region),
+            audio_index=self._preview_audio_index,
+        )
+
     # ------------------------------------------------------------------ navigation bornes
     def _prev_boundary(self):
         prev = 0
@@ -824,6 +855,8 @@ class SegmentEditorFrame(wx.Frame):
                 self._toggle_selected_keep(); return
             if key in (ord('V'), ord('v')):
                 self._verify_cut(); return
+            if key in (ord('M'), ord('m')):
+                self._play_montage(); return
         if key == wx.WXK_DELETE:
             self._remove_selected_boundary(); return
 

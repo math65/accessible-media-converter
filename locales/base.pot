@@ -6,11 +6,11 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ui/segment_editor.py:299
+#: ui/segment_editor.py:303
 msgid "   |   Silences: {count}"
 msgstr ""
 
-#: ui/segment_editor.py:244 ui/track_manager.py:147
+#: ui/segment_editor.py:248 ui/track_manager.py:147
 msgid "#"
 msgstr ""
 
@@ -30,15 +30,15 @@ msgstr ""
 msgid "&Documentation..."
 msgstr ""
 
-#: ui/main_window.py:246 ui/segment_editor.py:207
+#: ui/main_window.py:246 ui/segment_editor.py:211
 msgid "&Edit"
 msgstr ""
 
-#: ui/main_window.py:245 ui/segment_editor.py:140
+#: ui/main_window.py:245 ui/segment_editor.py:141
 msgid "&File"
 msgstr ""
 
-#: ui/main_window.py:247 ui/segment_editor.py:220
+#: ui/main_window.py:247 ui/segment_editor.py:224
 msgid "&Help"
 msgstr ""
 
@@ -46,11 +46,11 @@ msgstr ""
 msgid "&Merge Files"
 msgstr ""
 
-#: ui/segment_editor.py:191
+#: ui/segment_editor.py:194
 msgid "&Navigation"
 msgstr ""
 
-#: ui/segment_editor.py:216
+#: ui/segment_editor.py:220
 msgid "&Options"
 msgstr ""
 
@@ -58,7 +58,7 @@ msgstr ""
 msgid "&Paste Files"
 msgstr ""
 
-#: ui/segment_editor.py:165
+#: ui/segment_editor.py:168
 msgid "&Playback"
 msgstr ""
 
@@ -182,7 +182,7 @@ msgstr ""
 msgid "Add &Folder..."
 msgstr ""
 
-#: ui/segment_editor.py:199
+#: ui/segment_editor.py:202
 msgid "Add a cut here"
 msgstr ""
 
@@ -214,11 +214,11 @@ msgstr ""
 msgid "Always numbered"
 msgstr ""
 
-#: ui/segment_editor.py:210
+#: ui/segment_editor.py:214
 msgid "Announce playback actions"
 msgstr ""
 
-#: ui/segment_editor.py:213
+#: ui/segment_editor.py:217
 msgid "Announce position when moving"
 msgstr ""
 
@@ -396,7 +396,7 @@ msgstr ""
 msgid "BMP - Image (Uncompressed)"
 msgstr ""
 
-#: ui/segment_editor.py:168
+#: ui/segment_editor.py:171
 msgid "Backward"
 msgstr ""
 
@@ -449,7 +449,7 @@ msgstr ""
 msgid "Bitrate:"
 msgstr ""
 
-#: ui/segment_editor.py:596
+#: ui/segment_editor.py:601
 msgid "Boundary moved to {time}"
 msgstr ""
 
@@ -492,7 +492,7 @@ msgstr ""
 msgid "Cannot cut"
 msgstr ""
 
-#: ui/segment_editor.py:761
+#: ui/segment_editor.py:792
 msgid "Cannot export"
 msgstr ""
 
@@ -587,7 +587,7 @@ msgid "Clipboard does not contain files or folders."
 msgstr ""
 
 #: ui/announcement_dialog.py:40 ui/presets_dialog.py:108
-#: ui/segment_editor.py:139 ui/update_dialog.py:92 ui/update_dialog.py:93
+#: ui/segment_editor.py:140 ui/update_dialog.py:92 ui/update_dialog.py:93
 msgid "Close"
 msgstr ""
 
@@ -595,7 +595,7 @@ msgstr ""
 msgid "Closing application to install update..."
 msgstr ""
 
-#: ui/segment_editor.py:181
+#: ui/segment_editor.py:184
 msgid "Coarser step"
 msgstr ""
 
@@ -796,11 +796,11 @@ msgstr ""
 msgid "Cue sheets referencing multiple files are not supported yet."
 msgstr ""
 
-#: ui/segment_editor.py:239
+#: ui/segment_editor.py:243
 msgid "Current position"
 msgstr ""
 
-#: ui/segment_editor.py:293 ui/segment_editor.py:418 ui/segment_editor.py:426
+#: ui/segment_editor.py:297 ui/segment_editor.py:422 ui/segment_editor.py:430
 msgid "Current position: {time}"
 msgstr ""
 
@@ -832,7 +832,7 @@ msgstr ""
 msgid "Cut / Split..."
 msgstr ""
 
-#: ui/segment_editor.py:516
+#: ui/segment_editor.py:521
 msgid "Cut added at {time}"
 msgstr ""
 
@@ -844,7 +844,7 @@ msgstr ""
 msgid "Cut failed."
 msgstr ""
 
-#: ui/segment_editor.py:569
+#: ui/segment_editor.py:574
 msgid "Cut removed; segments merged"
 msgstr ""
 
@@ -856,11 +856,11 @@ msgstr ""
 msgid "Default"
 msgstr ""
 
-#: ui/segment_editor.py:411
+#: ui/segment_editor.py:415
 msgid "Default audio track"
 msgstr ""
 
-#: ui/segment_editor.py:158
+#: ui/segment_editor.py:161
 msgid "Default track"
 msgstr ""
 
@@ -905,7 +905,7 @@ msgstr ""
 msgid "Detect track number from each file name"
 msgstr ""
 
-#: ui/segment_editor.py:647
+#: ui/segment_editor.py:652
 msgid "Detecting silences, please wait"
 msgstr ""
 
@@ -913,11 +913,11 @@ msgstr ""
 msgid "Disc number"
 msgstr ""
 
-#: ui/segment_editor.py:288
+#: ui/segment_editor.py:292
 msgid "Discard"
 msgstr ""
 
-#: ui/segment_editor.py:539
+#: ui/segment_editor.py:544
 msgid "Discard region created from {start} to {end}"
 msgstr ""
 
@@ -953,7 +953,7 @@ msgstr ""
 msgid "Downloading update... {percent}%"
 msgstr ""
 
-#: ui/segment_editor.py:247
+#: ui/segment_editor.py:251
 msgid "Duration"
 msgstr ""
 
@@ -1005,7 +1005,7 @@ msgstr ""
 msgid "Encoder Preset:"
 msgstr ""
 
-#: ui/segment_editor.py:246
+#: ui/segment_editor.py:250
 msgid "End"
 msgstr ""
 
@@ -1060,11 +1060,11 @@ msgstr ""
 msgid "Export Presets"
 msgstr ""
 
-#: ui/segment_editor.py:134
+#: ui/segment_editor.py:135
 msgid "Export as one file (remove discarded segments)"
 msgstr ""
 
-#: ui/segment_editor.py:136
+#: ui/segment_editor.py:137
 msgid "Export as separate files (one per kept region)"
 msgstr ""
 
@@ -1124,7 +1124,7 @@ msgstr ""
 msgid "Film"
 msgstr ""
 
-#: ui/segment_editor.py:180
+#: ui/segment_editor.py:183
 msgid "Finer step"
 msgstr ""
 
@@ -1140,7 +1140,7 @@ msgstr ""
 msgid "Format settings dialog"
 msgstr ""
 
-#: ui/segment_editor.py:169
+#: ui/segment_editor.py:172
 msgid "Forward"
 msgstr ""
 
@@ -1161,23 +1161,23 @@ msgstr ""
 msgid "GitHub update check failed with HTTP status {code}."
 msgstr ""
 
-#: ui/segment_editor.py:173
+#: ui/segment_editor.py:176
 msgid "Go to end"
 msgstr ""
 
-#: ui/segment_editor.py:496
+#: ui/segment_editor.py:501
 msgid "Go to position"
 msgstr ""
 
-#: ui/segment_editor.py:495
+#: ui/segment_editor.py:500
 msgid "Go to position (HH:MM:SS.mmm):"
 msgstr ""
 
-#: ui/segment_editor.py:174
+#: ui/segment_editor.py:177
 msgid "Go to position..."
 msgstr ""
 
-#: ui/segment_editor.py:172
+#: ui/segment_editor.py:175
 msgid "Go to start"
 msgstr ""
 
@@ -1275,7 +1275,7 @@ msgstr ""
 msgid "Installation problem"
 msgstr ""
 
-#: ui/segment_editor.py:501 ui/segment_editor.py:503
+#: ui/segment_editor.py:506 ui/segment_editor.py:508
 msgid "Invalid time"
 msgstr ""
 
@@ -1299,11 +1299,11 @@ msgstr ""
 msgid "JPEG - Image"
 msgstr ""
 
-#: ui/segment_editor.py:288
+#: ui/segment_editor.py:292
 msgid "Keep"
 msgstr ""
 
-#: ui/segment_editor.py:200
+#: ui/segment_editor.py:203
 msgid "Keep / Discard segment"
 msgstr ""
 
@@ -1323,7 +1323,7 @@ msgid ""
 "possible."
 msgstr ""
 
-#: ui/segment_editor.py:219 ui/segment_editor.py:492
+#: ui/segment_editor.py:223 ui/segment_editor.py:497
 msgid "Keyboard shortcuts"
 msgstr ""
 
@@ -1331,7 +1331,7 @@ msgstr ""
 msgid "Keyboard shortcuts hint"
 msgstr ""
 
-#: ui/segment_editor.py:473
+#: ui/segment_editor.py:477
 msgid ""
 "Keyboard shortcuts:\n"
 "\n"
@@ -1343,6 +1343,7 @@ msgid ""
 "+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
 "Space: Play / Stop (Stop returns to the start point)\n"
 "Ctrl+Space: Pause / Resume\n"
+"M: play the result (skip discarded parts)\n"
 "V: verify the cut (hear the real export join)\n"
 "S: mark region start   E: mark region end (creates a discard region)\n"
 "X: add a cut here\n"
@@ -1462,15 +1463,15 @@ msgstr ""
 msgid "Manage presets"
 msgstr ""
 
-#: ui/segment_editor.py:524
+#: ui/segment_editor.py:529
 msgid "Mark a region start first"
 msgstr ""
 
-#: ui/segment_editor.py:198
+#: ui/segment_editor.py:201
 msgid "Mark region end"
 msgstr ""
 
-#: ui/segment_editor.py:197
+#: ui/segment_editor.py:200
 msgid "Mark region start"
 msgstr ""
 
@@ -1510,6 +1511,10 @@ msgstr ""
 msgid "Merge the listed files into one, using the selected output format."
 msgstr ""
 
+#: ui/segment_editor.py:204
+msgid "Merge with next segment (remove cut)"
+msgstr ""
+
 #: ui/main_window.py:2059 ui/main_window.py:2062 ui/main_window.py:2085
 msgid "Merging files..."
 msgstr ""
@@ -1546,11 +1551,11 @@ msgstr ""
 msgid "Move Up"
 msgstr ""
 
-#: ui/segment_editor.py:205
+#: ui/segment_editor.py:209
 msgid "Move segment end to current position"
 msgstr ""
 
-#: ui/segment_editor.py:203
+#: ui/segment_editor.py:207
 msgid "Move segment start to current position"
 msgstr ""
 
@@ -1566,11 +1571,11 @@ msgstr ""
 msgid "New name:"
 msgstr ""
 
-#: ui/segment_editor.py:171
+#: ui/segment_editor.py:174
 msgid "Next cut"
 msgstr ""
 
-#: ui/segment_editor.py:177
+#: ui/segment_editor.py:180
 msgid "Next silence"
 msgstr ""
 
@@ -1591,11 +1596,11 @@ msgstr ""
 msgid "No compatible media files found."
 msgstr ""
 
-#: ui/segment_editor.py:511
+#: ui/segment_editor.py:516
 msgid "No cut added here"
 msgstr ""
 
-#: ui/segment_editor.py:703
+#: ui/segment_editor.py:708
 msgid "No cut to check here"
 msgstr ""
 
@@ -1624,7 +1629,7 @@ msgstr ""
 msgid "No installer asset was found in the GitHub release."
 msgstr ""
 
-#: ui/segment_editor.py:659
+#: ui/segment_editor.py:664
 msgid "No more silence"
 msgstr ""
 
@@ -1632,16 +1637,16 @@ msgstr ""
 msgid "No release notes provided."
 msgstr ""
 
-#: ui/segment_editor.py:705
+#: ui/segment_editor.py:710
 msgid "No removal here (continuous playback)"
 msgstr ""
 
-#: ui/segment_editor.py:387 ui/segment_editor.py:545 ui/segment_editor.py:559
-#: ui/segment_editor.py:574 ui/segment_editor.py:583
+#: ui/segment_editor.py:391 ui/segment_editor.py:550 ui/segment_editor.py:564
+#: ui/segment_editor.py:579 ui/segment_editor.py:588
 msgid "No segment selected"
 msgstr ""
 
-#: ui/segment_editor.py:650
+#: ui/segment_editor.py:655
 msgid "No silence detected"
 msgstr ""
 
@@ -1673,11 +1678,15 @@ msgstr ""
 msgid "Not selected"
 msgstr ""
 
-#: ui/segment_editor.py:618
+#: ui/segment_editor.py:751
+msgid "Nothing to play (all discarded)"
+msgstr ""
+
+#: ui/segment_editor.py:623
 msgid "Nothing to redo"
 msgstr ""
 
-#: ui/segment_editor.py:608
+#: ui/segment_editor.py:613
 msgid "Nothing to undo"
 msgstr ""
 
@@ -1806,11 +1815,11 @@ msgstr ""
 msgid "Packaged"
 msgstr ""
 
-#: ui/segment_editor.py:146
+#: ui/segment_editor.py:147
 msgid "Pause / Resume"
 msgstr ""
 
-#: ui/segment_editor.py:377
+#: ui/segment_editor.py:381
 msgid "Paused at {time}"
 msgstr ""
 
@@ -1822,28 +1831,36 @@ msgstr ""
 msgid "Pixel Format:"
 msgstr ""
 
-#: ui/segment_editor.py:145
+#: ui/segment_editor.py:146
 msgid "Play / Stop"
 msgstr ""
 
-#: ui/segment_editor.py:147
+#: ui/segment_editor.py:148
 msgid "Play current segment"
 msgstr ""
 
-#: ui/segment_editor.py:463
+#: ui/segment_editor.py:149
+msgid "Play the result (skip discarded parts)"
+msgstr ""
+
+#: ui/segment_editor.py:467
 msgid "Playback announcements off"
 msgstr ""
 
-#: ui/segment_editor.py:462
+#: ui/segment_editor.py:466
 msgid "Playback announcements on"
 msgstr ""
 
-#: ui/segment_editor.py:368 ui/segment_editor.py:379
+#: ui/segment_editor.py:372 ui/segment_editor.py:383
 msgid "Playing"
 msgstr ""
 
-#: ui/segment_editor.py:393
+#: ui/segment_editor.py:397
 msgid "Playing segment {index}"
+msgstr ""
+
+#: ui/segment_editor.py:754
+msgid "Playing the result"
 msgstr ""
 
 #: ui/metadata_editor.py:372
@@ -1866,7 +1883,7 @@ msgstr ""
 msgid "Please enter a valid email address."
 msgstr ""
 
-#: ui/segment_editor.py:502
+#: ui/segment_editor.py:507
 msgid "Please enter a valid time (HH:MM:SS.mmm)."
 msgstr ""
 
@@ -1886,11 +1903,11 @@ msgstr ""
 msgid "Please wait for the update download to finish."
 msgstr ""
 
-#: ui/segment_editor.py:470
+#: ui/segment_editor.py:474
 msgid "Position announcements off"
 msgstr ""
 
-#: ui/segment_editor.py:469
+#: ui/segment_editor.py:473
 msgid "Position announcements on"
 msgstr ""
 
@@ -1978,19 +1995,19 @@ msgstr ""
 msgid "Preview Tracks..."
 msgstr ""
 
-#: ui/segment_editor.py:164
+#: ui/segment_editor.py:167
 msgid "Preview audio track"
 msgstr ""
 
-#: ui/segment_editor.py:413
+#: ui/segment_editor.py:417
 msgid "Preview audio track {number}"
 msgstr ""
 
-#: ui/segment_editor.py:170
+#: ui/segment_editor.py:173
 msgid "Previous cut"
 msgstr ""
 
-#: ui/segment_editor.py:176
+#: ui/segment_editor.py:179
 msgid "Previous silence"
 msgstr ""
 
@@ -2068,19 +2085,19 @@ msgid ""
 "version is later published, it is offered as an update too."
 msgstr ""
 
-#: ui/segment_editor.py:195
+#: ui/segment_editor.py:198
 msgid "Redo"
 msgstr ""
 
-#: ui/segment_editor.py:624
+#: ui/segment_editor.py:629
 msgid "Redone"
 msgstr ""
 
-#: ui/segment_editor.py:529
+#: ui/segment_editor.py:534
 msgid "Region start and end are identical"
 msgstr ""
 
-#: ui/segment_editor.py:520
+#: ui/segment_editor.py:525
 msgid "Region start marked at {time}"
 msgstr ""
 
@@ -2098,10 +2115,6 @@ msgstr ""
 
 #: ui/metadata_editor.py:266
 msgid "Remove cover"
-msgstr ""
-
-#: ui/segment_editor.py:201
-msgid "Remove cut"
 msgstr ""
 
 #: ui/presets_dialog.py:252 ui/presets_dialog.py:261
@@ -2192,15 +2205,15 @@ msgstr ""
 msgid "Save, apply, import or export encoding presets."
 msgstr ""
 
-#: ui/segment_editor.py:436
+#: ui/segment_editor.py:440
 msgid "Scrub off"
 msgstr ""
 
-#: ui/segment_editor.py:436
+#: ui/segment_editor.py:440
 msgid "Scrub on"
 msgstr ""
 
-#: ui/segment_editor.py:150
+#: ui/segment_editor.py:153
 msgid "Scrub on move (audio preview)"
 msgstr ""
 
@@ -2208,11 +2221,11 @@ msgstr ""
 msgid "Season"
 msgstr ""
 
-#: ui/segment_editor.py:553
+#: ui/segment_editor.py:558
 msgid "Segment {index}: {state}"
 msgstr ""
 
-#: ui/segment_editor.py:243
+#: ui/segment_editor.py:247
 msgid "Segments"
 msgstr ""
 
@@ -2297,7 +2310,7 @@ msgstr ""
 msgid "Shows conversion progress from 0 to 100 percent."
 msgstr ""
 
-#: ui/segment_editor.py:714
+#: ui/segment_editor.py:719
 msgid "Simulating join: {a} to {b}"
 msgstr ""
 
@@ -2354,7 +2367,7 @@ msgstr ""
 msgid "Standard"
 msgstr ""
 
-#: ui/segment_editor.py:245
+#: ui/segment_editor.py:249
 msgid "Start"
 msgstr ""
 
@@ -2362,7 +2375,7 @@ msgstr ""
 msgid "Start conversion"
 msgstr ""
 
-#: ui/segment_editor.py:248
+#: ui/segment_editor.py:252
 msgid "State"
 msgstr ""
 
@@ -2370,15 +2383,15 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: ui/segment_editor.py:190
+#: ui/segment_editor.py:193
 msgid "Step"
 msgstr ""
 
-#: ui/segment_editor.py:444
+#: ui/segment_editor.py:448
 msgid "Step: {step}"
 msgstr ""
 
-#: ui/segment_editor.py:297
+#: ui/segment_editor.py:301
 msgid "Step: {step}   |   Kept regions: {kept}"
 msgstr ""
 
@@ -2412,7 +2425,7 @@ msgstr ""
 msgid "Stopped by user"
 msgstr ""
 
-#: ui/segment_editor.py:366
+#: ui/segment_editor.py:370
 msgid "Stopped, back at {time}"
 msgstr ""
 
@@ -2526,7 +2539,7 @@ msgstr ""
 msgid "The installer failed its integrity check and was not installed."
 msgstr ""
 
-#: ui/segment_editor.py:562
+#: ui/segment_editor.py:567
 msgid "The last segment has no following cut to remove"
 msgstr ""
 
@@ -2576,7 +2589,7 @@ msgid ""
 "empty to leave it unchanged."
 msgstr ""
 
-#: ui/segment_editor.py:591
+#: ui/segment_editor.py:596
 msgid "This boundary cannot be moved here"
 msgstr ""
 
@@ -2633,7 +2646,7 @@ msgstr ""
 msgid "Too many reports have been sent recently. Please try again later."
 msgstr ""
 
-#: ui/segment_editor.py:234
+#: ui/segment_editor.py:238
 msgid "Total duration: {duration}"
 msgstr ""
 
@@ -2673,7 +2686,7 @@ msgstr ""
 msgid "Track title"
 msgstr ""
 
-#: core/conversion.py:110 ui/main_window.py:1830 ui/segment_editor.py:403
+#: core/conversion.py:110 ui/main_window.py:1830 ui/segment_editor.py:407
 msgid "Track {number}"
 msgstr ""
 
@@ -2743,11 +2756,11 @@ msgstr ""
 msgid "Uncompressed"
 msgstr ""
 
-#: ui/segment_editor.py:194
+#: ui/segment_editor.py:197
 msgid "Undo"
 msgstr ""
 
-#: ui/segment_editor.py:614
+#: ui/segment_editor.py:619
 msgid "Undone"
 msgstr ""
 
@@ -2826,7 +2839,7 @@ msgstr ""
 msgid "Variable Bitrate (VBR)"
 msgstr ""
 
-#: ui/segment_editor.py:148
+#: ui/segment_editor.py:151
 msgid "Verify the cut (real export join)"
 msgstr ""
 
@@ -2955,11 +2968,11 @@ msgstr ""
 msgid "Your report has been sent successfully."
 msgstr ""
 
-#: ui/segment_editor.py:314 ui/segment_editor.py:554
+#: ui/segment_editor.py:318 ui/segment_editor.py:559
 msgid "discard"
 msgstr ""
 
-#: ui/segment_editor.py:314 ui/segment_editor.py:554
+#: ui/segment_editor.py:318 ui/segment_editor.py:559
 msgid "keep"
 msgstr ""
 
@@ -3073,6 +3086,6 @@ msgstr ""
 msgid "{tab} tab selected."
 msgstr ""
 
-#: ui/segment_editor.py:315
+#: ui/segment_editor.py:319
 msgid "{time} — segment {index} of {total}, {state}"
 msgstr ""
