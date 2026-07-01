@@ -86,6 +86,8 @@ class SegmentEditorDialog(wx.Dialog):
         self.step_ms = _STEP_CHOICES[_DEFAULT_STEP_INDEX][1]
         self._region_start_ms = None
         self._scrub_enabled = False
+        self._play_anchor_ms = 0      # point de départ de la lecture (Stop y revient)
+        self._last_playhead_ms = 0    # dernière tête de lecture connue (Pause s'y pose)
         self.player = AudioPlayer()
         # Résultats lus par l'appelant après ShowModal() == wx.ID_OK.
         self.export_mode = EXPORT_MODE_ONE_FILE
@@ -147,7 +149,9 @@ class SegmentEditorDialog(wx.Dialog):
         btn_goto = wx.Button(panel, label=_("Go"))
         btn_goto.Bind(wx.EVT_BUTTON, lambda e: self._do_goto())
         self.btn_play = wx.Button(panel, label=_("Play / Stop (Space)"))
-        self.btn_play.SetToolTip(_("Stop returns to the position where playback started."))
+        self.btn_play.SetToolTip(_(
+            "Space plays, then Stop returns to where playback started. "
+            "Ctrl+Space pauses at the current point and resumes from there."))
         self.btn_play.Bind(wx.EVT_BUTTON, lambda e: self._toggle_play())
         btn_play_seg = wx.Button(panel, label=_("Play current segment"))
         btn_play_seg.Bind(wx.EVT_BUTTON, lambda e: self._play_current_segment())
@@ -308,24 +312,40 @@ class SegmentEditorDialog(wx.Dialog):
         if self.player.is_playing():
             self.player.stop()
 
-    def _toggle_play(self):
-        if self.player.is_playing():
-            self._stop_and_return()
-            return
-        start = self.position_ms if self.position_ms < self.duration_ms else 0
-        speak(_("Playing"))
+    def _play_from(self, start_ms, end_ms=None):
+        """Démarre la lecture ; ``start_ms`` devient l'**ancre** (point où Stop
+        ramènera le curseur). Le curseur d'édition ne bouge pas pendant l'écoute."""
+        start = int(start_ms) if start_ms < self.duration_ms else 0
+        self._play_anchor_ms = start
+        self._last_playhead_ms = start
         self.player.play(
-            self.meta.full_path, start_ms=start, end_ms=self.duration_ms,
+            self.meta.full_path, start_ms=start, end_ms=end_ms if end_ms is not None else self.duration_ms,
             on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
             on_finished=lambda: wx.CallAfter(self._on_play_finished),
         )
 
-    def _stop_and_return(self):
-        """Stop : coupe la lecture et **revient au curseur d'édition** (le point où
-        la lecture a démarré), qui n'a pas bougé pendant l'écoute."""
-        self.player.stop()
-        self.txt_position.ChangeValue(format_timecode(self.position_ms))
-        speak(_("Stopped, back at {time}").format(time=format_timecode(self.position_ms)))
+    def _toggle_play(self):
+        """Espace : Lecture / Stop. Stop revient à l'ancre (point de départ)."""
+        if self.player.is_playing():
+            self.player.stop()
+            self.position_ms = self._play_anchor_ms
+            self.txt_position.ChangeValue(format_timecode(self.position_ms))
+            speak(_("Stopped, back at {time}").format(time=format_timecode(self.position_ms)))
+        else:
+            speak(_("Playing"))
+            self._play_from(self.position_ms)
+
+    def _toggle_pause(self):
+        """Ctrl+Espace : Pause / Reprise. Pause fige au playhead (le curseur s'y
+        pose) ; une reprise repart de là."""
+        if self.player.is_playing():
+            self.player.stop()
+            self.position_ms = max(0, min(int(self._last_playhead_ms), self.duration_ms))
+            self.txt_position.ChangeValue(format_timecode(self.position_ms))
+            speak(_("Paused at {time}").format(time=format_timecode(self.position_ms)))
+        else:
+            speak(_("Playing"))
+            self._play_from(self.position_ms)
 
     def _play_current_segment(self):
         index = self._selected_index()
@@ -339,17 +359,14 @@ class SegmentEditorDialog(wx.Dialog):
         self.position_ms = seg.start_ms
         self.txt_position.ChangeValue(format_timecode(self.position_ms))
         speak(_("Playing segment {index}").format(index=index + 1))
-        self.player.play(
-            self.meta.full_path, start_ms=seg.start_ms, end_ms=seg.end_ms,
-            on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
-            on_finished=lambda: wx.CallAfter(self._on_play_finished),
-        )
+        self._play_from(seg.start_ms, end_ms=seg.end_ms)
 
     def _on_playhead(self, ms):
         # Affiche la tête de lecture EN LECTURE seulement (visuel, silencieux) : le
         # curseur d'édition self.position_ms ne bouge pas, pour que Stop y revienne.
+        self._last_playhead_ms = max(0, min(int(ms), self.duration_ms))
         if self.player.is_playing():
-            self.txt_position.ChangeValue(format_timecode(max(0, min(int(ms), self.duration_ms))))
+            self.txt_position.ChangeValue(format_timecode(self._last_playhead_ms))
 
     def _on_play_finished(self):
         # Fin naturelle de l'écoute : on ré-affiche le curseur d'édition.
@@ -485,9 +502,15 @@ class SegmentEditorDialog(wx.Dialog):
             if key == wx.WXK_DELETE:
                 self._remove_selected_boundary(); return
 
+        # Ctrl+Espace = Pause / Reprise, partout sauf dans les contrôles qui se
+        # servent des lettres/flèches (menu « Pas », mode d'export ; « Aller à »
+        # déjà écarté). Ctrl+Espace n'est utilisé nativement par aucun contrôle.
+        if key == wx.WXK_SPACE and event.ControlDown() and focus not in (self.choice_step, self.radio_mode):
+            self._toggle_pause(); return
+
         # Espace = Lecture / Stop, depuis le champ Position (ailleurs, Espace doit
         # activer le bouton ou la case à cocher qui a le focus).
-        if transport and key == wx.WXK_SPACE:
+        if transport and key == wx.WXK_SPACE and not event.ControlDown():
             self._toggle_play(); return
 
         # Navigation temporelle : active PARTOUT sauf dans les contrôles qui se
