@@ -110,6 +110,7 @@ class SegmentEditorFrame(wx.Frame):
         self._silence_ready = False  # détection terminée ?
         self._closed = False
         self._montage_queue = []     # régions gardées restant à jouer (mode montage)
+        self._skip_discarded = False # mode montage : la lecture saute les parties jetées
         self._dirty = False          # découpes modifiées depuis dernier export/enregistrement
         self._pending_export = None  # (mode, fmt_key, settings) appliqué à la fermeture
         self.player = AudioPlayer()
@@ -152,8 +153,9 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_play, _("Play / Stop") + "  (Space)", lambda e: self._toggle_play())
         self._append(m_play, _("Pause / Resume") + "  (Ctrl+Space)", lambda e: self._toggle_pause())
         self._append(m_play, _("Play current segment"), lambda e: self._play_current_segment())
-        self._append(m_play, _("Play the result (skip discarded parts)") + "  (M)",
-                     lambda e: self._play_montage())
+        self.item_skip = m_play.AppendCheckItem(
+            wx.ID_ANY, _("Montage mode: skip discarded parts") + "  (M)")
+        self.Bind(wx.EVT_MENU, lambda e: self._set_skip_mode(self.item_skip.IsChecked()), self.item_skip)
         self._append(m_play, _("Verify the cut (real export join)") + "  (V)", lambda e: self._verify_cut())
         m_play.AppendSeparator()
         self.item_scrub = m_play.AppendCheckItem(wx.ID_ANY, _("Scrub on move (audio preview)"))
@@ -338,8 +340,9 @@ class SegmentEditorFrame(wx.Frame):
                               audio_index=self._preview_audio_index)
         elif self.player.is_playing():
             # Se déplacer PENDANT la lecture : on continue à jouer depuis la nouvelle
-            # position (pas d'arrêt). Le curseur/point de reprise suit le déplacement.
-            self._play_from(self.position_ms)
+            # position (pas d'arrêt), en respectant le mode (montage ou tout). Le
+            # curseur/point de reprise suit le déplacement.
+            self._start_playback(self.position_ms)
             if speak_it:
                 self._announce_position()
         else:
@@ -367,6 +370,14 @@ class SegmentEditorFrame(wx.Frame):
         if self._opt_announce_transport:
             speak(message)
 
+    def _start_playback(self, from_ms):
+        """Démarre la lecture selon le mode : montage (saute les parties jetées) ou
+        tout, en partant de ``from_ms``."""
+        if self._skip_discarded:
+            self._start_montage(from_ms)
+        else:
+            self._play_from(from_ms)
+
     def _toggle_play(self):
         """Espace : Lecture / Stop. Stop revient à l'ancre (point de départ)."""
         if self.player.is_playing():
@@ -375,8 +386,8 @@ class SegmentEditorFrame(wx.Frame):
             self._sync_position_label()
             self._say_transport(_("Stopped, back at {time}").format(time=format_timecode(self.position_ms)))
         else:
-            self._say_transport(_("Playing"))
-            self._play_from(self.position_ms)
+            self._say_transport(_("Playing the result") if self._skip_discarded else _("Playing"))
+            self._start_playback(self.position_ms)
 
     def _toggle_pause(self):
         """Ctrl+Espace : Pause / Reprise. Pause fige au playhead (le curseur s'y pose)."""
@@ -386,8 +397,20 @@ class SegmentEditorFrame(wx.Frame):
             self._sync_position_label()
             self._say_transport(_("Paused at {time}").format(time=format_timecode(self.position_ms)))
         else:
-            self._say_transport(_("Playing"))
-            self._play_from(self.position_ms)
+            self._say_transport(_("Playing the result") if self._skip_discarded else _("Playing"))
+            self._start_playback(self.position_ms)
+
+    def _toggle_skip_mode(self):
+        self._set_skip_mode(not self._skip_discarded)
+
+    def _set_skip_mode(self, enabled):
+        self._skip_discarded = bool(enabled)
+        self.item_skip.Check(self._skip_discarded)
+        speak(_("Montage mode on (discarded parts skipped)") if self._skip_discarded
+              else _("Montage mode off (play everything)"))
+        # Bascule en direct pendant la lecture, depuis la position courante entendue.
+        if self.player.is_playing():
+            self._start_playback(self._last_playhead_ms)
 
     def _play_current_segment(self):
         index = self._selected_index()
@@ -490,7 +513,7 @@ class SegmentEditorFrame(wx.Frame):
             "+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
             "Space: Play / Stop (Stop returns to the start point)\n"
             "Ctrl+Space: Pause / Resume\n"
-            "M: play the result (skip discarded parts)\n"
+            "M: toggle montage mode (playback skips discarded parts)\n"
             "V: verify the cut (hear the real export join)\n"
             "S: mark region start   E: mark region end (creates a discard region)\n"
             "X: add a cut here\n"
@@ -817,15 +840,18 @@ class SegmentEditorFrame(wx.Frame):
         )
 
     # ---------------------------------------------------------------- montage
-    def _play_montage(self):
-        """Écoute le RÉSULTAT : joue à la suite uniquement les régions gardées (les
-        parties à jeter sont sautées), comme le fichier exporté « un seul fichier »."""
-        regions = segmods.kept_regions(self.plan)
+    def _start_montage(self, from_ms):
+        """Joue le RÉSULTAT (régions gardées, parties jetées sautées) en partant de
+        ``from_ms`` : la 1re région est rognée à la position courante. L'ancre (point
+        de retour du Stop) reste ``from_ms``."""
+        from_ms = max(0, min(int(from_ms), self.duration_ms))
+        regions = [(max(s, from_ms), e) for (s, e) in segmods.kept_regions(self.plan) if e > from_ms]
         if not regions:
             speak(_("Nothing to play (all discarded)"))
             return
-        self._montage_queue = list(regions)
-        self._say_transport(_("Playing the result"))
+        self._montage_queue = regions
+        self._play_anchor_ms = from_ms
+        self._last_playhead_ms = from_ms
         self._play_next_montage_region()
 
     def _play_next_montage_region(self):
@@ -833,8 +859,7 @@ class SegmentEditorFrame(wx.Frame):
             self._on_play_finished()
             return
         start_ms, end_ms = self._montage_queue.pop(0)
-        self._play_anchor_ms = start_ms
-        self._last_playhead_ms = start_ms
+        self._last_playhead_ms = start_ms  # affichage : le playhead saute au début de la région
         self.player.play(
             self.meta.full_path, start_ms=start_ms, end_ms=end_ms,
             on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
@@ -909,6 +934,10 @@ class SegmentEditorFrame(wx.Frame):
         ctrl = event.ControlDown()
         alt = event.AltDown()
 
+        # Échap ne doit RIEN faire ici (ne pas fermer l'éditeur par mégarde).
+        if key == wx.WXK_ESCAPE:
+            return
+
         # Alt+Gauche/Droite = silence précédent/suivant. Les autres combinaisons Alt
         # (Alt+lettre) sont laissées à la barre de menus.
         if alt and key == wx.WXK_LEFT:
@@ -950,7 +979,7 @@ class SegmentEditorFrame(wx.Frame):
             if key in (ord('V'), ord('v')):
                 self._verify_cut(); return
             if key in (ord('M'), ord('m')):
-                self._play_montage(); return
+                self._toggle_skip_mode(); return
         if key == wx.WXK_DELETE:
             self._remove_selected_boundary(); return
 
