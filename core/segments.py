@@ -157,6 +157,40 @@ def mark_region(plan, start_ms, end_ms, keep):
     return changed
 
 
+def set_segment_start(plan, index, new_ms):
+    """Déplace la coupe **au début** du segment ``index`` (frontière avec le segment
+    précédent) vers ``new_ms``, bornée pour rester ordonnée. Sans effet sur le
+    premier segment (son début est 0). Retourne True si déplacé."""
+    if index <= 0 or index >= len(plan.segments):
+        return False
+    left = plan.segments[index - 1]
+    seg = plan.segments[index]
+    lo, hi = left.start_ms + 1, seg.end_ms - 1
+    if hi < lo:
+        return False
+    new_ms = max(lo, min(int(new_ms), hi))
+    left.end_ms = new_ms
+    seg.start_ms = new_ms
+    return True
+
+
+def set_segment_end(plan, index, new_ms):
+    """Déplace la coupe **à la fin** du segment ``index`` (frontière avec le segment
+    suivant) vers ``new_ms``, bornée. Sans effet sur le dernier segment. Retourne
+    True si déplacé."""
+    if index < 0 or index >= len(plan.segments) - 1:
+        return False
+    seg = plan.segments[index]
+    right = plan.segments[index + 1]
+    lo, hi = seg.start_ms + 1, right.end_ms - 1
+    if hi < lo:
+        return False
+    new_ms = max(lo, min(int(new_ms), hi))
+    seg.end_ms = new_ms
+    right.start_ms = new_ms
+    return True
+
+
 def kept_regions(plan):
     """Régions gardées à exporter, en fusionnant les segments gardés **adjacents**
     (deux keep contigus → une seule pièce continue, pour des jointures propres).

@@ -23,13 +23,17 @@ L'éditeur **bloque la fenêtre principale** tant qu'il est ouvert (parent désa
 Le résultat est renvoyé à l'appelant par le callback ``on_export(meta, plan, mode)``.
 """
 
+import copy
 import os
+import threading
 
 import wx
 
 from core.speech import speak
 from core import segments as segmods
 from core.audio_player import AudioPlayer
+from core.ffmpeg_helpers import get_ffmpeg_path
+from core.silence import detect_silences, silence_points
 
 
 # Pas de déplacement proposés (libellé, millisecondes).
@@ -97,6 +101,12 @@ class SegmentEditorFrame(wx.Frame):
         self._play_anchor_ms = 0      # point de départ de la lecture (Stop y revient)
         self._last_playhead_ms = 0    # dernière tête de lecture connue (Pause s'y pose)
         self._preview_audio_index = None  # piste audio écoutée à l'aperçu (None = défaut)
+        self._undo_stack = []
+        self._redo_stack = []
+        self._silences = []          # liste (start_ms, end_ms)
+        self._silence_points = []    # milieux des silences (repères de navigation)
+        self._silence_ready = False  # détection terminée ?
+        self._closed = False
         self.player = AudioPlayer()
         self._pending_export_mode = None  # mode demandé, appliqué à la fermeture
 
@@ -104,6 +114,7 @@ class SegmentEditorFrame(wx.Frame):
         self._build_ui()
         self._refresh_segment_list(select_index=0)
         self._update_status()
+        self._start_silence_detection()
 
         # L'éditeur bloque la fenêtre principale tant qu'il est ouvert.
         if parent is not None:
@@ -134,6 +145,7 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_play, _("Play / Stop") + "  (Space)", lambda e: self._toggle_play())
         self._append(m_play, _("Pause / Resume") + "  (Ctrl+Space)", lambda e: self._toggle_pause())
         self._append(m_play, _("Play current segment"), lambda e: self._play_current_segment())
+        self._append(m_play, _("Check the nearest cut (before/after)") + "  (V)", lambda e: self._verify_cut())
         m_play.AppendSeparator()
         self.item_scrub = m_play.AppendCheckItem(wx.ID_ANY, _("Scrub on move (audio preview)"))
         self.Bind(wx.EVT_MENU, self.on_scrub_toggle, self.item_scrub)
@@ -161,6 +173,9 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_nav, _("Go to end") + "  (End)", lambda e: self._seek_to(self.duration_ms))
         self._append(m_nav, _("Go to position...") + "\tCtrl+G", lambda e: self._do_goto())
         m_nav.AppendSeparator()
+        self._append(m_nav, _("Previous silence") + "  (Alt+Left)", lambda e: self._go_silence(-1))
+        self._append(m_nav, _("Next silence") + "  (Alt+Right)", lambda e: self._go_silence(+1))
+        m_nav.AppendSeparator()
         m_step = wx.Menu()
         self._append(m_step, _("Finer step") + "  (-)", lambda e: self._change_step(-1))
         self._append(m_step, _("Coarser step") + "  (+)", lambda e: self._change_step(+1))
@@ -176,11 +191,19 @@ class SegmentEditorFrame(wx.Frame):
         bar.Append(m_nav, _("&Navigation"))
 
         m_edit = wx.Menu()
+        self._append(m_edit, _("Undo") + "\tCtrl+Z", lambda e: self._undo())
+        self._append(m_edit, _("Redo") + "\tCtrl+Y", lambda e: self._redo())
+        m_edit.AppendSeparator()
         self._append(m_edit, _("Mark region start") + "  (S)", lambda e: self._mark_start())
         self._append(m_edit, _("Mark region end") + "  (E)", lambda e: self._mark_end())
         self._append(m_edit, _("Add a cut here") + "  (X)", lambda e: self._cut_here())
         self._append(m_edit, _("Keep / Discard segment") + "  (K)", lambda e: self._toggle_selected_keep())
         self._append(m_edit, _("Remove cut") + "  (Del)", lambda e: self._remove_selected_boundary())
+        m_edit.AppendSeparator()
+        self._append(m_edit, _("Move segment start to current position"),
+                     lambda e: self._set_selected_boundary(start=True))
+        self._append(m_edit, _("Move segment end to current position"),
+                     lambda e: self._set_selected_boundary(start=False))
         bar.Append(m_edit, _("&Edit"))
 
         m_opt = wx.Menu()
@@ -271,8 +294,10 @@ class SegmentEditorFrame(wx.Frame):
             time=format_timecode(self.position_ms)))
         step_label = _STEP_CHOICES[self._step_index()][0]()
         kept = len(segmods.kept_regions(self.plan))
-        self.SetStatusText(_("Step: {step}   |   Kept regions: {kept}").format(
-            step=step_label, kept=kept))
+        status = _("Step: {step}   |   Kept regions: {kept}").format(step=step_label, kept=kept)
+        if self._silence_ready and self._silence_points:
+            status += _("   |   Silences: {count}").format(count=len(self._silence_points))
+        self.SetStatusText(status)
 
     def _step_index(self):
         for i, (_label, ms) in enumerate(_STEP_CHOICES):
@@ -477,10 +502,12 @@ class SegmentEditorFrame(wx.Frame):
         self._seek_to(ms)
 
     def _cut_here(self):
+        snapshot = self._snapshot()
         idx = segmods.split_at(self.plan, self.position_ms)
         if idx < 0:
             speak(_("No cut added here"))
             return
+        self._commit(snapshot)
         self._refresh_segment_list(select_index=idx)
         self._update_status()
         speak(_("Cut added at {time}").format(time=format_timecode(self.position_ms)))
@@ -498,7 +525,9 @@ class SegmentEditorFrame(wx.Frame):
         if end == start:
             speak(_("Region start and end are identical"))
             return
+        snapshot = self._snapshot()
         segmods.mark_region(self.plan, start, end, keep=False)
+        self._commit(snapshot)
         self._region_start_ms = None
         lo, hi = (start, end) if start < end else (end, start)
         target = self._segment_index_at(lo + 1)
@@ -512,7 +541,9 @@ class SegmentEditorFrame(wx.Frame):
         if index < 0:
             speak(_("No segment selected"))
             return
+        snapshot = self._snapshot()
         segmods.toggle_keep(self.plan, index)
+        self._commit(snapshot)
         keep = self.plan.segments[index].keep
         self._refresh_segment_list(select_index=index)
         self._update_status()
@@ -527,7 +558,9 @@ class SegmentEditorFrame(wx.Frame):
         if index >= len(self.plan.segments) - 1:
             speak(_("The last segment has no following cut to remove"))
             return
+        snapshot = self._snapshot()
         segmods.remove_boundary(self.plan, index)
+        self._commit(snapshot)
         self._refresh_segment_list(select_index=index)
         self._update_status()
         speak(_("Cut removed; segments merged"))
@@ -538,6 +571,111 @@ class SegmentEditorFrame(wx.Frame):
             speak(_("No segment selected"))
             return
         self._seek_to(self.plan.segments[index].start_ms)
+
+    def _set_selected_boundary(self, start):
+        """Caler le début (start=True) ou la fin (start=False) du segment
+        sélectionné sur la position d'écoute courante."""
+        index = self._selected_index()
+        if index < 0 or index >= len(self.plan.segments):
+            speak(_("No segment selected"))
+            return
+        snapshot = self._snapshot()
+        if start:
+            ok = segmods.set_segment_start(self.plan, index, self.position_ms)
+        else:
+            ok = segmods.set_segment_end(self.plan, index, self.position_ms)
+        if not ok:
+            speak(_("This boundary cannot be moved here"))
+            return
+        self._commit(snapshot)
+        self._refresh_segment_list(select_index=index)
+        self._update_status()
+        speak(_("Boundary moved to {time}").format(time=format_timecode(self.position_ms)))
+
+    # ---------------------------------------------------------------- historique
+    def _snapshot(self):
+        return copy.deepcopy(self.plan.segments)
+
+    def _commit(self, snapshot):
+        self._undo_stack.append(snapshot)
+        self._redo_stack.clear()
+
+    def _undo(self):
+        if not self._undo_stack:
+            speak(_("Nothing to undo"))
+            return
+        self._redo_stack.append(copy.deepcopy(self.plan.segments))
+        self.plan.segments = self._undo_stack.pop()
+        self._refresh_segment_list(select_index=0)
+        self._update_status()
+        speak(_("Undone"))
+
+    def _redo(self):
+        if not self._redo_stack:
+            speak(_("Nothing to redo"))
+            return
+        self._undo_stack.append(copy.deepcopy(self.plan.segments))
+        self.plan.segments = self._redo_stack.pop()
+        self._refresh_segment_list(select_index=0)
+        self._update_status()
+        speak(_("Redone"))
+
+    # ---------------------------------------------------------------- silences
+    def _start_silence_detection(self):
+        path = self.meta.full_path
+        ffmpeg_exe = get_ffmpeg_path()
+
+        def worker():
+            result = detect_silences(path, ffmpeg_exe)
+            wx.CallAfter(self._on_silences, result)
+
+        threading.Thread(target=worker, daemon=True, name='silence-detect').start()
+
+    def _on_silences(self, silences):
+        if self._closed:
+            return
+        self._silences = silences or []
+        self._silence_points = silence_points(self._silences)
+        self._silence_ready = True
+        self._update_status()
+
+    def _go_silence(self, direction):
+        if not self._silence_ready:
+            speak(_("Detecting silences, please wait"))
+            return
+        if not self._silence_points:
+            speak(_("No silence detected"))
+            return
+        if direction > 0:
+            later = [p for p in self._silence_points if p > self.position_ms]
+            target = later[0] if later else None
+        else:
+            earlier = [p for p in self._silence_points if p < self.position_ms]
+            target = earlier[-1] if earlier else None
+        if target is None:
+            speak(_("No more silence"))
+            return
+        self._seek_to(target)
+
+    # ---------------------------------------------------------------- vérifier coupe
+    def _verify_cut(self):
+        boundaries = self._boundaries()
+        if not boundaries:
+            return
+        boundary = min(boundaries, key=lambda m: abs(m - self.position_ms))
+        pre = post = 2000
+        start = max(0, boundary - pre)
+        end = min(self.duration_ms, boundary + post)
+        # Audition transitoire : on NE déplace PAS le curseur d'édition.
+        self._play_anchor_ms = start
+        self._last_playhead_ms = start
+        self._say_transport(_("Checking cut at {time}").format(time=format_timecode(boundary)))
+        self.player.play(
+            self.meta.full_path, start_ms=start, end_ms=end,
+            on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
+            on_finished=lambda: wx.CallAfter(self._on_play_finished),
+            audio_index=self._preview_audio_index,
+        )
 
     # ------------------------------------------------------------------ navigation bornes
     def _prev_boundary(self):
@@ -568,6 +706,7 @@ class SegmentEditorFrame(wx.Frame):
         self.Close()
 
     def on_close(self, event):
+        self._closed = True
         self.player.shutdown()  # ferme le flux + termine le thread moteur
         parent = self.GetParent()
         if parent is not None:
@@ -582,34 +721,49 @@ class SegmentEditorFrame(wx.Frame):
     # ------------------------------------------------------------------ clavier
     def on_char_hook(self, event):
         key = event.GetKeyCode()
+        ctrl = event.ControlDown()
+        alt = event.AltDown()
+
+        # Alt+Gauche/Droite = silence précédent/suivant. Les autres combinaisons Alt
+        # (Alt+lettre) sont laissées à la barre de menus.
+        if alt and key == wx.WXK_LEFT:
+            self._go_silence(-1); return
+        if alt and key == wx.WXK_RIGHT:
+            self._go_silence(+1); return
+        if alt:
+            event.Skip(); return
 
         # Ctrl+Espace = Pause / Reprise (Ctrl+Espace n'est utilisé par aucun contrôle).
-        if key == wx.WXK_SPACE and event.ControlDown():
+        if key == wx.WXK_SPACE and ctrl:
             self._toggle_pause(); return
         # Espace = Lecture / Stop (on remplace le rôle natif de la liste).
-        if key == wx.WXK_SPACE and not event.ControlDown():
+        if key == wx.WXK_SPACE and not ctrl:
             self._toggle_play(); return
 
         # Changer le pas : Ctrl+Haut/Bas ou +/- (pavé numérique inclus). Haut/+ =
         # pas plus grand ; Bas/- = pas plus fin. (Haut/Bas seuls restent à la liste.)
-        if event.ControlDown() and key == wx.WXK_UP:
+        if ctrl and key == wx.WXK_UP:
             self._change_step(+1); return
-        if event.ControlDown() and key == wx.WXK_DOWN:
+        if ctrl and key == wx.WXK_DOWN:
             self._change_step(-1); return
         if key in (wx.WXK_NUMPAD_ADD, ord('+')):
             self._change_step(+1); return
         if key in (wx.WXK_NUMPAD_SUBTRACT, ord('-')):
             self._change_step(-1); return
 
-        # Marquage / segments.
-        if key in (ord('S'), ord('s')):
-            self._mark_start(); return
-        if key in (ord('E'), ord('e')) and not event.ControlDown():
-            self._mark_end(); return
-        if key in (ord('X'), ord('x')):
-            self._cut_here(); return
-        if key in (ord('K'), ord('k')):
-            self._toggle_selected_keep(); return
+        # Ctrl+Z / Ctrl+Y (undo/redo) sont des accélérateurs de menu → on laisse
+        # passer. Ici on ne traite que les lettres SANS Ctrl.
+        if not ctrl:
+            if key in (ord('S'), ord('s')):
+                self._mark_start(); return
+            if key in (ord('E'), ord('e')):
+                self._mark_end(); return
+            if key in (ord('X'), ord('x')):
+                self._cut_here(); return
+            if key in (ord('K'), ord('k')):
+                self._toggle_selected_keep(); return
+            if key in (ord('V'), ord('v')):
+                self._verify_cut(); return
         if key == wx.WXK_DELETE:
             self._remove_selected_boundary(); return
 
