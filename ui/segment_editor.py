@@ -281,14 +281,18 @@ class SegmentEditorFrame(wx.Frame):
 
     def _seek_to(self, pos_ms, speak_it=True):
         self.position_ms = max(0, min(int(pos_ms), self.duration_ms))
-        self.lbl_position.SetLabel(_("Current position: {time}").format(
-            time=format_timecode(self.position_ms)))
+        self._sync_position_label()
         if self._scrub_enabled:
             # Scrub façon REAPER : chaque pas joue un court aperçu (l'audio EST le
             # retour ; pas d'annonce vocale par-dessus).
             self.player.scrub(self.meta.full_path, self.position_ms)
+        elif self.player.is_playing():
+            # Se déplacer PENDANT la lecture : on continue à jouer depuis la nouvelle
+            # position (pas d'arrêt). Le curseur/point de reprise suit le déplacement.
+            self._play_from(self.position_ms)
+            if speak_it:
+                self._announce_position()
         else:
-            self._stop_if_playing()
             if speak_it:
                 self._announce_position()
 
@@ -527,7 +531,7 @@ class SegmentEditorFrame(wx.Frame):
         self.Close()
 
     def on_close(self, event):
-        self.player.stop()
+        self.player.shutdown()  # ferme le flux + termine le thread moteur
         parent = self.GetParent()
         if parent is not None:
             parent.Enable()
