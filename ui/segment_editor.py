@@ -24,6 +24,7 @@ Le résultat est renvoyé à l'appelant par le callback ``on_export(meta, plan, 
 """
 
 import copy
+import json
 import os
 import threading
 
@@ -81,13 +82,14 @@ def parse_timecode(text):
 
 
 class SegmentEditorFrame(wx.Frame):
-    def __init__(self, parent, meta, on_export, settings_store=None):
+    def __init__(self, parent, meta, on_export, on_choose_settings=None, settings_store=None):
         title = _("Cut / Split — {name}").format(name=os.path.basename(meta.full_path))
         super().__init__(parent, title=title, size=(720, 520),
                          style=wx.DEFAULT_FRAME_STYLE)
 
         self.meta = meta
         self.on_export_cb = on_export
+        self.on_choose_settings = on_choose_settings
         self._settings = settings_store if isinstance(settings_store, dict) else {}
         self.duration_ms = int(round(float(getattr(meta, 'duration', 0) or 0) * 1000))
         self.plan = segmods.new_plan(self.duration_ms)
@@ -108,8 +110,9 @@ class SegmentEditorFrame(wx.Frame):
         self._silence_ready = False  # détection terminée ?
         self._closed = False
         self._montage_queue = []     # régions gardées restant à jouer (mode montage)
+        self._dirty = False          # découpes modifiées depuis dernier export/enregistrement
+        self._pending_export = None  # (mode, fmt_key, settings) appliqué à la fermeture
         self.player = AudioPlayer()
-        self._pending_export_mode = None  # mode demandé, appliqué à la fermeture
 
         self._build_menu()
         self._build_ui()
@@ -136,6 +139,9 @@ class SegmentEditorFrame(wx.Frame):
                      lambda e: self._request_export(EXPORT_MODE_ONE_FILE))
         self._append(m_file, _("Export as separate files (one per kept region)") + "\tCtrl+Shift+E",
                      lambda e: self._request_export(EXPORT_MODE_SEPARATE))
+        m_file.AppendSeparator()
+        self._append(m_file, _("Save project...") + "\tCtrl+S", lambda e: self._save_project())
+        self._append(m_file, _("Open project...") + "\tCtrl+O", lambda e: self._open_project())
         m_file.AppendSeparator()
         self._append(m_file, _("Close") + "\tCtrl+W", lambda e: self.Close())
         bar.Append(m_file, _("&File"))
@@ -492,6 +498,7 @@ class SegmentEditorFrame(wx.Frame):
             "Delete: remove a cut (merge segments)\n"
             "Ctrl+Z / Ctrl+Y: undo / redo\n"
             "Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
+            "Ctrl+S / Ctrl+O: save / open project\n"
             "Ctrl+G: go to a position   Ctrl+W: close"
         )
         wx.MessageBox(text, _("Keyboard shortcuts"), wx.ICON_INFORMATION, self)
@@ -607,6 +614,7 @@ class SegmentEditorFrame(wx.Frame):
     def _commit(self, snapshot):
         self._undo_stack.append(snapshot)
         self._redo_stack.clear()
+        self._dirty = True
 
     def _undo(self):
         if not self._undo_stack:
@@ -614,6 +622,7 @@ class SegmentEditorFrame(wx.Frame):
             return
         self._redo_stack.append(copy.deepcopy(self.plan.segments))
         self.plan.segments = self._undo_stack.pop()
+        self._dirty = True
         self._refresh_segment_list(select_index=0)
         self._update_status()
         speak(_("Undone"))
@@ -624,9 +633,74 @@ class SegmentEditorFrame(wx.Frame):
             return
         self._undo_stack.append(copy.deepcopy(self.plan.segments))
         self.plan.segments = self._redo_stack.pop()
+        self._dirty = True
         self._refresh_segment_list(select_index=0)
         self._update_status()
         speak(_("Redone"))
+
+    # ---------------------------------------------------------------- projet
+    def _save_project(self):
+        stem = os.path.splitext(os.path.basename(self.meta.full_path))[0]
+        with wx.FileDialog(self, _("Save project"), defaultFile=f"{stem}.amccut",
+                           wildcard=_("Cut project (*.amccut)") + "|*.amccut",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
+            if dlg.ShowModal() == wx.ID_CANCEL:
+                return
+            path = dlg.GetPath()
+        data = {
+            'app': 'amc-cut', 'version': 1,
+            'source': self.meta.full_path,
+            'source_name': os.path.basename(self.meta.full_path),
+            'duration_ms': self.duration_ms,
+            'plan': segmods.plan_to_dict(self.plan),
+        }
+        try:
+            with open(path, 'w', encoding='utf-8') as handle:
+                json.dump(data, handle, ensure_ascii=False, indent=2)
+        except OSError as exc:
+            wx.MessageBox(_("Could not save the project.") + f"\n{exc}",
+                          _("Error"), wx.ICON_ERROR, self)
+            return
+        self._dirty = False
+        speak(_("Project saved"))
+        self._set_frame_status(_("Project saved."))
+
+    def _open_project(self):
+        with wx.FileDialog(self, _("Open project"),
+                           wildcard=_("Cut project (*.amccut)") + "|*.amccut",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_CANCEL:
+                return
+            path = dlg.GetPath()
+        try:
+            with open(path, 'r', encoding='utf-8') as handle:
+                data = json.load(handle)
+        except (OSError, ValueError) as exc:
+            wx.MessageBox(_("Could not open the project.") + f"\n{exc}",
+                          _("Error"), wx.ICON_ERROR, self)
+            return
+        source_name = str(data.get('source_name', ''))
+        if source_name and source_name != os.path.basename(self.meta.full_path):
+            resp = wx.MessageBox(
+                _("This project was made for a different file ({name}). Load it anyway?").format(
+                    name=source_name),
+                _("Open project"), wx.YES_NO | wx.ICON_WARNING, self)
+            if resp != wx.YES:
+                return
+        snapshot = self._snapshot()
+        self.plan = segmods.plan_from_dict(data.get('plan', {}), duration_ms=self.duration_ms)
+        self._undo_stack.append(snapshot)
+        self._redo_stack.clear()
+        self._dirty = False
+        self._refresh_segment_list(select_index=0)
+        self._update_status()
+        speak(_("Project opened"))
+
+    def _set_frame_status(self, text):
+        try:
+            self.SetStatusText(text)
+        except Exception:
+            pass
 
     # ---------------------------------------------------------------- silences
     def _start_silence_detection(self):
@@ -791,23 +865,43 @@ class SegmentEditorFrame(wx.Frame):
             speak(error)
             wx.MessageBox(error, _("Cannot export"), wx.ICON_WARNING, self)
             return
-        # L'export réel (dialogues de sortie + conversion) est fait par l'appelant,
-        # après la fermeture de l'éditeur (parent réactivé).
-        self._pending_export_mode = mode
+        # Choix du format/qualité PENDANT que l'éditeur est ouvert (parenté ici) :
+        # si l'utilisateur annule, on ne ferme pas → aucune découpe perdue.
+        fmt_key = settings = None
+        if callable(self.on_choose_settings):
+            fmt_key, settings = self.on_choose_settings(self, self.meta)
+            if fmt_key is None:
+                return  # annulé : on reste ouvert
+        self._pending_export = (mode, fmt_key, settings)
+        # L'export réel (choix du fichier de sortie + conversion) est fait par
+        # l'appelant après la fermeture (parent réactivé).
+        self.player.stop()
         self.Close()
 
     def on_close(self, event):
+        # Confirmation si des découpes non exportées / non enregistrées seraient
+        # perdues (Alt+F4, Ctrl+W…). L'export a déjà mis _pending_export.
+        if self._pending_export is None and self._dirty:
+            resp = wx.MessageBox(
+                _("Close without exporting? Your cuts will be lost."),
+                _("Cut / Split"), wx.YES_NO | wx.ICON_WARNING, self)
+            if resp != wx.YES:
+                if hasattr(event, 'CanVeto') and event.CanVeto():
+                    event.Veto()
+                return
+
         self._closed = True
         self.player.shutdown()  # ferme le flux + termine le thread moteur
         parent = self.GetParent()
         if parent is not None:
             parent.Enable()
             parent.Raise()
-        mode = self._pending_export_mode
+        pending = self._pending_export
         meta, plan, cb = self.meta, self.plan, self.on_export_cb
         self.Destroy()
-        if mode is not None and cb is not None:
-            wx.CallAfter(cb, meta, plan, mode)
+        if pending is not None and cb is not None:
+            mode, fmt_key, settings = pending
+            wx.CallAfter(cb, meta, plan, mode, fmt_key, settings)
 
     # ------------------------------------------------------------------ clavier
     def on_char_hook(self, event):

@@ -2137,14 +2137,52 @@ class MainWindow(wx.Frame):
                           _("Cannot cut"), wx.ICON_WARNING, self)
             return
 
-        # Le Frame se montre lui-même et désactive la fenêtre principale ; à sa
-        # fermeture il rappelle _run_segment_export(meta, plan, mode) si un export
-        # a été demandé, sinon rien (annulation).
-        SegmentEditorFrame(self, meta, self._run_segment_export, settings_store=self.settings_store)
+        # Le Frame se montre lui-même et désactive la fenêtre principale. Il choisit
+        # le format/qualité via _choose_export_format_settings (tant qu'il est encore
+        # ouvert, pour ne rien perdre si on annule), puis rappelle
+        # _run_segment_export(meta, plan, mode, fmt_key, settings) à sa fermeture.
+        SegmentEditorFrame(
+            self, meta, self._run_segment_export,
+            on_choose_settings=self._choose_export_format_settings,
+            settings_store=self.settings_store,
+        )
 
-    def _run_segment_export(self, meta, plan, mode):
-        fmt_key, settings = self._resolve_active_format_settings()
-        if fmt_key is None:
+    def _choose_export_format_settings(self, parent, meta):
+        """Fenêtre format + qualité (pré-remplie sur les réglages actuels), pour
+        l'export du découpage. Retourne (fmt_key, settings) ou (None, None) si annulé.
+        ``parent`` = fenêtre sur laquelle afficher les dialogues (l'éditeur)."""
+        fmt_keys = list(self.current_fmt_keys_active)
+        if not fmt_keys:
+            return None, None
+        labels = [build_format_label(key, context=self.current_tab) for key in fmt_keys]
+        current_sel = self.combo_format.GetSelection()
+        preselect = current_sel if current_sel != wx.NOT_FOUND else 0
+        fmt_dlg = wx.SingleChoiceDialog(parent, _("Output format for the export:"),
+                                        _("Export settings"), labels)
+        fmt_dlg.SetSelection(preselect)
+        if fmt_dlg.ShowModal() != wx.ID_OK:
+            fmt_dlg.Destroy()
+            return None, None
+        fmt_key = fmt_keys[fmt_dlg.GetSelection()]
+        fmt_dlg.Destroy()
+
+        clean = build_format_label(fmt_key, context=self.current_tab)
+        input_has_vid = (self.current_tab == 'video')
+        input_ac = getattr(meta, 'audio_codec', '') if self.current_tab in ('audio', 'video') else ""
+        current_saved = self.settings_store.get(fmt_key, {})
+        dlg = SettingsDialog(parent, clean, input_has_vid, input_ac, current_saved, fmt_key)
+        if dlg.ShowModal() != wx.ID_OK:
+            dlg.Destroy()
+            return None, None
+        settings = dict(dlg.get_settings())
+        dlg.Destroy()
+        settings['ffmpeg_threads'] = self.settings_store.get('ffmpeg_threads', 'auto')
+        settings['preserve_metadata'] = self.settings_store.get('preserve_metadata', False)
+        settings['m4b_chapter_naming'] = self.settings_store.get('m4b_chapter_naming', 'title_or_number')
+        return fmt_key, settings
+
+    def _run_segment_export(self, meta, plan, mode, fmt_key, settings):
+        if not fmt_key:
             return
         if mode == EXPORT_MODE_SEPARATE:
             list_ctrl, _data = self._get_current_media_collection()

@@ -210,6 +210,41 @@ def kept_duration_ms(plan):
     return sum(end - start for start, end in kept_regions(plan))
 
 
+def plan_to_dict(plan):
+    """Sérialise un plan (pour un fichier projet de découpe)."""
+    return {
+        'duration_ms': int(plan.duration_ms),
+        'segments': [
+            {'start_ms': int(s.start_ms), 'end_ms': int(s.end_ms),
+             'keep': bool(s.keep), 'label': s.label or ''}
+            for s in plan.segments
+        ],
+    }
+
+
+def plan_from_dict(data, duration_ms=None):
+    """Reconstruit un plan depuis un dict. Si ``duration_ms`` est fourni (durée du
+    fichier réellement ouvert), le plan est reclampé/normalisé sur cette durée —
+    utile pour rouvrir un projet sur le même fichier."""
+    raw = data.get('segments') or []
+    total = int(duration_ms if duration_ms is not None else data.get('duration_ms', 0) or 0)
+    plan = SegmentPlan(duration_ms=total, segments=[])
+    for entry in raw:
+        try:
+            start = int(entry.get('start_ms', 0))
+            end = int(entry.get('end_ms', 0))
+        except (TypeError, ValueError):
+            continue
+        if end <= start:
+            continue
+        plan.segments.append(Segment(start, end, keep=bool(entry.get('keep', True)),
+                                     label=str(entry.get('label', '') or '')))
+    if not plan.segments and total > 0:
+        plan.segments.append(Segment(0, total, keep=True))
+    _normalize(plan)
+    return plan
+
+
 def validate(plan):
     """Retourne un message d'erreur (traduit) si le plan ne peut pas être exporté,
     sinon None. Un plan valide garde au moins une région de durée non nulle."""
