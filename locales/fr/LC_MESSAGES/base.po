@@ -2780,7 +2780,7 @@ msgstr "Au moins un segment doit être conservé."
 msgid "Cannot cut"
 msgstr "Découpage impossible"
 
-#: ui/segment_editor.py:701
+#: ui/segment_editor.py:709
 msgid "Cannot export"
 msgstr "Export impossible"
 
@@ -3143,7 +3143,7 @@ msgstr "Coupe déplacée à {time}"
 msgid "Check the nearest cut (before/after)"
 msgstr "Vérifier la coupe la plus proche (avant/après)"
 
-#: ui/segment_editor.py:672
+#: ui/segment_editor.py:680
 msgid "Checking cut at {time}"
 msgstr "Vérification de la coupe à {time}"
 
@@ -3202,6 +3202,10 @@ msgstr "Annuler"
 #: ui/segment_editor.py:611
 msgid "Undone"
 msgstr "Annulé"
+
+#: ui/segment_editor.py:676
+msgid "No cut to check here"
+msgstr "Aucune coupe à vérifier ici"
 
 #~ msgid "Cut here"
 #~ msgstr "Couper ici"

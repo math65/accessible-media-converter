@@ -118,9 +118,15 @@ class AudioPlayer:
 
     def _engine(self):
         import sounddevice as sd  # import tardif : ne charge PortAudio qu'à la 1re lecture
+        # Le flux est démarré UNE SEULE fois et n'est jamais stoppé/aborté en cours
+        # de session (seulement fermé à shutdown) : les cycles start/stop/abort
+        # répétés déstabilisent PortAudio (crash natif). Quand rien ne joue, le flux
+        # reste actif et « sous-alimenté » → il sort simplement du silence, sans
+        # danger. Un seul thread touche le flux (PortAudio n'est pas thread-safe).
         try:
             stream = sd.RawOutputStream(
                 samplerate=SAMPLE_RATE, channels=CHANNELS, dtype='int16', latency='low')
+            stream.start()
         except Exception:
             logging.exception("AudioPlayer : ouverture du flux audio impossible.")
             with self._lock:
@@ -142,32 +148,20 @@ class AudioPlayer:
                     req = self._request
                     gen = req['gen']
 
-                try:
-                    if not stream.active:
-                        stream.start()
-                except Exception:
-                    logging.exception("AudioPlayer : démarrage du flux impossible.")
-
                 self._run_request(stream, req, gen)
 
-                # Requête terminée (fin naturelle, remplacée ou stoppée) : si aucune
-                # requête plus récente n'attend, on repasse au silence (flux gardé
-                # ouvert, juste stoppé) ; sinon la boucle enchaîne sur la nouvelle.
+                # Requête terminée (fin naturelle / remplacée / stoppée) : si aucune
+                # requête plus récente n'attend, on repasse au silence — le flux
+                # reste actif, on cesse juste de lui écrire des données.
                 with self._lock:
-                    newer = self._request is not None and self._request['gen'] != gen
-                    if not newer:
-                        if self._generation == gen:
-                            self._request = None
-                            self._playing = False
-                        idle = self._request is None
-                    else:
-                        idle = False
-                if idle:
-                    try:
-                        stream.abort()  # coupe net le résidu de tampon
-                    except Exception:
-                        pass
+                    if self._generation == gen:
+                        self._request = None
+                        self._playing = False
         finally:
+            try:
+                stream.stop()
+            except Exception:
+                pass
             try:
                 stream.close()
             except Exception:

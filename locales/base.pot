@@ -492,7 +492,7 @@ msgstr ""
 msgid "Cannot cut"
 msgstr ""
 
-#: ui/segment_editor.py:701
+#: ui/segment_editor.py:709
 msgid "Cannot export"
 msgstr ""
 
@@ -524,7 +524,7 @@ msgstr ""
 msgid "Check the nearest cut (before/after)"
 msgstr ""
 
-#: ui/segment_editor.py:672
+#: ui/segment_editor.py:680
 msgid "Checking cut at {time}"
 msgstr ""
 
@@ -1598,6 +1598,10 @@ msgstr ""
 
 #: ui/segment_editor.py:508
 msgid "No cut added here"
+msgstr ""
+
+#: ui/segment_editor.py:676
+msgid "No cut to check here"
 msgstr ""
 
 #: ui/main_window.py:1511

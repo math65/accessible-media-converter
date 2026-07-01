@@ -659,14 +659,22 @@ class SegmentEditorFrame(wx.Frame):
 
     # ---------------------------------------------------------------- vérifier coupe
     def _verify_cut(self):
-        boundaries = self._boundaries()
-        if not boundaries:
+        """Écoute ~2 s avant et ~2 s après la coupe du segment sélectionné (sa
+        frontière de début ; pour le tout premier segment, sa fin). Déterministe et
+        lié à la sélection de la liste — sans déplacer le curseur d'édition."""
+        if not self.plan.segments:
             return
-        boundary = min(boundaries, key=lambda m: abs(m - self.position_ms))
+        index = self._selected_index()
+        if index < 0:
+            index = self._segment_index_at(self.position_ms)
+        seg = self.plan.segments[index]
+        boundary = seg.start_ms if index > 0 else seg.end_ms
         pre = post = 2000
         start = max(0, boundary - pre)
         end = min(self.duration_ms, boundary + post)
-        # Audition transitoire : on NE déplace PAS le curseur d'édition.
+        if end <= start:
+            speak(_("No cut to check here"))
+            return
         self._play_anchor_ms = start
         self._last_playhead_ms = start
         self._say_transport(_("Checking cut at {time}").format(time=format_timecode(boundary)))
