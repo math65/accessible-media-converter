@@ -2145,6 +2145,7 @@ class MainWindow(wx.Frame):
         result = dlg.ShowModal()
         plan = dlg.plan
         mode = dlg.export_mode
+        dlg.stop_playback()
         dlg.Destroy()
         if result != wx.ID_OK:
             return

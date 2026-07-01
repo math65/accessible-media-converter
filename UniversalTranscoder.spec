@@ -17,13 +17,26 @@ for _pkg in ('accessible_output2', 'platform_utils', 'libloader'):
     _speech_binaries += _b
     _speech_hidden += _h
 
+# sounddevice (lecture audio de l'éditeur de segments) est un module simple qui
+# charge la DLL PortAudio depuis le package de données séparé `_sounddevice_data`
+# (chemin calculé à l'exécution : `_sounddevice_data/portaudio-binaries/...dll`).
+# On collecte donc les DEUX, en conservant l'arborescence attendue par sounddevice.
+_audio_datas, _audio_binaries, _audio_hidden = [], [], []
+for _pkg in ('sounddevice', '_sounddevice_data'):
+    _d, _b, _h = collect_all(_pkg)
+    _audio_datas += _d
+    _audio_binaries += _b
+    _audio_hidden += _h
+
 
 a = Analysis(
     ['main.py'],
     pathex=[project_root],
-    binaries=[('bin\\ffmpeg.exe', 'bin'), ('bin\\ffprobe.exe', 'bin')] + _speech_binaries,
-    datas=[('locales', 'locales'), ('docs', 'docs')] + _speech_datas,
-    hiddenimports=['wx.richtext', 'wx._richtext', 'wx.xml', 'wx._xml'] + _speech_hidden,
+    binaries=[('bin\\ffmpeg.exe', 'bin'), ('bin\\ffprobe.exe', 'bin')] + _speech_binaries + _audio_binaries,
+    datas=[('locales', 'locales'), ('docs', 'docs')] + _speech_datas + _audio_datas,
+    hiddenimports=['wx.richtext', 'wx._richtext', 'wx.xml', 'wx._xml',
+                   'sounddevice', '_sounddevice_data',
+                   'cffi', '_cffi_backend', 'pycparser'] + _speech_hidden + _audio_hidden,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

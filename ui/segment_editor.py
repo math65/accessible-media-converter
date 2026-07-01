@@ -27,6 +27,7 @@ import wx
 
 from core.speech import speak
 from core import segments as segmods
+from core.audio_player import AudioPlayer
 
 
 # Pas de déplacement proposés (libellé, millisecondes).
@@ -84,6 +85,7 @@ class SegmentEditorDialog(wx.Dialog):
         self.position_ms = 0
         self.step_ms = _STEP_CHOICES[_DEFAULT_STEP_INDEX][1]
         self._region_start_ms = None
+        self.player = AudioPlayer()
         # Résultats lus par l'appelant après ShowModal() == wx.ID_OK.
         self.export_mode = EXPORT_MODE_ONE_FILE
 
@@ -92,6 +94,7 @@ class SegmentEditorDialog(wx.Dialog):
         self._update_position_display(speak_it=False)
 
         self.Bind(wx.EVT_CHAR_HOOK, self.on_char_hook)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
         self.SetSize((640, 620))
         self.CentreOnParent()
         wx.CallAfter(self.txt_position.SetFocus)
@@ -139,9 +142,16 @@ class SegmentEditorDialog(wx.Dialog):
 
         nav_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
 
+        nav_btns = wx.BoxSizer(wx.HORIZONTAL)
         btn_goto = wx.Button(panel, label=_("Go"))
         btn_goto.Bind(wx.EVT_BUTTON, lambda e: self._do_goto())
-        nav_sizer.Add(btn_goto, 0, wx.LEFT | wx.BOTTOM, 8)
+        self.btn_play = wx.Button(panel, label=_("Play / Pause (Space)"))
+        self.btn_play.Bind(wx.EVT_BUTTON, lambda e: self._toggle_play())
+        btn_play_seg = wx.Button(panel, label=_("Play current segment"))
+        btn_play_seg.Bind(wx.EVT_BUTTON, lambda e: self._play_current_segment())
+        for btn in (btn_goto, self.btn_play, btn_play_seg):
+            nav_btns.Add(btn, 0, wx.RIGHT, 8)
+        nav_sizer.Add(nav_btns, 0, wx.LEFT | wx.BOTTOM, 8)
         outer.Add(nav_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
         # --- Marquage -------------------------------------------------------------
@@ -273,8 +283,63 @@ class SegmentEditorDialog(wx.Dialog):
                 speak(format_timecode(self.position_ms))
 
     def _seek_to(self, pos_ms, speak_it=True):
+        # Se déplacer met la lecture en pause : on repart à l'oreille avec Espace
+        # depuis la nouvelle position (comportement prévisible au clavier).
+        self._stop_if_playing()
         self.position_ms = max(0, min(int(pos_ms), self.duration_ms))
         self._update_position_display(speak_it=speak_it)
+
+    # ------------------------------------------------------------------ lecture
+    def _stop_if_playing(self):
+        if self.player.is_playing():
+            self.player.stop()
+
+    def _toggle_play(self):
+        if self.player.is_playing():
+            self.player.stop()
+            speak(_("Paused"))
+            return
+        start = self.position_ms if self.position_ms < self.duration_ms else 0
+        speak(_("Playing"))
+        self.player.play(
+            self.meta.full_path, start_ms=start, end_ms=self.duration_ms,
+            on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
+            on_finished=lambda: wx.CallAfter(self._on_play_finished),
+        )
+
+    def _play_current_segment(self):
+        index = self._selected_index()
+        if index < 0:
+            index = self._segment_index_at(self.position_ms)
+        if index < 0 or index >= len(self.plan.segments):
+            speak(_("No segment selected"))
+            return
+        seg = self.plan.segments[index]
+        self._stop_if_playing()
+        self.position_ms = seg.start_ms
+        self.txt_position.ChangeValue(format_timecode(self.position_ms))
+        speak(_("Playing segment {index}").format(index=index + 1))
+        self.player.play(
+            self.meta.full_path, start_ms=seg.start_ms, end_ms=seg.end_ms,
+            on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
+            on_finished=lambda: wx.CallAfter(self._on_play_finished),
+        )
+
+    def _on_playhead(self, ms):
+        # Mise à jour silencieuse pendant la lecture (pas d'annonce à chaque tick).
+        self.position_ms = max(0, min(int(ms), self.duration_ms))
+        self.txt_position.ChangeValue(format_timecode(self.position_ms))
+
+    def _on_play_finished(self):
+        self.txt_position.ChangeValue(format_timecode(self.position_ms))
+
+    def stop_playback(self):
+        """À appeler par l'appelant après ShowModal (avant Destroy)."""
+        self.player.stop()
+
+    def on_close(self, event):
+        self.player.stop()
+        event.Skip()
 
     # ------------------------------------------------------------------ actions
     def _do_goto(self):
@@ -394,6 +459,8 @@ class SegmentEditorDialog(wx.Dialog):
         # Navigation temporelle : uniquement depuis le champ Position (pour ne pas
         # capturer les flèches de la liste, du RadioBox, etc.).
         if transport:
+            if key == wx.WXK_SPACE:
+                self._toggle_play(); return
             if key == wx.WXK_LEFT:
                 if event.ControlDown():
                     self._seek_to(self._prev_boundary())
@@ -435,4 +502,5 @@ class SegmentEditorDialog(wx.Dialog):
             wx.MessageBox(error, _("Cannot export"), wx.ICON_WARNING, self)
             return  # ne pas fermer : laisser corriger
         self.export_mode = EXPORT_MODE_ONE_FILE if self.radio_mode.GetSelection() == 0 else EXPORT_MODE_SEPARATE
+        self.player.stop()
         self.EndModal(wx.ID_OK)

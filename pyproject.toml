@@ -9,6 +9,7 @@ authors = [{ name = "Mathieu Martin" }]
 dependencies = [
     "wxPython>=4.2.1",
     "accessible_output2>=0.17",
+    "sounddevice>=0.5.5",
 ]
 
 [dependency-groups]
