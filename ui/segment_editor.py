@@ -85,6 +85,7 @@ class SegmentEditorDialog(wx.Dialog):
         self.position_ms = 0
         self.step_ms = _STEP_CHOICES[_DEFAULT_STEP_INDEX][1]
         self._region_start_ms = None
+        self._scrub_enabled = False
         self.player = AudioPlayer()
         # Résultats lus par l'appelant après ShowModal() == wx.ID_OK.
         self.export_mode = EXPORT_MODE_ONE_FILE
@@ -152,6 +153,13 @@ class SegmentEditorDialog(wx.Dialog):
         for btn in (btn_goto, self.btn_play, btn_play_seg):
             nav_btns.Add(btn, 0, wx.RIGHT, 8)
         nav_sizer.Add(nav_btns, 0, wx.LEFT | wx.BOTTOM, 8)
+
+        self.chk_scrub = wx.CheckBox(panel, label=_("Scrub on move (audio preview)"))
+        self.chk_scrub.SetName(_("Scrub on move"))
+        self.chk_scrub.SetToolTip(_(
+            "When enabled, each move plays a short audio preview at the new position."))
+        self.chk_scrub.Bind(wx.EVT_CHECKBOX, self.on_scrub_toggle)
+        nav_sizer.Add(self.chk_scrub, 0, wx.LEFT | wx.BOTTOM, 8)
         outer.Add(nav_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
         # --- Marquage -------------------------------------------------------------
@@ -283,11 +291,16 @@ class SegmentEditorDialog(wx.Dialog):
                 speak(format_timecode(self.position_ms))
 
     def _seek_to(self, pos_ms, speak_it=True):
-        # Se déplacer met la lecture en pause : on repart à l'oreille avec Espace
-        # depuis la nouvelle position (comportement prévisible au clavier).
-        self._stop_if_playing()
         self.position_ms = max(0, min(int(pos_ms), self.duration_ms))
-        self._update_position_display(speak_it=speak_it)
+        if self._scrub_enabled:
+            # Scrub façon REAPER : chaque pas joue un court aperçu à la nouvelle
+            # position (l'audio EST le retour ; pas d'annonce vocale par-dessus).
+            self.txt_position.ChangeValue(format_timecode(self.position_ms))
+            self.player.scrub(self.meta.full_path, self.position_ms)
+        else:
+            # Sans scrub, se déplacer met la lecture continue en pause.
+            self._stop_if_playing()
+            self._update_position_display(speak_it=speak_it)
 
     # ------------------------------------------------------------------ lecture
     def _stop_if_playing(self):
@@ -332,6 +345,12 @@ class SegmentEditorDialog(wx.Dialog):
 
     def _on_play_finished(self):
         self.txt_position.ChangeValue(format_timecode(self.position_ms))
+
+    def on_scrub_toggle(self, event):
+        self._scrub_enabled = self.chk_scrub.GetValue()
+        if not self._scrub_enabled:
+            self._stop_if_playing()
+        speak(_("Scrub on") if self._scrub_enabled else _("Scrub off"))
 
     def stop_playback(self):
         """À appeler par l'appelant après ShowModal (avant Destroy)."""

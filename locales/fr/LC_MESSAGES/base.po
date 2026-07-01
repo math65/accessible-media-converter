@@ -1351,7 +1351,7 @@ msgstr ""
 "Utilisez Espace pour conserver ou retirer une piste. Utilisez Ctrl+Haut et "
 "Ctrl+Bas pour la réordonner."
 
-#: ui/segment_editor.py:179 ui/track_manager.py:147
+#: ui/segment_editor.py:187 ui/track_manager.py:147
 msgid "#"
 msgstr "N°"
 
@@ -1578,7 +1578,7 @@ msgstr "Valider les réglages de piste"
 
 #: ui/main_window.py:746 ui/metadata_editor.py:314
 #: ui/preferences_dialog.py:236 ui/presets_dialog.py:429
-#: ui/presets_dialog.py:487 ui/segment_editor.py:222 ui/settings_dialog.py:246
+#: ui/presets_dialog.py:487 ui/segment_editor.py:230 ui/settings_dialog.py:246
 #: ui/support_dialog.py:179 ui/support_dialog.py:180 ui/track_manager.py:416
 #: ui/track_manager.py:475
 msgid "Cancel"
@@ -2676,7 +2676,7 @@ msgstr ""
 "Choisissez ce qui sera inclus dans l'export. Le format et les réglages "
 "d'encodage sont toujours inclus."
 
-#: ui/presets_dialog.py:428 ui/segment_editor.py:220
+#: ui/presets_dialog.py:428 ui/segment_editor.py:228
 msgid "Export"
 msgstr "Exporter"
 
@@ -2773,7 +2773,7 @@ msgstr "10 secondes"
 msgid "100 ms"
 msgstr "100 ms"
 
-#: ui/segment_editor.py:122
+#: ui/segment_editor.py:123
 msgid ""
 "Arrow keys move by the step; Home/End go to start/end; Ctrl+Left/Right jump "
 "to cut points."
@@ -2789,15 +2789,15 @@ msgstr "Au moins un segment doit être conservé."
 msgid "Cannot cut"
 msgstr "Découpage impossible"
 
-#: ui/segment_editor.py:502
+#: ui/segment_editor.py:521
 msgid "Cannot export"
 msgstr "Export impossible"
 
-#: ui/segment_editor.py:121
+#: ui/segment_editor.py:122
 msgid "Current position"
 msgstr "Position courante"
 
-#: ui/segment_editor.py:119
+#: ui/segment_editor.py:120
 msgid "Current position:"
 msgstr "Position courante :"
 
@@ -2809,7 +2809,7 @@ msgstr "Couper / Diviser — {name}"
 msgid "Cut / Split..."
 msgstr "Couper / Diviser..."
 
-#: ui/segment_editor.py:360
+#: ui/segment_editor.py:379
 msgid "Cut added at {time}"
 msgstr "Coupe ajoutée à {time}"
 
@@ -2821,11 +2821,11 @@ msgstr "Découpage terminé."
 msgid "Cut failed."
 msgstr "Échec du découpage."
 
-#: ui/segment_editor.py:165
+#: ui/segment_editor.py:173
 msgid "Cut here (X)"
 msgstr "Couper ici (X)"
 
-#: ui/segment_editor.py:404
+#: ui/segment_editor.py:423
 msgid "Cut removed; segments merged"
 msgstr "Coupe retirée ; segments fusionnés"
 
@@ -2833,27 +2833,27 @@ msgstr "Coupe retirée ; segments fusionnés"
 msgid "Cutting..."
 msgstr "Découpage en cours..."
 
-#: ui/segment_editor.py:265 ui/segment_editor.py:429
+#: ui/segment_editor.py:273 ui/segment_editor.py:448
 msgid "Discard"
 msgstr "Jeter"
 
-#: ui/segment_editor.py:380
+#: ui/segment_editor.py:399
 msgid "Discard region created from {start} to {end}"
 msgstr "Région à jeter créée de {start} à {end}"
 
-#: ui/segment_editor.py:182
+#: ui/segment_editor.py:190
 msgid "Duration"
 msgstr "Durée"
 
-#: ui/segment_editor.py:181
+#: ui/segment_editor.py:189
 msgid "End"
 msgstr "Fin"
 
-#: ui/segment_editor.py:203 ui/segment_editor.py:210
+#: ui/segment_editor.py:211 ui/segment_editor.py:218
 msgid "Export mode"
 msgstr "Mode d'export"
 
-#: ui/segment_editor.py:214
+#: ui/segment_editor.py:222
 msgid ""
 "Export uses the output format and quality currently selected in the main "
 "window."
@@ -2861,112 +2861,112 @@ msgstr ""
 "L'export utilise le format et la qualité de sortie sélectionnés dans la "
 "fenêtre principale."
 
-#: ui/segment_editor.py:146
+#: ui/segment_editor.py:147
 msgid "Go"
 msgstr "Aller"
 
-#: ui/segment_editor.py:138
+#: ui/segment_editor.py:139
 msgid "Go to position"
 msgstr "Aller à la position"
 
-#: ui/segment_editor.py:136
+#: ui/segment_editor.py:137
 msgid "Go to position (HH:MM:SS.mmm):"
 msgstr "Aller à la position (HH:MM:SS.mmm) :"
 
-#: ui/segment_editor.py:194
+#: ui/segment_editor.py:202
 msgid "Go to segment start"
 msgstr "Aller au début du segment"
 
-#: ui/segment_editor.py:348 ui/segment_editor.py:350
+#: ui/segment_editor.py:367 ui/segment_editor.py:369
 msgid "Invalid time"
 msgstr "Heure invalide"
 
-#: ui/segment_editor.py:265 ui/segment_editor.py:429
+#: ui/segment_editor.py:273 ui/segment_editor.py:448
 msgid "Keep"
 msgstr "Garder"
 
-#: ui/segment_editor.py:190
+#: ui/segment_editor.py:198
 msgid "Keep / Discard (K)"
 msgstr "Garder / Jeter (K)"
 
-#: ui/segment_editor.py:368
+#: ui/segment_editor.py:387
 msgid "Mark a region start first"
 msgstr "Marquez d'abord un début de région"
 
-#: ui/segment_editor.py:163
+#: ui/segment_editor.py:171
 msgid "Mark region end (E)"
 msgstr "Marquer la fin (E)"
 
-#: ui/segment_editor.py:161
+#: ui/segment_editor.py:169
 msgid "Mark region start (S)"
 msgstr "Marquer le début (S)"
 
-#: ui/segment_editor.py:158
+#: ui/segment_editor.py:166
 msgid "Marking"
 msgstr "Marquage"
 
-#: ui/segment_editor.py:112
+#: ui/segment_editor.py:113
 msgid "Navigation"
 msgstr "Navigation"
 
-#: ui/segment_editor.py:357
+#: ui/segment_editor.py:376
 msgid "No cut added here"
 msgstr "Aucune coupe ajoutée ici"
 
-#: ui/segment_editor.py:315 ui/segment_editor.py:386 ui/segment_editor.py:397
-#: ui/segment_editor.py:409
+#: ui/segment_editor.py:328 ui/segment_editor.py:405 ui/segment_editor.py:416
+#: ui/segment_editor.py:428
 msgid "No segment selected"
 msgstr "Aucun segment sélectionné"
 
-#: ui/segment_editor.py:205
+#: ui/segment_editor.py:213
 msgid "One file (remove discarded segments)"
 msgstr "Un seul fichier (retirer les segments jetés)"
 
-#: ui/segment_editor.py:349
+#: ui/segment_editor.py:368
 msgid "Please enter a valid time (HH:MM:SS.mmm)."
 msgstr "Veuillez entrer une heure valide (HH:MM:SS.mmm)."
 
-#: ui/segment_editor.py:373
+#: ui/segment_editor.py:392
 msgid "Region start and end are identical"
 msgstr "Le début et la fin de la région sont identiques"
 
-#: ui/segment_editor.py:364
+#: ui/segment_editor.py:383
 msgid "Region start marked at {time}"
 msgstr "Début de région marqué à {time}"
 
-#: ui/segment_editor.py:192
+#: ui/segment_editor.py:200
 msgid "Remove cut (Del)"
 msgstr "Retirer la coupe (Suppr)"
 
-#: ui/segment_editor.py:391
+#: ui/segment_editor.py:410
 msgid "Segment {index}: {state}"
 msgstr "Segment {index} : {state}"
 
-#: ui/segment_editor.py:172 ui/segment_editor.py:177
+#: ui/segment_editor.py:180 ui/segment_editor.py:185
 msgid "Segments"
 msgstr "Segments"
 
-#: ui/segment_editor.py:206
+#: ui/segment_editor.py:214
 msgid "Separate files (one per kept region)"
 msgstr "Fichiers séparés (un par région gardée)"
 
-#: ui/segment_editor.py:180
+#: ui/segment_editor.py:188
 msgid "Start"
 msgstr "Début"
 
-#: ui/segment_editor.py:183
+#: ui/segment_editor.py:191
 msgid "State"
 msgstr "État"
 
-#: ui/segment_editor.py:131
+#: ui/segment_editor.py:132
 msgid "Step"
 msgstr "Pas"
 
-#: ui/segment_editor.py:128
+#: ui/segment_editor.py:129
 msgid "Step:"
 msgstr "Pas :"
 
-#: ui/segment_editor.py:400
+#: ui/segment_editor.py:419
 msgid "The last segment has no following cut to remove"
 msgstr "Le dernier segment n'a pas de coupe suivante à retirer"
 
@@ -2978,15 +2978,15 @@ msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 msgid "This file has no known duration and cannot be split."
 msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 
-#: ui/segment_editor.py:107
+#: ui/segment_editor.py:108
 msgid "Total duration: {duration}"
 msgstr "Durée totale : {duration}"
 
-#: ui/segment_editor.py:278 ui/segment_editor.py:392
+#: ui/segment_editor.py:286 ui/segment_editor.py:411
 msgid "discard"
 msgstr "à jeter"
 
-#: ui/segment_editor.py:278 ui/segment_editor.py:392
+#: ui/segment_editor.py:286 ui/segment_editor.py:411
 msgid "keep"
 msgstr "à garder"
 
@@ -2994,29 +2994,52 @@ msgstr "à garder"
 msgid "part {number}"
 msgstr "partie {number}"
 
-#: ui/segment_editor.py:279
+#: ui/segment_editor.py:287
 msgid "{time} — segment {index} of {total}, {state}"
 msgstr "{time} — segment {index} sur {total}, {state}"
 
-#: ui/segment_editor.py:300
+#: ui/segment_editor.py:313
 msgid "Paused"
 msgstr "En pause"
 
-#: ui/segment_editor.py:148
+#: ui/segment_editor.py:149
 msgid "Play / Pause (Space)"
 msgstr "Lecture / Pause (Espace)"
 
-#: ui/segment_editor.py:150
+#: ui/segment_editor.py:151
 msgid "Play current segment"
 msgstr "Lire le segment courant"
 
-#: ui/segment_editor.py:303
+#: ui/segment_editor.py:316
 msgid "Playing"
 msgstr "Lecture"
 
-#: ui/segment_editor.py:321
+#: ui/segment_editor.py:334
 msgid "Playing segment {index}"
 msgstr "Lecture du segment {index}"
+
+#: ui/segment_editor.py:353
+msgid "Scrub off"
+msgstr "Scrub désactivé"
+
+#: ui/segment_editor.py:353
+msgid "Scrub on"
+msgstr "Scrub activé"
+
+#: ui/segment_editor.py:158
+msgid "Scrub on move"
+msgstr "Scrub à la navigation"
+
+#: ui/segment_editor.py:157
+msgid "Scrub on move (audio preview)"
+msgstr "Scrub à la navigation (aperçu audio)"
+
+#: ui/segment_editor.py:159
+msgid ""
+"When enabled, each move plays a short audio preview at the new position."
+msgstr ""
+"Si activé, chaque déplacement joue un court aperçu audio à la nouvelle "
+"position."
 
 #~ msgid "Use arrows to browse files. Press Delete to remove selected entries."
 #~ msgstr ""
