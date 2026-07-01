@@ -96,6 +96,7 @@ class SegmentEditorFrame(wx.Frame):
         self._opt_announce_position = bool(self._settings.get('cutter_announce_position', True))
         self._play_anchor_ms = 0      # point de départ de la lecture (Stop y revient)
         self._last_playhead_ms = 0    # dernière tête de lecture connue (Pause s'y pose)
+        self._preview_audio_index = None  # piste audio écoutée à l'aperçu (None = défaut)
         self.player = AudioPlayer()
         self._pending_export_mode = None  # mode demandé, appliqué à la fermeture
 
@@ -136,6 +137,19 @@ class SegmentEditorFrame(wx.Frame):
         m_play.AppendSeparator()
         self.item_scrub = m_play.AppendCheckItem(wx.ID_ANY, _("Scrub on move (audio preview)"))
         self.Bind(wx.EVT_MENU, self.on_scrub_toggle, self.item_scrub)
+
+        # Choix de la piste audio écoutée à l'aperçu (vidéos multipistes : VO/VF,
+        # audiodescription…). N'affecte que l'écoute, pas l'export.
+        audio_tracks = list(getattr(self.meta, 'audio_tracks', []) or [])
+        if len(audio_tracks) > 1:
+            m_track = wx.Menu()
+            item_default = m_track.AppendRadioItem(wx.ID_ANY, _("Default track"))
+            item_default.Check(True)
+            self.Bind(wx.EVT_MENU, lambda e: self._select_preview_track(None), item_default)
+            for ordinal, track in enumerate(audio_tracks):
+                item = m_track.AppendRadioItem(wx.ID_ANY, self._audio_track_label(ordinal, track))
+                self.Bind(wx.EVT_MENU, lambda e, n=ordinal: self._select_preview_track(n), item)
+            m_play.AppendSubMenu(m_track, _("Preview audio track"))
         bar.Append(m_play, _("&Playback"))
 
         m_nav = wx.Menu()
@@ -285,7 +299,8 @@ class SegmentEditorFrame(wx.Frame):
         if self._scrub_enabled:
             # Scrub façon REAPER : chaque pas joue un court aperçu (l'audio EST le
             # retour ; pas d'annonce vocale par-dessus).
-            self.player.scrub(self.meta.full_path, self.position_ms)
+            self.player.scrub(self.meta.full_path, self.position_ms,
+                              audio_index=self._preview_audio_index)
         elif self.player.is_playing():
             # Se déplacer PENDANT la lecture : on continue à jouer depuis la nouvelle
             # position (pas d'arrêt). Le curseur/point de reprise suit le déplacement.
@@ -310,6 +325,7 @@ class SegmentEditorFrame(wx.Frame):
             end_ms=end_ms if end_ms is not None else self.duration_ms,
             on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
             on_finished=lambda: wx.CallAfter(self._on_play_finished),
+            audio_index=self._preview_audio_index,
         )
 
     def _say_transport(self, message):
@@ -351,6 +367,27 @@ class SegmentEditorFrame(wx.Frame):
         self._sync_position_label()
         self._say_transport(_("Playing segment {index}").format(index=index + 1))
         self._play_from(seg.start_ms, end_ms=seg.end_ms)
+
+    def _audio_track_label(self, ordinal, track):
+        summary = ""
+        if hasattr(track, 'get_summary'):
+            try:
+                summary = track.get_summary()
+            except Exception:
+                summary = ""
+        base = _("Track {number}").format(number=ordinal + 1)
+        return f"{base}: {summary}" if summary else base
+
+    def _select_preview_track(self, ordinal):
+        """Choisit la piste audio écoutée à l'aperçu. Si une lecture est en cours,
+        on bascule immédiatement à la position courante avec la nouvelle piste."""
+        self._preview_audio_index = ordinal
+        if ordinal is None:
+            speak(_("Default audio track"))
+        else:
+            speak(_("Preview audio track {number}").format(number=ordinal + 1))
+        if self.player.is_playing():
+            self._play_from(self._last_playhead_ms)
 
     def _sync_position_label(self):
         self.lbl_position.SetLabel(_("Current position: {time}").format(

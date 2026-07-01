@@ -62,23 +62,26 @@ class AudioPlayer:
         with self._lock:
             return self._playing
 
-    def play(self, path, start_ms=0, end_ms=None, on_position=None, on_finished=None):
-        """Joue depuis ``start_ms`` (jusqu'à ``end_ms`` si fourni). Remplace toute
-        lecture en cours de façon fluide (le flux reste ouvert)."""
+    def play(self, path, start_ms=0, end_ms=None, on_position=None, on_finished=None,
+             audio_index=None):
+        """Joue depuis ``start_ms`` (jusqu'à ``end_ms`` si fourni). ``audio_index``
+        sélectionne la Nᵉ piste audio (``-map 0:a:N``) pour l'aperçu, None = piste
+        par défaut. Remplace toute lecture en cours de façon fluide."""
         with self._lock:
             self._generation += 1
             self._request = {
                 'gen': self._generation, 'path': path, 'start': int(start_ms),
                 'end': end_ms, 'on_position': on_position, 'on_finished': on_finished,
+                'audio_index': audio_index,
             }
             self._playing = True
             self._cv.notify()
         self._ensure_thread()
 
-    def scrub(self, path, pos_ms, window_ms=SCRUB_WINDOW_MS):
+    def scrub(self, path, pos_ms, window_ms=SCRUB_WINDOW_MS, audio_index=None):
         """Rejoue une courte fenêtre à ``pos_ms`` (aperçu façon scrub), en coupant
         l'aperçu précédent."""
-        self.play(path, int(pos_ms), int(pos_ms) + int(window_ms))
+        self.play(path, int(pos_ms), int(pos_ms) + int(window_ms), audio_index=audio_index)
 
     def stop(self):
         """Arrête la lecture (non bloquant). Le thread moteur reste vivant pour la
@@ -173,6 +176,8 @@ class AudioPlayer:
     def _run_request(self, stream, req, gen):
         cmd = [self.ffmpeg_exe, '-hide_banner', '-loglevel', 'quiet',
                '-ss', _format_ss(req['start']), '-i', req['path']]
+        if req.get('audio_index') is not None:
+            cmd.extend(['-map', f"0:a:{int(req['audio_index'])}"])
         if req['end'] is not None and req['end'] > req['start']:
             cmd.extend(['-t', _format_ss(req['end'] - req['start'])])
         cmd.extend(['-vn', '-f', 's16le', '-acodec', 'pcm_s16le',
