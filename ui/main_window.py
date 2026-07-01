@@ -42,11 +42,7 @@ from core.cue import cuesheet_from_chapters, finalize_tracks, parse_cue_text
 from core.merge import MergeTask
 from core.segment_export import SegmentExportTask
 from core.segments import kept_regions
-from ui.segment_editor import (
-    EXPORT_MODE_ONE_FILE,
-    EXPORT_MODE_SEPARATE,
-    SegmentEditorDialog,
-)
+from ui.segment_editor import EXPORT_MODE_SEPARATE, SegmentEditorFrame
 from core.single_instance import drain_paths
 from core.speech import speak
 from core.i18n import AUTO_LANGUAGE_CODE, get_current_language_code, normalize_ui_language
@@ -2130,7 +2126,7 @@ class MainWindow(wx.Frame):
         (N fichiers séparés via le batch, ou 1 fichier reconcaténé)."""
         if self.is_converting:
             return
-        list_ctrl, data = self._get_current_media_collection()
+        _lc, data = self._get_current_media_collection()
         if index < 0 or index >= len(data):
             return
         meta = data[index]
@@ -2141,20 +2137,17 @@ class MainWindow(wx.Frame):
                           _("Cannot cut"), wx.ICON_WARNING, self)
             return
 
-        dlg = SegmentEditorDialog(self, meta)
-        result = dlg.ShowModal()
-        plan = dlg.plan
-        mode = dlg.export_mode
-        dlg.stop_playback()
-        dlg.Destroy()
-        if result != wx.ID_OK:
-            return
+        # Le Frame se montre lui-même et désactive la fenêtre principale ; à sa
+        # fermeture il rappelle _run_segment_export(meta, plan, mode) si un export
+        # a été demandé, sinon rien (annulation).
+        SegmentEditorFrame(self, meta, self._run_segment_export)
 
+    def _run_segment_export(self, meta, plan, mode):
         fmt_key, settings = self._resolve_active_format_settings()
         if fmt_key is None:
             return
-
         if mode == EXPORT_MODE_SEPARATE:
+            list_ctrl, _data = self._get_current_media_collection()
             self._start_segment_split(meta, plan, list_ctrl, fmt_key, settings)
         else:
             self._start_segment_join(meta, plan, fmt_key, settings)
