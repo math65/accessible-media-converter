@@ -145,7 +145,7 @@ class SegmentEditorFrame(wx.Frame):
         self._append(m_play, _("Play / Stop") + "  (Space)", lambda e: self._toggle_play())
         self._append(m_play, _("Pause / Resume") + "  (Ctrl+Space)", lambda e: self._toggle_pause())
         self._append(m_play, _("Play current segment"), lambda e: self._play_current_segment())
-        self._append(m_play, _("Check the nearest cut (before/after)") + "  (V)", lambda e: self._verify_cut())
+        self._append(m_play, _("Verify the cut (real export join)") + "  (V)", lambda e: self._verify_cut())
         m_play.AppendSeparator()
         self.item_scrub = m_play.AppendCheckItem(wx.ID_ANY, _("Scrub on move (audio preview)"))
         self.Bind(wx.EVT_MENU, self.on_scrub_toggle, self.item_scrub)
@@ -475,14 +475,17 @@ class SegmentEditorFrame(wx.Frame):
             "Up / Down: select a segment\n"
             "Left / Right: move by the step\n"
             "Ctrl+Left / Ctrl+Right: previous / next cut\n"
+            "Alt+Left / Alt+Right: previous / next silence\n"
             "Home / End: start / end\n"
             "+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
             "Space: Play / Stop (Stop returns to the start point)\n"
             "Ctrl+Space: Pause / Resume\n"
+            "V: verify the cut (hear the real export join)\n"
             "S: mark region start   E: mark region end (creates a discard region)\n"
             "X: add a cut here\n"
             "K: keep / discard the selected segment\n"
             "Delete: remove a cut (merge segments)\n"
+            "Ctrl+Z / Ctrl+Y: undo / redo\n"
             "Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
             "Ctrl+G: go to a position   Ctrl+W: close"
         )
@@ -659,27 +662,76 @@ class SegmentEditorFrame(wx.Frame):
 
     # ---------------------------------------------------------------- vérifier coupe
     def _verify_cut(self):
-        """Écoute ~2 s avant et ~2 s après la coupe du segment sélectionné (sa
-        frontière de début ; pour le tout premier segment, sa fin). Déterministe et
-        lié à la sélection de la liste — sans déplacer le curseur d'édition."""
-        if not self.plan.segments:
+        """Simule le **raccord réel** de l'export autour du segment sélectionné :
+        joue ~2 s de l'audio gardé juste avant la zone jetée, puis (en sautant la
+        zone jetée) ~2 s juste après — c.-à-d. exactement ce qu'on entendra dans le
+        fichier exporté. Ne déplace pas le curseur d'édition."""
+        segs = self.plan.segments
+        if not segs:
             return
         index = self._selected_index()
         if index < 0:
             index = self._segment_index_at(self.position_ms)
-        seg = self.plan.segments[index]
-        boundary = seg.start_ms if index > 0 else seg.end_ms
-        pre = post = 2000
-        start = max(0, boundary - pre)
-        end = min(self.duration_ms, boundary + post)
-        if end <= start:
-            speak(_("No cut to check here"))
-            return
-        self._play_anchor_ms = start
-        self._last_playhead_ms = start
-        self._say_transport(_("Checking cut at {time}").format(time=format_timecode(boundary)))
+
+        if not segs[index].keep:
+            # Segment à jeter : étendre à toute la suite contiguë de segments jetés.
+            a = index
+            while a - 1 >= 0 and not segs[a - 1].keep:
+                a -= 1
+            b = index
+            while b + 1 < len(segs) and not segs[b + 1].keep:
+                b += 1
+            self._play_join(segs[a].start_ms, segs[b].end_ms)
+        elif index + 1 < len(segs) and not segs[index + 1].keep:
+            # Gardé suivi d'une zone jetée : raccord après ce segment.
+            b = index + 1
+            while b + 1 < len(segs) and not segs[b + 1].keep:
+                b += 1
+            self._play_join(segs[index].end_ms, segs[b].end_ms)
+        elif index - 1 >= 0 and not segs[index - 1].keep:
+            # Gardé précédé d'une zone jetée : raccord avant ce segment.
+            a = index - 1
+            while a - 1 >= 0 and not segs[a - 1].keep:
+                a -= 1
+            self._play_join(segs[a].start_ms, segs[index].start_ms)
+        else:
+            # Aucune suppression adjacente : l'audio est continu ici (rien à raccorder).
+            boundary = segs[index].start_ms if index > 0 else segs[index].end_ms
+            start = max(0, boundary - 2000)
+            end = min(self.duration_ms, boundary + 2000)
+            if end <= start:
+                speak(_("No cut to check here"))
+                return
+            speak(_("No removal here (continuous playback)"))
+            self._play_range(start, end)
+
+    def _play_join(self, left_ms, right_ms):
+        """Fait entendre le raccord « ...gardé | [saut] | gardé... » : 2 s finissant
+        à ``left_ms`` puis 2 s commençant à ``right_ms`` (la partie entre les deux,
+        jetée, est sautée)."""
+        pre = (max(0, left_ms - 2000), left_ms) if left_ms > 0 else None
+        post = (right_ms, min(self.duration_ms, right_ms + 2000)) if right_ms < self.duration_ms else None
+        self._say_transport(_("Simulating join: {a} to {b}").format(
+            a=format_timecode(left_ms), b=format_timecode(right_ms)))
+        if pre and post:
+            self._play_anchor_ms = pre[0]
+            self._last_playhead_ms = pre[0]
+            self.player.play(
+                self.meta.full_path, start_ms=pre[0], end_ms=pre[1],
+                on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
+                on_finished=lambda: wx.CallAfter(self._play_range, post[0], post[1]),
+                audio_index=self._preview_audio_index,
+            )
+        elif pre:
+            self._play_range(pre[0], pre[1])
+        elif post:
+            self._play_range(post[0], post[1])
+
+    def _play_range(self, start_ms, end_ms):
+        self._play_anchor_ms = start_ms
+        self._last_playhead_ms = start_ms
         self.player.play(
-            self.meta.full_path, start_ms=start, end_ms=end,
+            self.meta.full_path, start_ms=start_ms, end_ms=end_ms,
             on_position=lambda ms: wx.CallAfter(self._on_playhead, ms),
             on_finished=lambda: wx.CallAfter(self._on_play_finished),
             audio_index=self._preview_audio_index,

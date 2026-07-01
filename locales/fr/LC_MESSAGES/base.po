@@ -2780,7 +2780,7 @@ msgstr "Au moins un segment doit être conservé."
 msgid "Cannot cut"
 msgstr "Découpage impossible"
 
-#: ui/segment_editor.py:709
+#: ui/segment_editor.py:761
 msgid "Cannot export"
 msgstr "Export impossible"
 
@@ -2796,7 +2796,7 @@ msgstr "Couper / Diviser — {name}"
 msgid "Cut / Split..."
 msgstr "Couper / Diviser..."
 
-#: ui/segment_editor.py:513
+#: ui/segment_editor.py:516
 msgid "Cut added at {time}"
 msgstr "Coupe ajoutée à {time}"
 
@@ -2808,7 +2808,7 @@ msgstr "Découpage terminé."
 msgid "Cut failed."
 msgstr "Échec du découpage."
 
-#: ui/segment_editor.py:566
+#: ui/segment_editor.py:569
 msgid "Cut removed; segments merged"
 msgstr "Coupe retirée ; segments fusionnés"
 
@@ -2820,7 +2820,7 @@ msgstr "Découpage en cours..."
 msgid "Discard"
 msgstr "Jeter"
 
-#: ui/segment_editor.py:536
+#: ui/segment_editor.py:539
 msgid "Discard region created from {start} to {end}"
 msgstr "Région à jeter créée de {start} à {end}"
 
@@ -2832,15 +2832,15 @@ msgstr "Durée"
 msgid "End"
 msgstr "Fin"
 
-#: ui/segment_editor.py:493
+#: ui/segment_editor.py:496
 msgid "Go to position"
 msgstr "Aller à la position"
 
-#: ui/segment_editor.py:492
+#: ui/segment_editor.py:495
 msgid "Go to position (HH:MM:SS.mmm):"
 msgstr "Aller à la position (HH:MM:SS.mmm) :"
 
-#: ui/segment_editor.py:498 ui/segment_editor.py:500
+#: ui/segment_editor.py:501 ui/segment_editor.py:503
 msgid "Invalid time"
 msgstr "Heure invalide"
 
@@ -2848,32 +2848,32 @@ msgstr "Heure invalide"
 msgid "Keep"
 msgstr "Garder"
 
-#: ui/segment_editor.py:521
+#: ui/segment_editor.py:524
 msgid "Mark a region start first"
 msgstr "Marquez d'abord un début de région"
 
-#: ui/segment_editor.py:508
+#: ui/segment_editor.py:511
 msgid "No cut added here"
 msgstr "Aucune coupe ajoutée ici"
 
-#: ui/segment_editor.py:387 ui/segment_editor.py:542 ui/segment_editor.py:556
-#: ui/segment_editor.py:571 ui/segment_editor.py:580
+#: ui/segment_editor.py:387 ui/segment_editor.py:545 ui/segment_editor.py:559
+#: ui/segment_editor.py:574 ui/segment_editor.py:583
 msgid "No segment selected"
 msgstr "Aucun segment sélectionné"
 
-#: ui/segment_editor.py:499
+#: ui/segment_editor.py:502
 msgid "Please enter a valid time (HH:MM:SS.mmm)."
 msgstr "Veuillez entrer une heure valide (HH:MM:SS.mmm)."
 
-#: ui/segment_editor.py:526
+#: ui/segment_editor.py:529
 msgid "Region start and end are identical"
 msgstr "Le début et la fin de la région sont identiques"
 
-#: ui/segment_editor.py:517
+#: ui/segment_editor.py:520
 msgid "Region start marked at {time}"
 msgstr "Début de région marqué à {time}"
 
-#: ui/segment_editor.py:550
+#: ui/segment_editor.py:553
 msgid "Segment {index}: {state}"
 msgstr "Segment {index} : {state}"
 
@@ -2893,7 +2893,7 @@ msgstr "État"
 msgid "Step"
 msgstr "Pas"
 
-#: ui/segment_editor.py:559
+#: ui/segment_editor.py:562
 msgid "The last segment has no following cut to remove"
 msgstr "Le dernier segment n'a pas de coupe suivante à retirer"
 
@@ -2909,11 +2909,11 @@ msgstr "Ce fichier n'a pas de durée connue et ne peut pas être découpé."
 msgid "Total duration: {duration}"
 msgstr "Durée totale : {duration}"
 
-#: ui/segment_editor.py:314 ui/segment_editor.py:551
+#: ui/segment_editor.py:314 ui/segment_editor.py:554
 msgid "discard"
 msgstr "à jeter"
 
-#: ui/segment_editor.py:314 ui/segment_editor.py:551
+#: ui/segment_editor.py:314 ui/segment_editor.py:554
 msgid "keep"
 msgstr "à garder"
 
@@ -3061,43 +3061,9 @@ msgstr "Pas plus grand"
 msgid "Finer step"
 msgstr "Pas plus fin"
 
-#: ui/segment_editor.py:219 ui/segment_editor.py:489
+#: ui/segment_editor.py:219 ui/segment_editor.py:492
 msgid "Keyboard shortcuts"
 msgstr "Raccourcis clavier"
-
-#: ui/segment_editor.py:473
-msgid ""
-"Keyboard shortcuts:\n"
-"\n"
-"Up / Down: select a segment\n"
-"Left / Right: move by the step\n"
-"Ctrl+Left / Ctrl+Right: previous / next cut\n"
-"Home / End: start / end\n"
-"+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
-"Space: Play / Stop (Stop returns to the start point)\n"
-"Ctrl+Space: Pause / Resume\n"
-"S: mark region start   E: mark region end (creates a discard region)\n"
-"X: add a cut here\n"
-"K: keep / discard the selected segment\n"
-"Delete: remove a cut (merge segments)\n"
-"Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
-"Ctrl+G: go to a position   Ctrl+W: close"
-msgstr ""
-"Raccourcis clavier :\n"
-"\n"
-"Haut / Bas : choisir un segment\n"
-"Gauche / Droite : se déplacer du pas\n"
-"Ctrl+Gauche / Ctrl+Droite : coupe précédente / suivante\n"
-"Origine / Fin : début / fin\n"
-"+ / - (ou Ctrl+Haut / Ctrl+Bas) : pas plus grand / plus fin\n"
-"Espace : Lecture / Stop (Stop revient au point de départ)\n"
-"Ctrl+Espace : Pause / Reprise\n"
-"S : marquer le début   E : marquer la fin (crée une région à jeter)\n"
-"X : ajouter une coupe ici\n"
-"K : garder / jeter le segment sélectionné\n"
-"Suppr : retirer une coupe (fusionne les segments)\n"
-"Ctrl+E : exporter en un fichier   Ctrl+Maj+E : exporter en fichiers séparés\n"
-"Ctrl+G : aller à une position   Ctrl+W : fermer"
 
 #: ui/segment_editor.py:463
 msgid "Playback announcements off"
@@ -3135,19 +3101,11 @@ msgstr "Aperçu sur la piste audio {number}"
 msgid "   |   Silences: {count}"
 msgstr "   |   Silences : {count}"
 
-#: ui/segment_editor.py:593
+#: ui/segment_editor.py:596
 msgid "Boundary moved to {time}"
 msgstr "Coupe déplacée à {time}"
 
-#: ui/segment_editor.py:148
-msgid "Check the nearest cut (before/after)"
-msgstr "Vérifier la coupe la plus proche (avant/après)"
-
-#: ui/segment_editor.py:680
-msgid "Checking cut at {time}"
-msgstr "Vérification de la coupe à {time}"
-
-#: ui/segment_editor.py:644
+#: ui/segment_editor.py:647
 msgid "Detecting silences, please wait"
 msgstr "Détection des silences en cours, patientez"
 
@@ -3163,19 +3121,19 @@ msgstr "Caler le début du segment sur la position courante"
 msgid "Next silence"
 msgstr "Silence suivant"
 
-#: ui/segment_editor.py:656
+#: ui/segment_editor.py:659
 msgid "No more silence"
 msgstr "Plus de silence"
 
-#: ui/segment_editor.py:647
+#: ui/segment_editor.py:650
 msgid "No silence detected"
 msgstr "Aucun silence détecté"
 
-#: ui/segment_editor.py:615
+#: ui/segment_editor.py:618
 msgid "Nothing to redo"
 msgstr "Rien à refaire"
 
-#: ui/segment_editor.py:605
+#: ui/segment_editor.py:608
 msgid "Nothing to undo"
 msgstr "Rien à annuler"
 
@@ -3187,11 +3145,11 @@ msgstr "Silence précédent"
 msgid "Redo"
 msgstr "Refaire"
 
-#: ui/segment_editor.py:621
+#: ui/segment_editor.py:624
 msgid "Redone"
 msgstr "Refait"
 
-#: ui/segment_editor.py:588
+#: ui/segment_editor.py:591
 msgid "This boundary cannot be moved here"
 msgstr "Cette coupe ne peut pas être déplacée ici"
 
@@ -3199,13 +3157,104 @@ msgstr "Cette coupe ne peut pas être déplacée ici"
 msgid "Undo"
 msgstr "Annuler"
 
-#: ui/segment_editor.py:611
+#: ui/segment_editor.py:614
 msgid "Undone"
 msgstr "Annulé"
 
-#: ui/segment_editor.py:676
+#: ui/segment_editor.py:703
 msgid "No cut to check here"
 msgstr "Aucune coupe à vérifier ici"
+
+#: ui/segment_editor.py:473
+msgid ""
+"Keyboard shortcuts:\n"
+"\n"
+"Up / Down: select a segment\n"
+"Left / Right: move by the step\n"
+"Ctrl+Left / Ctrl+Right: previous / next cut\n"
+"Alt+Left / Alt+Right: previous / next silence\n"
+"Home / End: start / end\n"
+"+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
+"Space: Play / Stop (Stop returns to the start point)\n"
+"Ctrl+Space: Pause / Resume\n"
+"V: verify the cut (hear the real export join)\n"
+"S: mark region start   E: mark region end (creates a discard region)\n"
+"X: add a cut here\n"
+"K: keep / discard the selected segment\n"
+"Delete: remove a cut (merge segments)\n"
+"Ctrl+Z / Ctrl+Y: undo / redo\n"
+"Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
+"Ctrl+G: go to a position   Ctrl+W: close"
+msgstr ""
+"Raccourcis clavier :\n"
+"\n"
+"Haut / Bas : choisir un segment\n"
+"Gauche / Droite : se déplacer du pas\n"
+"Ctrl+Gauche / Ctrl+Droite : coupe précédente / suivante\n"
+"Alt+Gauche / Alt+Droite : silence précédent / suivant\n"
+"Origine / Fin : début / fin\n"
+"+ / - (ou Ctrl+Haut / Ctrl+Bas) : pas plus grand / plus fin\n"
+"Espace : Lecture / Stop (Stop revient au point de départ)\n"
+"Ctrl+Espace : Pause / Reprise\n"
+"V : vérifier la coupe (entendre le raccord réel de l'export)\n"
+"S : marquer le début   E : marquer la fin (crée une région à jeter)\n"
+"X : ajouter une coupe ici\n"
+"K : garder / jeter le segment sélectionné\n"
+"Suppr : retirer une coupe (fusionne les segments)\n"
+"Ctrl+Z / Ctrl+Y : annuler / refaire\n"
+"Ctrl+E : exporter en un fichier   Ctrl+Maj+E : exporter en fichiers séparés\n"
+"Ctrl+G : aller à une position   Ctrl+W : fermer"
+
+#: ui/segment_editor.py:705
+msgid "No removal here (continuous playback)"
+msgstr "Aucune suppression ici (lecture continue)"
+
+#: ui/segment_editor.py:714
+msgid "Simulating join: {a} to {b}"
+msgstr "Simulation du raccord : {a} vers {b}"
+
+#: ui/segment_editor.py:148
+msgid "Verify the cut (real export join)"
+msgstr "Vérifier la coupe (raccord réel de l'export)"
+
+#~ msgid ""
+#~ "Keyboard shortcuts:\n"
+#~ "\n"
+#~ "Up / Down: select a segment\n"
+#~ "Left / Right: move by the step\n"
+#~ "Ctrl+Left / Ctrl+Right: previous / next cut\n"
+#~ "Home / End: start / end\n"
+#~ "+ / - (or Ctrl+Up / Ctrl+Down): coarser / finer step\n"
+#~ "Space: Play / Stop (Stop returns to the start point)\n"
+#~ "Ctrl+Space: Pause / Resume\n"
+#~ "S: mark region start   E: mark region end (creates a discard region)\n"
+#~ "X: add a cut here\n"
+#~ "K: keep / discard the selected segment\n"
+#~ "Delete: remove a cut (merge segments)\n"
+#~ "Ctrl+E: export one file   Ctrl+Shift+E: export separate files\n"
+#~ "Ctrl+G: go to a position   Ctrl+W: close"
+#~ msgstr ""
+#~ "Raccourcis clavier :\n"
+#~ "\n"
+#~ "Haut / Bas : choisir un segment\n"
+#~ "Gauche / Droite : se déplacer du pas\n"
+#~ "Ctrl+Gauche / Ctrl+Droite : coupe précédente / suivante\n"
+#~ "Origine / Fin : début / fin\n"
+#~ "+ / - (ou Ctrl+Haut / Ctrl+Bas) : pas plus grand / plus fin\n"
+#~ "Espace : Lecture / Stop (Stop revient au point de départ)\n"
+#~ "Ctrl+Espace : Pause / Reprise\n"
+#~ "S : marquer le début   E : marquer la fin (crée une région à jeter)\n"
+#~ "X : ajouter une coupe ici\n"
+#~ "K : garder / jeter le segment sélectionné\n"
+#~ "Suppr : retirer une coupe (fusionne les segments)\n"
+#~ "Ctrl+E : exporter en un fichier   Ctrl+Maj+E : exporter en fichiers séparés\n"
+#~ "Ctrl+G : aller à une position   Ctrl+W : fermer"
+
+#~ msgid "Check the nearest cut (before/after)"
+#~ msgstr "Vérifier la coupe la plus proche (avant/après)"
+
+#~ msgid "Checking cut at {time}"
+#~ msgstr "Vérification de la coupe à {time}"
 
 #~ msgid "Cut here"
 #~ msgstr "Couper ici"
