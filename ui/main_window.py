@@ -1057,10 +1057,15 @@ class MainWindow(wx.Frame):
                 self.Bind(wx.EVT_MENU, lambda e: self.on_reset_output_settings(target_indices), item_reset_output)
 
         # Presets — also reachable from the list, on every tab (Seb request).
-        # From the context menu, applying a preset scopes its metadata template
-        # to the right-click selection (the general button stays global).
+        # From the context menu a preset applies PER FILE to the selection (format
+        # + settings as a per-file output override, metadata scoped); the general
+        # button stays global. Label shows the count like the sibling entries.
         menu.AppendSeparator()
-        item_presets = menu.Append(wx.ID_ANY, _("Manage Presets..."))
+        if len(target_indices) > 1:
+            presets_label = _("Apply Preset ({count} files)...").format(count=len(target_indices))
+        else:
+            presets_label = _("Apply Preset...")
+        item_presets = menu.Append(wx.ID_ANY, presets_label)
         self.Bind(wx.EVT_MENU, lambda e: self.on_open_presets(e, target_indices), item_presets)
 
         if menu.GetMenuItemCount() == 0:
@@ -1658,11 +1663,15 @@ class MainWindow(wx.Frame):
         )
 
     def on_open_presets(self, event, target_indices=None):
-        # ``target_indices`` scopes the metadata template to specific files: the
-        # context-menu entry passes the right-click selection (Seb wants the menu
-        # to act on the selected files), while the general buttons pass None and
-        # apply the template to every loaded file. Format/settings/output prefs
-        # are global regardless — that is the nature of a preset.
+        # ``target_indices`` distinguishes the two entry points. The general
+        # buttons pass None → the preset is applied GLOBALLY (format/settings/
+        # output poured into settings_store — the classic "preset" behaviour).
+        # The context-menu entry passes the right-click selection → the preset is
+        # applied PER FILE on that selection only (Seb: choosing a preset for one
+        # file must affect that file, not reload the global settings). Format +
+        # settings become a per-file output_override and the metadata template is
+        # scoped to those files; the global settings stay untouched.
+        per_file = target_indices is not None
         fmt_key = self._active_format_key()
         current_output = {
             'output_mode': self.settings_store.get('output_mode', 'source'),
@@ -1680,7 +1689,43 @@ class MainWindow(wx.Frame):
         preset = dlg.result_preset if applied else None
         dlg.Destroy()
         if preset:
-            self._apply_preset(preset, target_indices)
+            if per_file:
+                self._apply_preset_per_file(preset, target_indices)
+            else:
+                self._apply_preset(preset)
+
+    def _apply_preset_per_file(self, preset, target_indices):
+        """Applique un preset UNIQUEMENT aux fichiers ciblés (menu contextuel) :
+        format + réglages posés en ``output_override`` par fichier (comme
+        « Réglages de sortie… »), et le modèle de métadonnées limité à ces
+        fichiers. Les réglages globaux ne sont PAS modifiés. Nuance : la
+        destination de sortie du preset (dossier/mode) reste globale — il n'y a
+        pas de stockage per-fichier pour elle, seuls format et réglages sont
+        portés par fichier (retour Sèb)."""
+        list_ctrl, data = self._get_current_media_collection()
+        indices = [i for i in (target_indices or []) if 0 <= i < len(data)]
+        if not indices:
+            return
+        fmt_key = preset['format']
+        settings = dict(preset.get('settings') or {})
+        for i in indices:
+            data[i].output_override = {"format": fmt_key, "settings": dict(settings)}
+        meta_count = self._apply_preset_metadata(preset.get('metadata'), indices)
+        for i in indices:
+            self._set_list_row(list_ctrl, i, data[i])
+        clean = build_format_label(fmt_key, context=self.current_tab)
+        if meta_count:
+            self._set_status(
+                _("Preset \"{name}\" applied to {count} file(s) ({format}); metadata included.").format(
+                    name=preset['name'], format=clean, count=len(indices)
+                )
+            )
+        else:
+            self._set_status(
+                _("Preset \"{name}\" applied to {count} file(s) ({format}).").format(
+                    name=preset['name'], format=clean, count=len(indices)
+                )
+            )
 
     def _apply_preset(self, preset, target_indices=None):
         fmt_key = preset['format']

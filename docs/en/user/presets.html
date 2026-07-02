@@ -40,7 +40,7 @@
       <ul>
         <li>The <strong>Presets...</strong> button, next to the <strong>Settings / Quality</strong> button.</li>
         <li>A <strong>Presets...</strong> button on the start screen, available <strong>even with no file loaded</strong> &mdash; handy to import a preset before adding anything.</li>
-        <li>The file list: <strong>right-click</strong> (or the Menu key / Shift+F10) and choose <strong>Manage Presets...</strong></li>
+        <li>The file list: <strong>right-click</strong> (or the Menu key / Shift+F10) and choose <strong>Apply Preset...</strong> &mdash; from here the preset applies only to the selected file(s), see below.</li>
       </ul>
       <p>
         Presets are grouped by the active tab: audio presets appear on the Audio
@@ -103,17 +103,34 @@
     </section>
 
     <section class="section" id="selection">
-      <h2>Apply to selected files only</h2>
+      <h2>Global or per-file, depending on where you open it</h2>
       <p>
-        Applying a preset always sets the output format, encoding settings, and
-        output destination globally &mdash; that is what a preset is for. The
-        <strong>metadata template</strong> behaves differently depending on how
-        you opened the window:
+        The same preset can be applied two ways, and <strong>where you open it
+        decides the scope</strong>:
       </p>
       <ul>
-        <li>From the <strong>Presets...</strong> button, the metadata is applied to <strong>every loaded file</strong>.</li>
-        <li>From the file list <strong>right-click</strong> menu, the metadata is applied only to the <strong>selected files</strong>.</li>
+        <li>
+          From the <strong>Presets...</strong> button, the preset is applied
+          <strong>globally</strong>: output format, encoding settings and output
+          destination become the settings for <strong>every loaded file</strong>,
+          and the metadata template is applied to every file.
+        </li>
+        <li>
+          From the file list <strong>right-click &rarr; Apply Preset...</strong>,
+          the preset is applied <strong>only to the selected file(s)</strong>: its
+          format and encoding settings are stored as a per-file output override
+          (the same mechanism as <strong>Output Settings...</strong>), and the
+          metadata template targets only those files. The global settings and the
+          other files are left untouched. This is the way to convert, say, one
+          file to MP3 and another to FLAC in a single batch.
+        </li>
       </ul>
+      <p>
+        One nuance in per-file mode: the preset's <strong>output destination</strong>
+        (folder) is not stored per file, so it is not applied &mdash; only the
+        format and encoding settings are. The output destination always stays
+        global.
+      </p>
     </section>
 
     <section class="section" id="share">

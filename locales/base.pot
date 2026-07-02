@@ -86,7 +86,7 @@ msgstr ""
 msgid "4 conversions"
 msgstr ""
 
-#: ui/main_window.py:1887
+#: ui/main_window.py:1932
 msgid ""
 "A conversion is currently running.\n"
 "Do you really want to stop it and exit?"
@@ -134,7 +134,7 @@ msgstr ""
 msgid "ALAC - Audio (Extract)"
 msgstr ""
 
-#: ui/main_window.py:2406
+#: ui/main_window.py:2451
 msgid "About"
 msgstr ""
 
@@ -158,11 +158,11 @@ msgstr ""
 msgid "Album artist"
 msgstr ""
 
-#: ui/main_window.py:2332
+#: ui/main_window.py:2377
 msgid "All tasks completed successfully."
 msgstr ""
 
-#: ui/main_window.py:2331
+#: ui/main_window.py:2376
 msgid "All tasks completed!"
 msgstr ""
 
@@ -182,7 +182,7 @@ msgstr ""
 msgid "App version: {value}"
 msgstr ""
 
-#: ui/main_window.py:1347
+#: ui/main_window.py:1352
 msgid "Application Language"
 msgstr ""
 
@@ -196,6 +196,14 @@ msgstr ""
 
 #: ui/presets_dialog.py:79 ui/track_manager.py:415 ui/track_manager.py:474
 msgid "Apply"
+msgstr ""
+
+#: ui/main_window.py:1065
+msgid "Apply Preset ({count} files)..."
+msgstr ""
+
+#: ui/main_window.py:1067
+msgid "Apply Preset..."
 msgstr ""
 
 #: ui/track_manager.py:476
@@ -226,7 +234,7 @@ msgstr ""
 msgid "Ask output folder each time"
 msgstr ""
 
-#: ui/main_window.py:1982
+#: ui/main_window.py:2027
 msgid "At least 2 files are required to merge."
 msgstr ""
 
@@ -238,7 +246,7 @@ msgstr ""
 msgid "Attributes:"
 msgstr ""
 
-#: core/support.py:390 ui/main_window.py:1388 ui/main_window.py:1448
+#: core/support.py:390 ui/main_window.py:1393 ui/main_window.py:1453
 msgid "Audio"
 msgstr ""
 
@@ -266,7 +274,7 @@ msgstr ""
 msgid "Audio extract track dialog"
 msgstr ""
 
-#: ui/main_window.py:1199
+#: ui/main_window.py:1204
 msgid "Audio extraction track selected: {track}"
 msgstr ""
 
@@ -294,13 +302,13 @@ msgstr ""
 msgid "Audio settings panel"
 msgstr ""
 
-#: ui/main_window.py:1189
+#: ui/main_window.py:1194
 msgid ""
 "Audio track applied to {applied} files ({unmatched} without a matching "
 "track)."
 msgstr ""
 
-#: ui/main_window.py:1195
+#: ui/main_window.py:1200
 msgid "Audio track applied to {applied} files."
 msgstr ""
 
@@ -344,7 +352,7 @@ msgstr ""
 msgid "BMP - Image (Uncompressed)"
 msgstr ""
 
-#: ui/main_window.py:2335
+#: ui/main_window.py:2380
 msgid ""
 "Batch completed.\n"
 "\n"
@@ -353,11 +361,11 @@ msgid ""
 "Errors: {error}"
 msgstr ""
 
-#: ui/main_window.py:2345
+#: ui/main_window.py:2390
 msgid "Batch finished: {done} done / {skipped} skipped / {error} error"
 msgstr ""
 
-#: ui/main_window.py:2323
+#: ui/main_window.py:2368
 msgid "Batch stopped by user."
 msgstr ""
 
@@ -576,7 +584,7 @@ msgstr ""
 msgid "Configure settings for: "
 msgstr ""
 
-#: ui/main_window.py:1888
+#: ui/main_window.py:1933
 msgid "Confirm Exit"
 msgstr ""
 
@@ -628,11 +636,11 @@ msgstr ""
 msgid "Conversion progress percentage"
 msgstr ""
 
-#: ui/main_window.py:1952
+#: ui/main_window.py:1997
 msgid "Conversion started."
 msgstr ""
 
-#: ui/main_window.py:2258
+#: ui/main_window.py:2303
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -642,7 +650,7 @@ msgid ""
 "Do you want to delete it?"
 msgstr ""
 
-#: ui/main_window.py:2262
+#: ui/main_window.py:2307
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -664,7 +672,7 @@ msgstr ""
 msgid "Convert to:"
 msgstr ""
 
-#: ui/main_window.py:2107
+#: ui/main_window.py:2152
 msgid "Converting..."
 msgstr ""
 
@@ -716,7 +724,7 @@ msgstr ""
 msgid "Cover image file"
 msgstr ""
 
-#: ui/main_window.py:1817
+#: ui/main_window.py:1862
 msgid "Cue Sheet Tracks"
 msgstr ""
 
@@ -736,7 +744,7 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
-#: ui/main_window.py:1930
+#: ui/main_window.py:1975
 msgid "Custom folder not found. Using source folder."
 msgstr ""
 
@@ -752,7 +760,7 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: ui/main_window.py:2272 ui/main_window.py:2298
+#: ui/main_window.py:2317 ui/main_window.py:2343
 msgid "Delete Partial Files"
 msgstr ""
 
@@ -793,11 +801,11 @@ msgstr ""
 msgid "Disc number"
 msgstr ""
 
-#: ui/main_window.py:2367
+#: ui/main_window.py:2412
 msgid "Documentation"
 msgstr ""
 
-#: ui/main_window.py:2115 ui/main_window.py:2343
+#: ui/main_window.py:2160 ui/main_window.py:2388
 msgid "Done"
 msgstr ""
 
@@ -885,13 +893,13 @@ msgstr ""
 msgid "Episode title"
 msgstr ""
 
-#: ui/main_window.py:1320 ui/main_window.py:2099 ui/main_window.py:2119
-#: ui/main_window.py:2376 ui/main_window.py:2388 ui/main_window.py:514
+#: ui/main_window.py:1325 ui/main_window.py:2144 ui/main_window.py:2164
+#: ui/main_window.py:2421 ui/main_window.py:2433 ui/main_window.py:514
 #: ui/main_window.py:539 ui/main_window.py:661 ui/main_window.py:669
 msgid "Error"
 msgstr ""
 
-#: ui/main_window.py:2118
+#: ui/main_window.py:2163
 msgid "Error (file not found)"
 msgstr ""
 
@@ -1040,7 +1048,7 @@ msgstr ""
 msgid "How chapters are named when merging files into an M4B audiobook."
 msgstr ""
 
-#: core/probe.py:114 ui/main_window.py:1392 ui/main_window.py:1448
+#: core/probe.py:114 ui/main_window.py:1397 ui/main_window.py:1453
 msgid "Image"
 msgstr ""
 
@@ -1089,7 +1097,7 @@ msgstr ""
 msgid "Include the output destination"
 msgstr ""
 
-#: ui/main_window.py:1850 ui/main_window.py:1983 ui/main_window.py:675
+#: ui/main_window.py:1895 ui/main_window.py:2028 ui/main_window.py:675
 #: ui/main_window.py:763 ui/main_window.py:777 ui/main_window.py:807
 msgid "Info"
 msgstr ""
@@ -1150,7 +1158,7 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: ui/main_window.py:1351 ui/main_window.py:1373
+#: ui/main_window.py:1356 ui/main_window.py:1378
 msgid "Language change saved. It will be applied on next launch."
 msgstr ""
 
@@ -1162,7 +1170,7 @@ msgstr ""
 msgid "Language: {value}"
 msgstr ""
 
-#: ui/main_window.py:1544
+#: ui/main_window.py:1549
 msgid "List cleared."
 msgstr ""
 
@@ -1235,10 +1243,6 @@ msgstr ""
 msgid "Manage Presets"
 msgstr ""
 
-#: ui/main_window.py:1063
-msgid "Manage Presets..."
-msgstr ""
-
 #: ui/main_window.py:1016
 msgid "Manage Tracks ({count} files)..."
 msgstr ""
@@ -1263,7 +1267,7 @@ msgstr ""
 msgid "Max concurrent conversions: {value}"
 msgstr ""
 
-#: ui/main_window.py:1500
+#: ui/main_window.py:1505
 msgid "Media Files"
 msgstr ""
 
@@ -1271,11 +1275,11 @@ msgstr ""
 msgid "Medium"
 msgstr ""
 
-#: ui/main_window.py:2092 ui/main_window.py:2093
+#: ui/main_window.py:2137 ui/main_window.py:2138
 msgid "Merge complete."
 msgstr ""
 
-#: ui/main_window.py:2098 ui/main_window.py:2102
+#: ui/main_window.py:2143 ui/main_window.py:2147
 msgid "Merge failed."
 msgstr ""
 
@@ -1287,7 +1291,7 @@ msgstr ""
 msgid "Merge the listed files into one, using the selected output format."
 msgstr ""
 
-#: ui/main_window.py:2040 ui/main_window.py:2043 ui/main_window.py:2066
+#: ui/main_window.py:2085 ui/main_window.py:2088 ui/main_window.py:2111
 msgid "Merging files..."
 msgstr ""
 
@@ -1295,11 +1299,11 @@ msgstr ""
 msgid "Metadata"
 msgstr ""
 
-#: ui/main_window.py:1323
+#: ui/main_window.py:1328
 msgid "Metadata rewrite finished with errors."
 msgstr ""
 
-#: ui/main_window.py:1325
+#: ui/main_window.py:1330
 msgid "Metadata rewritten on the original file(s)."
 msgstr ""
 
@@ -1307,7 +1311,7 @@ msgstr ""
 msgid "Metadata updated."
 msgstr ""
 
-#: ui/main_window.py:1277
+#: ui/main_window.py:1282
 msgid "Metadata will be applied during conversion."
 msgstr ""
 
@@ -1352,7 +1356,7 @@ msgstr ""
 msgid "No compatible media files found."
 msgstr ""
 
-#: ui/main_window.py:1494
+#: ui/main_window.py:1499
 msgid "No files loaded."
 msgstr ""
 
@@ -1369,7 +1373,7 @@ msgid ""
 "or use File > Add Folder."
 msgstr ""
 
-#: ui/main_window.py:1915
+#: ui/main_window.py:1960
 msgid "No files to convert."
 msgstr ""
 
@@ -1381,7 +1385,7 @@ msgstr ""
 msgid "No release notes provided."
 msgstr ""
 
-#: ui/main_window.py:1850
+#: ui/main_window.py:1895
 msgid "No usable cue sheet was found in this file."
 msgstr ""
 
@@ -1422,7 +1426,7 @@ msgstr ""
 msgid "OK"
 msgstr ""
 
-#: ui/main_window.py:1501
+#: ui/main_window.py:1506
 msgid "Open Media"
 msgstr ""
 
@@ -1478,7 +1482,7 @@ msgstr ""
 msgid "Output"
 msgstr ""
 
-#: ui/main_window.py:1753
+#: ui/main_window.py:1798
 msgid "Output Settings"
 msgstr ""
 
@@ -1490,11 +1494,11 @@ msgstr ""
 msgid "Output Settings..."
 msgstr ""
 
-#: ui/main_window.py:1752
+#: ui/main_window.py:1797
 msgid "Output format for the selected file(s):"
 msgstr ""
 
-#: ui/main_window.py:1620
+#: ui/main_window.py:1625
 msgid "Output format selected: {format}"
 msgstr ""
 
@@ -1506,11 +1510,11 @@ msgstr ""
 msgid "Output in specific folder"
 msgstr ""
 
-#: ui/main_window.py:1791
+#: ui/main_window.py:1836
 msgid "Output settings reset for {count} file(s)."
 msgstr ""
 
-#: ui/main_window.py:1779
+#: ui/main_window.py:1824
 msgid "Output settings set for {count} file(s)."
 msgstr ""
 
@@ -1586,7 +1590,7 @@ msgstr ""
 msgid "Preferences dialog"
 msgstr ""
 
-#: ui/main_window.py:1949
+#: ui/main_window.py:1994
 msgid "Preparing conversion..."
 msgstr ""
 
@@ -1602,12 +1606,21 @@ msgstr ""
 msgid "Preserve original subfolder structure"
 msgstr ""
 
-#: ui/main_window.py:1709
+#: ui/main_window.py:1754
 msgid "Preset \"{name}\" applied ({format})."
 msgstr ""
 
-#: ui/main_window.py:1703
+#: ui/main_window.py:1748
 msgid "Preset \"{name}\" applied ({format}); metadata set on {count} file(s)."
+msgstr ""
+
+#: ui/main_window.py:1725
+msgid "Preset \"{name}\" applied to {count} file(s) ({format})."
+msgstr ""
+
+#: ui/main_window.py:1719
+msgid ""
+"Preset \"{name}\" applied to {count} file(s) ({format}); metadata included."
 msgstr ""
 
 #: ui/presets_dialog.py:215
@@ -1698,7 +1711,7 @@ msgstr ""
 msgid "Quality {q}"
 msgstr ""
 
-#: ui/main_window.py:2113
+#: ui/main_window.py:2158
 msgid "Queued"
 msgstr ""
 
@@ -1722,7 +1735,7 @@ msgstr ""
 msgid "Re-tag the original file now (no re-encoding)"
 msgstr ""
 
-#: ui/main_window.py:2128 ui/main_window.py:466
+#: ui/main_window.py:2173 ui/main_window.py:466
 msgid "Ready"
 msgstr ""
 
@@ -1796,11 +1809,11 @@ msgstr ""
 msgid "Resize:"
 msgstr ""
 
-#: ui/main_window.py:1359
+#: ui/main_window.py:1364
 msgid "Restart Required"
 msgstr ""
 
-#: ui/main_window.py:1280
+#: ui/main_window.py:1285
 msgid "Rewriting metadata..."
 msgstr ""
 
@@ -1848,11 +1861,11 @@ msgstr ""
 msgid "Select &All"
 msgstr ""
 
-#: ui/main_window.py:2020
+#: ui/main_window.py:2065
 msgid "Select Output File"
 msgstr ""
 
-#: ui/main_window.py:1933 ui/main_window.py:2007 ui/preferences_dialog.py:322
+#: ui/main_window.py:1978 ui/main_window.py:2052 ui/preferences_dialog.py:322
 msgid "Select Output Folder"
 msgstr ""
 
@@ -1908,7 +1921,7 @@ msgstr ""
 msgid "Settings and quality"
 msgstr ""
 
-#: ui/main_window.py:1641
+#: ui/main_window.py:1646
 msgid "Settings updated for format: {format}"
 msgstr ""
 
@@ -1928,15 +1941,15 @@ msgstr ""
 msgid "Skip existing file"
 msgstr ""
 
-#: ui/main_window.py:2127
+#: ui/main_window.py:2172
 msgid "Skipped"
 msgstr ""
 
-#: ui/main_window.py:2126
+#: ui/main_window.py:2171
 msgid "Skipped (Batch stopped)"
 msgstr ""
 
-#: ui/main_window.py:2124
+#: ui/main_window.py:2169
 msgid "Skipped (Exists)"
 msgstr ""
 
@@ -1944,11 +1957,11 @@ msgstr ""
 msgid "Smallest Size"
 msgstr ""
 
-#: ui/main_window.py:1319
+#: ui/main_window.py:1324
 msgid "Some files could not be re-tagged:"
 msgstr ""
 
-#: ui/main_window.py:2295
+#: ui/main_window.py:2340
 msgid ""
 "Some partially generated files could not be deleted.\n"
 "\n"
@@ -1993,7 +2006,7 @@ msgstr ""
 msgid "Stereo (Downmix)"
 msgstr ""
 
-#: ui/main_window.py:1945 ui/main_window.py:2036 ui/main_window.py:323
+#: ui/main_window.py:1990 ui/main_window.py:2081 ui/main_window.py:323
 msgid "Stop"
 msgstr ""
 
@@ -2001,7 +2014,7 @@ msgstr ""
 msgid "Stop conversion"
 msgstr ""
 
-#: ui/main_window.py:1879 ui/main_window.py:2095
+#: ui/main_window.py:1924 ui/main_window.py:2140
 msgid "Stop requested."
 msgstr ""
 
@@ -2010,11 +2023,11 @@ msgstr ""
 msgid "Stop the current conversion before installing an update."
 msgstr ""
 
-#: ui/main_window.py:2121
+#: ui/main_window.py:2166
 msgid "Stopped by user"
 msgstr ""
 
-#: ui/main_window.py:1873
+#: ui/main_window.py:1918
 msgid "Stopping..."
 msgstr ""
 
@@ -2026,7 +2039,7 @@ msgstr ""
 msgid "Subtitles"
 msgstr ""
 
-#: ui/main_window.py:2092 ui/main_window.py:2331
+#: ui/main_window.py:2137 ui/main_window.py:2376
 msgid "Success"
 msgstr ""
 
@@ -2090,7 +2103,7 @@ msgstr ""
 msgid "The GitHub release does not define a valid version tag."
 msgstr ""
 
-#: ui/main_window.py:1353
+#: ui/main_window.py:1358
 msgid ""
 "The application language has changed.\n"
 "\n"
@@ -2124,7 +2137,7 @@ msgstr ""
 msgid "The installer failed its integrity check and was not installed."
 msgstr ""
 
-#: ui/main_window.py:2363
+#: ui/main_window.py:2408
 msgid ""
 "The local documentation could not be opened.\n"
 "\n"
@@ -2132,7 +2145,7 @@ msgid ""
 "{path}"
 msgstr ""
 
-#: ui/main_window.py:2359
+#: ui/main_window.py:2404
 msgid ""
 "The local documentation files were not found.\n"
 "\n"
@@ -2140,7 +2153,7 @@ msgid ""
 "{path}"
 msgstr ""
 
-#: ui/main_window.py:1344
+#: ui/main_window.py:1349
 msgid ""
 "The new language will be applied the next time the application starts "
 "because a conversion is currently running."
@@ -2186,11 +2199,11 @@ msgstr ""
 msgid "This file is not a valid presets file."
 msgstr ""
 
-#: ui/main_window.py:1869
+#: ui/main_window.py:1914
 msgid "This file will be converted as a single file."
 msgstr ""
 
-#: ui/main_window.py:1857
+#: ui/main_window.py:1902
 msgid "This file will be split into {count} tracks."
 msgstr ""
 
@@ -2243,7 +2256,7 @@ msgstr ""
 msgid "Track number"
 msgstr ""
 
-#: ui/main_window.py:1154
+#: ui/main_window.py:1159
 msgid "Track settings applied to {count} files."
 msgstr ""
 
@@ -2251,7 +2264,7 @@ msgstr ""
 msgid "Track title"
 msgstr ""
 
-#: core/conversion.py:108 ui/main_window.py:1813
+#: core/conversion.py:108 ui/main_window.py:1858
 msgid "Track {number}"
 msgstr ""
 
@@ -2284,11 +2297,11 @@ msgstr ""
 msgid "Unable to download the installer from GitHub."
 msgstr ""
 
-#: ui/main_window.py:2387
+#: ui/main_window.py:2432
 msgid "Unable to open the DownAccess page."
 msgstr ""
 
-#: ui/main_window.py:2375
+#: ui/main_window.py:2420
 msgid "Unable to open the GitHub repository page."
 msgstr ""
 
@@ -2296,7 +2309,7 @@ msgstr ""
 msgid "Unable to open the release page."
 msgstr ""
 
-#: ui/main_window.py:1370
+#: ui/main_window.py:1375
 msgid "Unable to restart the application after changing language."
 msgstr ""
 
@@ -2329,7 +2342,7 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: ui/main_window.py:1816 ui/main_window.py:413
+#: ui/main_window.py:1861 ui/main_window.py:413
 msgid "Unknown album"
 msgstr ""
 
@@ -2408,7 +2421,7 @@ msgid ""
 "Do you want to continue?"
 msgstr ""
 
-#: core/support.py:390 ui/main_window.py:1390 ui/main_window.py:1448
+#: core/support.py:390 ui/main_window.py:1395 ui/main_window.py:1453
 msgid "Video"
 msgstr ""
 
@@ -2472,7 +2485,7 @@ msgstr ""
 msgid "WMA - Audio (Legacy)"
 msgstr ""
 
-#: ui/main_window.py:1930 ui/main_window.py:522 ui/main_window.py:623
+#: ui/main_window.py:1975 ui/main_window.py:522 ui/main_window.py:623
 #: ui/track_manager.py:436
 msgid "Warning"
 msgstr ""
@@ -2529,7 +2542,7 @@ msgstr ""
 msgid "present"
 msgstr ""
 
-#: ui/main_window.py:1815
+#: ui/main_window.py:1860
 msgid "{album} — {count} tracks"
 msgstr ""
 
@@ -2541,7 +2554,7 @@ msgstr ""
 msgid "{app_name} - {issue} - v{version}"
 msgstr ""
 
-#: ui/main_window.py:1480
+#: ui/main_window.py:1485
 msgid ""
 "{audio_count} audio, {video_count} video, {image_count} image file(s) "
 "loaded."
@@ -2551,7 +2564,7 @@ msgstr ""
 msgid "{count} file(s) added from folder."
 msgstr ""
 
-#: ui/main_window.py:1529
+#: ui/main_window.py:1534
 msgid "{count} file(s) added."
 msgstr ""
 
@@ -2565,11 +2578,11 @@ msgid ""
 "finishes."
 msgstr ""
 
-#: ui/main_window.py:1574
+#: ui/main_window.py:1579
 msgid "{count} file(s) removed."
 msgstr ""
 
-#: ui/main_window.py:1609
+#: ui/main_window.py:1614
 msgid "{count} file(s) selected."
 msgstr ""
 
@@ -2593,7 +2606,7 @@ msgstr ""
 msgid "{count}x Subtitles"
 msgstr ""
 
-#: ui/main_window.py:2110 ui/main_window.py:2162
+#: ui/main_window.py:2155 ui/main_window.py:2207
 msgid "{eta} remaining"
 msgstr ""
 
@@ -2605,24 +2618,24 @@ msgstr ""
 msgid "{name} moved, {pos} of {total}"
 msgstr ""
 
-#: ui/main_window.py:2229
+#: ui/main_window.py:2274
 msgid ""
 "{paths}\n"
 "...and {count} more file(s)."
 msgstr ""
 
-#: ui/main_window.py:2144
+#: ui/main_window.py:2189
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error"
 msgstr ""
 
-#: ui/main_window.py:2148
+#: ui/main_window.py:2193
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error / {stopped} stopped"
 msgstr ""
 
-#: ui/main_window.py:1450
+#: ui/main_window.py:1455
 msgid "{tab} tab selected."
 msgstr ""

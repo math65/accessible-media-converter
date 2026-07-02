@@ -41,7 +41,7 @@
       <ul>
         <li>Le bouton <strong>Presets…</strong>, à côté du bouton <strong>Réglages / Qualité</strong>.</li>
         <li>Un bouton <strong>Presets…</strong> sur l'écran d'accueil, disponible <strong>même sans fichier chargé</strong> &mdash; pratique pour importer un preset avant d'ajouter quoi que ce soit.</li>
-        <li>La liste des fichiers : <strong>clic droit</strong> (ou touche Menu / Maj+F10) puis <strong>Gérer les presets…</strong></li>
+        <li>La liste des fichiers : <strong>clic droit</strong> (ou touche Menu / Maj+F10) puis <strong>Appliquer un preset…</strong> &mdash; depuis cet endroit, le preset ne s'applique qu'au(x) fichier(s) sélectionné(s), voir plus bas.</li>
       </ul>
       <p>
         Les presets sont regroupés par onglet actif : les presets audio
@@ -106,17 +106,36 @@
     </section>
 
     <section class="section" id="selection">
-      <h2>Appliquer aux fichiers sélectionnés</h2>
+      <h2>Global ou par fichier, selon l'endroit où vous l'ouvrez</h2>
       <p>
-        Appliquer un preset définit toujours le format de sortie, les réglages
-        d'encodage et la destination de sortie de manière globale &mdash; c'est le
-        but d'un preset. Le <strong>modèle de métadonnées</strong>, lui, se
-        comporte différemment selon la façon dont vous avez ouvert la fenêtre :
+        Un même preset peut s'appliquer de deux façons, et <strong>l'endroit où
+        vous l'ouvrez décide de la portée</strong> :
       </p>
       <ul>
-        <li>Depuis le bouton <strong>Presets…</strong>, les métadonnées sont appliquées à <strong>tous les fichiers chargés</strong>.</li>
-        <li>Depuis le menu <strong>clic droit</strong> de la liste, les métadonnées ne sont appliquées qu'aux <strong>fichiers sélectionnés</strong>.</li>
+        <li>
+          Depuis le bouton <strong>Presets…</strong>, le preset s'applique de
+          manière <strong>globale</strong> : le format de sortie, les réglages
+          d'encodage et la destination de sortie deviennent les réglages de
+          <strong>tous les fichiers chargés</strong>, et le modèle de métadonnées
+          est appliqué à tous les fichiers.
+        </li>
+        <li>
+          Depuis <strong>clic droit &rarr; Appliquer un preset…</strong> dans la
+          liste, le preset s'applique <strong>uniquement au(x) fichier(s)
+          sélectionné(s)</strong> : son format et ses réglages d'encodage sont
+          enregistrés comme un réglage de sortie propre à ce fichier (le même
+          mécanisme que <strong>Réglages de sortie…</strong>), et le modèle de
+          métadonnées ne vise que ces fichiers. Les réglages globaux et les autres
+          fichiers ne sont pas touchés. C'est ainsi que vous pouvez convertir, par
+          exemple, un fichier en MP3 et un autre en FLAC dans une même fournée.
+        </li>
       </ul>
+      <p>
+        Une nuance en mode par fichier : la <strong>destination de sortie</strong>
+        (dossier) du preset n'est pas mémorisée par fichier, elle n'est donc pas
+        appliquée &mdash; seuls le format et les réglages d'encodage le sont. La
+        destination de sortie reste toujours globale.
+      </p>
     </section>
 
     <section class="section" id="share">
