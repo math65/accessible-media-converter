@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.19.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.0`.
 
 ## Running and building
 
@@ -154,6 +154,25 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.0 — published 2026-07-02, tag `v1.20.0`, commit `e30b2c2`.** Small stable: **presets now
+  apply per-file from the context menu.** Tester Sèb reported that choosing a preset via the file-list
+  right-click reloaded the **global** settings instead of scoping to the selected file. Fixed in
+  `ui/main_window.py`: `on_open_presets` branches on `target_indices` — the general **Presets…** button
+  (None) still applies globally via `_apply_preset`; the context-menu entry (a selection) now calls the
+  new **`_apply_preset_per_file`**, which sets the preset's format+settings as a per-file
+  `output_override` on the selection (same mechanism as "Output Settings…", honored by
+  `BatchConversionManager._resolve_job_format_settings` on every tab) and scopes the metadata template
+  to those files — **global settings untouched**. Nuance: the preset's output-destination block has no
+  per-file storage, so it's ignored in per-file mode (destination stays global). Context-menu entry
+  renamed **"Manage Presets…" → "Apply Preset…"** (with "(N files)" count); the dialog window title
+  stays "Manage Presets". i18n FR + EN/FR presets docs updated. Embedded FFmpeg **8.1.2** (unchanged).
+  - ⚠️ **The file cutter / segment editor is NOT in this release.** It was previewed in the deleted
+    prerelease `v1.20.0-rc1` and is frozen on the unmerged `feature/segment-editor` branch, moving to
+    the standalone app **Accessible Media Editor** (see auto-memory). `1.20.0 > 1.20.0-rc1`, so testers
+    still on rc1 (Sèb) are auto-updated onto this cutter-free stable.
+  - ⚠️ Published **without** real-world NVDA validation (logic verified by a scoping test; confirm a
+    posteriori). [[project_seb_feedback_loop]]
 
 - **v1.19.0 — published 2026-06-29, tag `v1.19.0`, commit `d8aab05`.** Ships the **DownAccess ↔ AMC
   integration** (Downie→Permute pairing: DownAccess downloads, AMC converts). The DownAccess side was
