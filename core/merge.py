@@ -251,6 +251,16 @@ class MergeTask:
             logging.info("Fusion terminée avec succès.")
 
         finally:
+            # Les tubes du sous-processus ne se referment pas tout seuls : sans ça
+            # les descripteurs restent ouverts jusqu'au ramasse-miettes.
+            if self.process is not None:
+                for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
+                    if stream is None:
+                        continue
+                    try:
+                        stream.close()
+                    except OSError:
+                        pass
             try:
                 os.unlink(list_path)
             except Exception:
