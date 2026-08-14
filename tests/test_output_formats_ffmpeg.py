@@ -44,6 +44,11 @@ class OutputFormatTests(unittest.TestCase):
         ])
         cls.image = os.path.join(cls.folder, "photo.png")
         run_ffmpeg(['-f', 'lavfi', '-i', 'testsrc=d=1:s=192x144', '-frames:v', '1', cls.image])
+        # Entrée multi-images : le muxeur image2 n'écrit qu'un fichier, la
+        # conversion doit donc n'encoder qu'une image au lieu d'échouer.
+        cls.animated = os.path.join(cls.folder, "anime.webp")
+        run_ffmpeg(['-f', 'lavfi', '-i', 'testsrc=d=1:s=96x72', '-c:v', 'libwebp_anim',
+                    '-loop', '0', cls.animated])
         cls.transport = os.path.join(cls.folder, "capture.ts")
         run_ffmpeg([
             '-f', 'lavfi', '-i', 'testsrc=d=1:s=192x144', '-f', 'lavfi', '-i', 'sine=f=440:d=1',
@@ -119,6 +124,17 @@ class OutputFormatTests(unittest.TestCase):
         for label, target_format, extra in cases:
             with self.subTest(format=label):
                 self.convert(label, self.image, target_format, {"ffmpeg_threads": "auto", **extra})
+
+    def test_animated_image_input(self):
+        """WebP animé : la sortie est un fichier unique, on n'encode qu'une image.
+
+        Sans `-frames:v 1`, le muxeur image2 échoue en cours de route
+        (« Error muxing a packet ») et la conversion entière est perdue."""
+        for label, target_format in (("anim_jpeg", "jpeg"), ("anim_png", "png")):
+            with self.subTest(format=label):
+                self.convert(label, self.animated, target_format,
+                             {"ffmpeg_threads": "auto", "image_quality": 85,
+                              "image_compression": 6})
 
     def test_merge_formats(self):
         cases = [

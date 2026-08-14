@@ -406,6 +406,11 @@ class ConversionTask:
             cmd.extend(['-compression_algo', compression])
 
         cmd.append('-an')
+        # Une entrée peut contenir plusieurs images (WebP animé, GIF, HEIC avec
+        # sa miniature) : la sortie image est un fichier unique, donc on n'en
+        # encode qu'une. Sans ça le muxeur image2 échoue en cours de route
+        # (« Error muxing a packet ») et la conversion est perdue.
+        cmd.extend(['-frames:v', '1'])
 
         thread_count = parse_ffmpeg_threads(self.settings)
         if thread_count is not None:
