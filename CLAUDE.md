@@ -206,7 +206,18 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
     output format the app offers (31 cases: audio incl. MP3 ABR/VBR, FLAC 24, ALAC, M4B, loudnorm;
     video incl. TS→MP4 and copy paths; every image format; both concat merges). All green on 9.0.1 —
     none of the ~40 command fragments the app emits was removed upstream.
-  - **First automated test suite** (see "Run the test suite"): 29 tests, including real FFmpeg
+  - **Animated image inputs produced nothing.** A multi-frame input fed every frame to the image2
+    muxer, which writes a single file → the whole conversion failed ("Error muxing a packet").
+    `_build_image_command` now emits `-frames:v 1`. Pre-existing bug, surfaced while checking whether
+    FFmpeg 9's new `webp_anim` demuxer changed the image tab: on 8.1.2 the decoder could not read the
+    animation at all, 9.0.1 decodes it, which is what makes the case fixable. Note **`.gif` is routed
+    to the video tab** (it has a duration, and is absent from `IMAGE_EXTENSIONS`), so it does not go
+    through this path — animated GIF → still image would need a routing decision first.
+  - **Embedded libmp3lame is still LAME 3.100** (verified: `lame-3.100` build paths inside the binary
+    and the `LAME3.100` tag written into encoded MP3s) even though **LAME 4.0 shipped upstream
+    2026-07-11**. Nothing to do on our side — it depends on GyanD rebuilding against it; worth
+    re-checking at each `/update-ffmpeg`.
+  - **First automated test suite** (see "Run the test suite"): 30 tests, including real FFmpeg
     conversions and a headless UI smoke test that fails if the StaticBox warnings ever come back.
     It immediately paid for itself: its `ResourceWarning`s exposed the unclosed FFmpeg pipes in
     **both** `ConversionTask` and `MergeTask`.
