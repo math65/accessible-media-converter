@@ -2161,6 +2161,10 @@ class MainWindow(wx.Frame):
         if state == JOB_STATE_ERROR:
             if payload.get('error_kind') == 'input_missing':
                 return _("Error (file not found)")
+            if payload.get('error_kind') == 'cue_invalid':
+                # La raison exacte (image introuvable, cue multi-fichiers…) est
+                # plus utile que « Erreur » : elle se lit dans la liste.
+                return _("Error: {reason}").format(reason=payload.get('error_message', ''))
             return _("Error")
         if state == JOB_STATE_STOPPED:
             return _("Stopped by user")
@@ -2229,9 +2233,10 @@ class MainWindow(wx.Frame):
             error_msg = payload.get('error_message', '')
             if error_msg == 'Stopped by user':
                 return
-            # A missing input file is a user-side issue (file moved/deleted after import),
-            # not an FFmpeg failure worth reporting. The clear message shows in the list row.
-            if payload.get('error_kind') == 'input_missing':
+            # A missing input file — or a cue sheet that cannot be split — is a
+            # user-side issue, not an FFmpeg failure worth reporting. The clear
+            # message shows in the list row.
+            if payload.get('error_kind') in ('input_missing', 'cue_invalid'):
                 return
             if not self._is_error_report_dialog_alive():
                 # Hard update gate: if a newer version exists, require updating

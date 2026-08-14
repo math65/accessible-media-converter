@@ -200,6 +200,17 @@ def _find_audio_by_stem(directory, stem):
     return None
 
 
+def _cue_stem(path):
+    """Nom de base sans son (ou ses) extension(s) .cue.
+
+    Les cue téléchargés arrivent parfois en « Album.cue.cue » : un seul splitext
+    laisserait « Album.cue » et ferait échouer la recherche de l'image audio."""
+    stem = os.path.basename(path)
+    while os.path.splitext(stem)[1].lower() == '.cue':
+        stem = os.path.splitext(stem)[0]
+    return stem
+
+
 def resolve_cue_audio(cue_path, audio_ref):
     """Trouve l'image audio référencée par le .cue, avec replis tolérants.
 
@@ -216,7 +227,7 @@ def resolve_cue_audio(cue_path, audio_ref):
         if match:
             return os.path.abspath(match)
 
-    match = _find_audio_by_stem(base_dir, os.path.splitext(os.path.basename(cue_path))[0])
+    match = _find_audio_by_stem(base_dir, _cue_stem(cue_path))
     if match:
         return os.path.abspath(match)
 

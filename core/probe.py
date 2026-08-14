@@ -5,10 +5,13 @@ import logging
 import builtins
 
 from core.cue import finalize_tracks, load_cue_file, resolve_cue_audio
-from core.ffmpeg_helpers import get_ffprobe_path
+from core.ffmpeg_helpers import broadcast_input_args, get_ffprobe_path, is_transport_stream
 from core.track_settings import is_ui_track_visible
 
 FFPROBE_TIMEOUT_SECONDS = 30
+# Les captures TV sont sondées avec un probesize élargi : lire plusieurs
+# centaines de Mo depuis un disque lent demande plus que le délai standard.
+FFPROBE_BROADCAST_TIMEOUT_SECONDS = 120
 
 
 def _translate(msgid):
@@ -22,13 +25,29 @@ def _translatef(msgid, **kwargs):
     return _translate(msgid).format(**kwargs)
 
 class MediaTrack:
-    def __init__(self, stream_index, codec_type, codec_name, language='und', title=None, disposition=None):
+    def __init__(self, stream_index, codec_type, codec_name, language='und', title=None,
+                 disposition=None, sample_rate=None):
         self.index = stream_index
         self.codec_type = codec_type
         self.codec_name = codec_name
         self.language = language
         self.title = title
         self.disposition = disposition if disposition else {}
+        # Débit d'échantillonnage (audio) tel que rapporté par ffprobe. Absent
+        # quand ffprobe n'a pas pu lire les paramètres du flux (capture TV
+        # abîmée) : voir is_usable().
+        self.sample_rate = sample_rate
+
+    def is_usable(self):
+        """False si FFmpeg n'a pas pu déterminer les paramètres du flux.
+
+        Un flux audio sans débit d'échantillonnage (« Could not find codec
+        parameters … unspecified sample rate ») est refusé par le muxeur MP4 au
+        moment d'écrire l'en-tête, ce qui fait échouer TOUT le fichier. On le
+        détecte à la sonde pour l'écarter du mapping par défaut."""
+        if self.codec_type == 'audio':
+            return bool(self.sample_rate)
+        return True
 
     def is_default(self): return self.disposition.get('default', 0) == 1
     def is_forced(self): return self.disposition.get('forced', 0) == 1
@@ -90,11 +109,15 @@ class MediaMetadata:
         return None
 
     def get_default_audio_track(self):
-        for track in self.audio_tracks:
+        # Une piste illisible ferait échouer l'extraction : on ne la propose
+        # jamais d'office (l'utilisateur peut toujours la choisir explicitement).
+        usable_tracks = [track for track in self.audio_tracks if track.is_usable()]
+        candidates = usable_tracks or self.audio_tracks
+        for track in candidates:
             if track.is_default():
                 return track
-        if self.audio_tracks:
-            return self.audio_tracks[0]
+        if candidates:
+            return candidates[0]
         return None
 
     def get_preferred_audio_track(self, preferred_index=None):
@@ -151,21 +174,27 @@ class FileProber:
 
         ffprobe = get_ffprobe_path()
 
-        cmd = [
-            ffprobe,
-            '-v', 'quiet',
+        cmd = [ffprobe, '-v', 'quiet']
+        # Captures TV : même analyse élargie qu'à la conversion, sinon l'UI et
+        # FFmpeg ne voient pas les mêmes pistes.
+        cmd.extend(broadcast_input_args(file_path))
+        cmd.extend([
             '-print_format', 'json',
             '-show_format',
             '-show_streams',
             '-show_chapters',
             file_path,
-        ]
+        ])
 
         try:
             output = subprocess.check_output(
                 cmd,
                 startupinfo=self._get_startup_info(),
-                timeout=FFPROBE_TIMEOUT_SECONDS,
+                timeout=(
+                    FFPROBE_BROADCAST_TIMEOUT_SECONDS
+                    if is_transport_stream(file_path)
+                    else FFPROBE_TIMEOUT_SECONDS
+                ),
             )
             data = json.loads(output)
 
@@ -191,7 +220,10 @@ class FileProber:
                 title = tags.get('title', None)
                 disposition = stream.get('disposition', {})
 
-                track = MediaTrack(idx, c_type, c_name, lang, title, disposition)
+                track = MediaTrack(
+                    idx, c_type, c_name, lang, title, disposition,
+                    sample_rate=self._parse_sample_rate(stream),
+                )
 
                 if c_type == 'video' and disposition.get('attached_pic', 0) == 1:
                     meta.has_cover_art = True
@@ -228,6 +260,15 @@ class FileProber:
 
         return meta
 
+    @staticmethod
+    def _parse_sample_rate(stream):
+        """Débit d'échantillonnage en Hz, ou None si absent/illisible."""
+        try:
+            value = int(stream.get('sample_rate', 0) or 0)
+        except (TypeError, ValueError):
+            return None
+        return value or None
+
     def _analyze_cue(self, meta, cue_path):
         """Sonde un fichier .cue : parse le cue, résout l'image audio et la sonde
         pour la durée totale, puis attache le CueSheet (toujours, même en erreur,
@@ -242,7 +283,13 @@ class FileProber:
         meta.cue_sheet = sheet
 
         if sheet.multi_file:
-            meta.cue_error = _translate("Cue sheets referencing multiple files are not supported yet.")
+            # Cas courant : un cue décrivant un album déjà découpé (un FILE par
+            # piste). Il n'y a rien à découper — on l'explique au lieu de laisser
+            # croire à une limitation temporaire.
+            meta.cue_error = _translate(
+                "This cue sheet references several audio files, so there is nothing to split. "
+                "Add the audio files themselves instead."
+            )
             return meta
         if not sheet.tracks:
             meta.cue_error = _translate("This cue sheet contains no tracks.")

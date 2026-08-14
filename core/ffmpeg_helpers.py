@@ -18,12 +18,35 @@ _WAV_DEPTH_TO_CODEC = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
 # flux ont souvent des PTS manquants ou des DTS non-monotones ; `-fflags +genpts`
 # régénère les PTS manquants à l'entrée (correctif documenté FFmpeg), ce qui
 # fiabilise surtout les chemins `-c copy` vers MP4.
-TRANSPORT_STREAM_EXTENSIONS = {'.ts', '.m2ts', '.mts'}
+# Les captures TV (.mpg d'enregistreurs type adslTV, .vob de DVD) sont en pratique
+# des flux MPEG-PS/TS et souffrent des mêmes défauts : on les traite pareil.
+TRANSPORT_STREAM_EXTENSIONS = {
+    '.ts', '.m2ts', '.mts', '.m2t', '.tp', '.trp', '.mpg', '.mpeg', '.vob',
+}
+
+# Analyse d'entrée élargie pour ces captures : les paramètres d'un flux (débit
+# d'échantillonnage audio notamment) apparaissent parfois très tard dans le flux.
+# Avec les valeurs par défaut, FFmpeg déclare « Could not find codec parameters »
+# puis échoue au muxage MP4 (« sample rate not set »). 200 Mo / 60 s d'analyse
+# couvrent les captures hertziennes réelles sans coût mesurable sur les fichiers sains.
+BROADCAST_PROBESIZE = '200M'
+BROADCAST_ANALYZEDURATION = '60M'  # microsecondes = 60 s
 
 
 def is_transport_stream(path):
-    """True si le chemin pointe vers un conteneur MPEG-TS (par extension)."""
+    """True si le chemin pointe vers une capture MPEG-TS/PS (par extension)."""
     return os.path.splitext(path or '')[1].lower() in TRANSPORT_STREAM_EXTENSIONS
+
+
+def broadcast_input_args(path):
+    """Options d'entrée à placer avant `-i` pour une capture TV, sinon []."""
+    if not is_transport_stream(path):
+        return []
+    return [
+        '-fflags', '+genpts',
+        '-probesize', BROADCAST_PROBESIZE,
+        '-analyzeduration', BROADCAST_ANALYZEDURATION,
+    ]
 
 
 def _bin_path(executable):

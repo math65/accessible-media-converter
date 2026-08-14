@@ -47,17 +47,27 @@ def rerun_ffmpeg_verbose(original_cmd, timeout=VERBOSE_RERUN_TIMEOUT):
         return f"[Diagnostic re-run failed: {exc}]"
 
 
-def build_error_report_message(input_path, target_format, ffmpeg_stderr, user_comment=""):
-    """Build the user-facing message body for the error report."""
+def build_error_report_message(input_path, target_format, ffmpeg_stderr, user_comment="",
+                               error_message=""):
+    """Build the user-facing message body for the error report.
+
+    error_message carries the failure as the app saw it. It is the only usable
+    clue when the job never reached FFmpeg (missing cue image, no video track
+    kept, truncated output…), where ffmpeg_stderr is empty.
+    """
     filename = os.path.basename(input_path) if input_path else "unknown"
     lines = [
         f"Automatic error report — conversion failure",
         f"File: {filename}",
         f"Target format: {target_format}",
+    ]
+    if error_message and error_message.strip():
+        lines.extend(["", "Application error message:", error_message.strip()])
+    lines.extend([
         "",
         "FFmpeg error output:",
         ffmpeg_stderr or "(no output captured)",
-    ]
+    ])
     if user_comment and user_comment.strip():
         lines.extend(["", "User comment:", user_comment.strip()])
     return "\n".join(lines)
@@ -71,12 +81,15 @@ def send_error_report(
     verbose_log,
     user_comment,
     support_context,
+    error_message="",
 ):
     """Send the error report using the existing support report API.
 
     Raises SupportSendError on failure.
     """
-    message = build_error_report_message(input_path, target_format, ffmpeg_stderr, user_comment)
+    message = build_error_report_message(
+        input_path, target_format, ffmpeg_stderr, user_comment, error_message
+    )
     send_support_report(
         email_address=email,
         issue_type="conversion_problem",

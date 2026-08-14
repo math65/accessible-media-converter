@@ -80,7 +80,15 @@ def build_default_track_settings(meta):
     for track_type, config_key in TRACK_TYPE_CONFIG_KEYS.items():
         entries = []
         for position, track in enumerate(iter_media_tracks(meta, track_type), start=1):
-            entries.append(build_track_entry(track_type, track=track, ui_id=str(position), keep=True))
+            # Une piste dont FFmpeg n'a pas pu lire les paramètres (capture TV
+            # abîmée) n'est pas cochée par défaut : la conserver ferait échouer
+            # tout le fichier au muxage. L'utilisateur peut la recocher.
+            usable = not (hasattr(track, "is_usable") and not track.is_usable())
+            entry = build_track_entry(
+                track_type, track=track, ui_id=str(position), keep=usable
+            )
+            entry["usable"] = usable
+            entries.append(entry)
         settings[config_key] = entries
     return settings
 
@@ -130,6 +138,11 @@ def normalize_track_settings(track_settings, meta=None):
     if not isinstance(track_settings, dict):
         return copy.deepcopy(defaults)
 
+    # Quand on connaît les flux réels du fichier, une entrée qui ne correspond à
+    # aucun d'eux est écartée : elle vient d'un réglage copié depuis un autre
+    # fichier (« Gérer les pistes (N fichiers)… ») et produirait un `-map 0:N`
+    # pointant dans le vide, ce qui fait échouer toute la conversion.
+    drop_unknown_entries = meta is not None
     normalized = copy.deepcopy(defaults)
     for config_key, track_type in CONFIG_KEY_TO_TRACK_TYPE.items():
         if config_key not in track_settings:
@@ -146,9 +159,13 @@ def normalize_track_settings(track_settings, meta=None):
             continue
 
         if _looks_like_legacy_entries(provided_entries):
-            normalized[config_key] = _normalize_legacy_entries(track_type, provided_entries, normalized.get(config_key, []))
+            normalized[config_key] = _normalize_legacy_entries(
+                track_type, provided_entries, normalized.get(config_key, []), drop_unknown_entries
+            )
         else:
-            normalized[config_key] = _normalize_new_entries(track_type, provided_entries, normalized.get(config_key, []))
+            normalized[config_key] = _normalize_new_entries(
+                track_type, provided_entries, normalized.get(config_key, []), drop_unknown_entries
+            )
 
         normalized[config_key] = _ensure_default_exclusive(normalized[config_key])
 
@@ -189,7 +206,7 @@ def _looks_like_legacy_entries(entries):
     return False
 
 
-def _normalize_legacy_entries(track_type, entries, default_entries):
+def _normalize_legacy_entries(track_type, entries, default_entries, drop_unknown_entries=False):
     normalized_entries = []
     remaining_defaults = {
         entry["original_index"]: entry
@@ -200,6 +217,8 @@ def _normalize_legacy_entries(track_type, entries, default_entries):
         original_index = normalized_entry["original_index"]
         default_entry = remaining_defaults.pop(original_index, None)
         if default_entry is None:
+            if drop_unknown_entries:
+                continue
             normalized_entries.append(normalized_entry)
             continue
 
@@ -226,7 +245,7 @@ def _normalize_legacy_entries(track_type, entries, default_entries):
     return normalized_entries
 
 
-def _normalize_new_entries(track_type, entries, default_entries):
+def _normalize_new_entries(track_type, entries, default_entries, drop_unknown_entries=False):
     normalized_entries = []
     remaining_defaults = {entry["original_index"]: copy.deepcopy(entry) for entry in default_entries}
     next_ui_id = 1
@@ -236,6 +255,8 @@ def _normalize_new_entries(track_type, entries, default_entries):
         original_index = normalized_entry["original_index"]
         default_entry = remaining_defaults.pop(original_index, None)
         if default_entry is None:
+            if drop_unknown_entries:
+                continue
             if not normalized_entry["ui_id"]:
                 normalized_entry["ui_id"] = str(next_ui_id)
             normalized_entries.append(normalized_entry)

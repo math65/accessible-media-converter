@@ -22,6 +22,9 @@ class ErrorReportDialog(wx.Dialog):
         self._target_format = job_payload.get('target_format', '')
         self._ffmpeg_command = job_payload.get('ffmpeg_command', [])
         self._ffmpeg_stderr = job_payload.get('ffmpeg_stderr', '')
+        # Message applicatif : seule trace exploitable quand l'échec est survenu
+        # avant (ou sans) FFmpeg — il manquait totalement des rapports reçus.
+        self._error_message = job_payload.get('error_message', '')
         self._settings_store = settings_store
         self._parent_window = parent
         self._send_in_progress = False
@@ -149,6 +152,7 @@ class ErrorReportDialog(wx.Dialog):
                 verbose_log=verbose_log,
                 user_comment=user_comment,
                 support_context=support_context,
+                error_message=self._error_message,
             )
         except SupportSendError as exc:
             wx.CallAfter(self._on_send_failure, exc.message)

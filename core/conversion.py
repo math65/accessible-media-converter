@@ -11,9 +11,9 @@ from core.ffmpeg_helpers import (
     apply_audio_codec_args,
     apply_common_audio_options,
     apply_metadata_preservation,
+    broadcast_input_args,
     get_ffmpeg_path,
     get_ffprobe_path,
-    is_transport_stream,
     parse_ffmpeg_threads,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
@@ -23,7 +23,11 @@ from core.metadata_edit import (
     get_metadata_overrides,
     overrides_are_effective,
 )
-from core.track_settings import get_effective_track_settings, get_kept_track_entries
+from core.track_settings import (
+    get_effective_track_settings,
+    get_kept_track_entries,
+    iter_media_tracks,
+)
 
 
 def _translate(msgid):
@@ -183,7 +187,9 @@ class ConversionTask:
         if isinstance(selected_track_data, dict):
             original_index = selected_track_data.get('original_index')
             selected_track = self._find_audio_track_by_index(original_index)
-            if selected_track is not None:
+            if selected_track is not None and not (
+                hasattr(selected_track, 'is_usable') and not selected_track.is_usable()
+            ):
                 return selected_track, "manual"
 
             logging.warning(
@@ -291,23 +297,63 @@ class ConversionTask:
 
         return compatible_entries
 
+    def _filter_entries_against_source(self, track_type, entries):
+        """Écarte les pistes absentes ou illisibles dans CE fichier.
+
+        Un réglage de pistes appliqué à plusieurs fichiers (« Gérer les pistes
+        (N fichiers)… ») peut référencer un flux qui n'existe pas dans un fichier
+        au sommaire plus court : FFmpeg rejetait alors toute la commande
+        (« Stream map '' matches no streams » / « Failed to set value '0:4' for
+        option 'map' »). Les flux dont FFmpeg n'a pas pu lire les paramètres sont
+        écartés aussi : le muxeur MP4 refuse d'écrire l'en-tête sans eux
+        (« sample rate not set »)."""
+        source_tracks = {
+            getattr(track, "index", None): track
+            for track in iter_media_tracks(self.meta, track_type)
+        }
+
+        filtered_entries = []
+        for entry in entries:
+            original_index = entry.get("original_index")
+            track = source_tracks.get(original_index)
+            if track is None:
+                logging.warning(
+                    "Piste %s #%s absente de %s : ignorée du mapping.",
+                    track_type, original_index, os.path.basename(self.input_path),
+                )
+                continue
+            if hasattr(track, "is_usable") and not track.is_usable():
+                logging.warning(
+                    "Piste %s #%s illisible (paramètres de codec introuvables) dans %s : ignorée du mapping.",
+                    track_type, original_index, os.path.basename(self.input_path),
+                )
+                continue
+            filtered_entries.append(entry)
+        return filtered_entries
+
     def _apply_video_container_track_mapping(self, cmd):
         effective_track_settings = get_effective_track_settings(self.meta)
-        kept_video_tracks = get_kept_track_entries(effective_track_settings, "video")
-        if not kept_video_tracks:
+
+        mapped_entries = {
+            "video": self._filter_entries_against_source(
+                "video", get_kept_track_entries(effective_track_settings, "video")
+            ),
+            "audio": self._filter_entries_against_source(
+                "audio", get_kept_track_entries(effective_track_settings, "audio")
+            ),
+            "subtitle": self._filter_subtitle_entries_for_container(
+                self._filter_entries_against_source(
+                    "subtitle", get_kept_track_entries(effective_track_settings, "subtitle")
+                )
+            ),
+        }
+
+        if not mapped_entries["video"]:
             logging.error("Aucune piste vidéo conservée pour la sortie vidéo (%s)", self.input_path)
             raise Exception(f"No video track selected for {os.path.basename(self.input_path)}")
 
         mapping_used = "personnalise" if getattr(self.meta, "track_settings", None) else "par defaut"
         logging.info("Utilisation du mapping vidéo explicite (%s).", mapping_used)
-
-        mapped_entries = {
-            "video": get_kept_track_entries(effective_track_settings, "video"),
-            "audio": get_kept_track_entries(effective_track_settings, "audio"),
-            "subtitle": self._filter_subtitle_entries_for_container(
-                get_kept_track_entries(effective_track_settings, "subtitle")
-            ),
-        }
 
         for track_type in ("video", "audio", "subtitle"):
             kept_entries = mapped_entries[track_type]
@@ -479,9 +525,9 @@ class ConversionTask:
         cover_path = cover.get('path') if cover_replace else None
 
         cmd = [self.ffmpeg_exe, '-y']
-        if is_transport_stream(self.input_path):
-            # PTS manquants / DTS non-monotones fréquents sur les .ts broadcast.
-            cmd.extend(['-fflags', '+genpts'])
+        # Captures TV (.ts/.mpg/.vob…) : PTS manquants, DTS non-monotones et
+        # paramètres de flux découverts tardivement → genpts + analyse élargie.
+        cmd.extend(broadcast_input_args(self.input_path))
         clip_start_ms = clip_end_ms = None
         if self.clip:
             clip_start_ms, clip_end_ms = self.clip
@@ -625,32 +671,13 @@ class ConversionTask:
 
         time_pattern = re.compile(r'time=(\d{2}):(\d{2}):(\d{2}\.\d+)')
 
-        while True:
-            if stop_check_callback and stop_check_callback():
-                logging.info("Interruption demandée par l'utilisateur.")
-                self.process.kill()
-                raise Exception("Stopped by user")
-
-            line = self.process.stderr.readline()
-            if not line and self.process.poll() is not None: break
-            
-            if line:
-                stripped = line.strip()
-                logging.debug(f"FFmpeg output: {stripped}")
-                self.stderr_lines.append(stripped)
-                if len(self.stderr_lines) > 200:
-                    self.stderr_lines.pop(0)
-
-                if progress_callback:
-                    match = time_pattern.search(line)
-                    if match and self.duration > 0:
-                        try:
-                            h, m, s = match.groups()
-                            current_seconds = int(h) * 3600 + int(m) * 60 + float(s)
-                            percent = int((current_seconds / self.duration) * 100)
-                            progress_callback(min(max(percent, 0), 100))
-                        except (ValueError, TypeError):
-                            pass
+        try:
+            self._read_ffmpeg_progress(time_pattern, progress_callback, stop_check_callback)
+        finally:
+            # Sans ça, les tubes du sous-processus restent ouverts jusqu'au
+            # ramasse-miettes : sur un lot de plusieurs dizaines de fichiers on
+            # accumule des descripteurs pour rien.
+            self._close_process_streams()
 
         if self.process.returncode != 0:
             if stop_check_callback and stop_check_callback():
@@ -678,3 +705,40 @@ class ConversionTask:
                     + (f"\n{tail}" if tail else "")
                 )
             logging.info("Conversion terminée avec succès.")
+
+    def _close_process_streams(self):
+        for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
+            if stream is None:
+                continue
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+    def _read_ffmpeg_progress(self, time_pattern, progress_callback, stop_check_callback):
+        while True:
+            if stop_check_callback and stop_check_callback():
+                logging.info("Interruption demandée par l'utilisateur.")
+                self.process.kill()
+                raise Exception("Stopped by user")
+
+            line = self.process.stderr.readline()
+            if not line and self.process.poll() is not None: break
+            
+            if line:
+                stripped = line.strip()
+                logging.debug(f"FFmpeg output: {stripped}")
+                self.stderr_lines.append(stripped)
+                if len(self.stderr_lines) > 200:
+                    self.stderr_lines.pop(0)
+
+                if progress_callback:
+                    match = time_pattern.search(line)
+                    if match and self.duration > 0:
+                        try:
+                            h, m, s = match.groups()
+                            current_seconds = int(h) * 3600 + int(m) * 60 + float(s)
+                            percent = int((current_seconds / self.duration) * 100)
+                            progress_callback(min(max(percent, 0), 100))
+                        except (ValueError, TypeError):
+                            pass

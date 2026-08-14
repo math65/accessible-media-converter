@@ -144,10 +144,14 @@ class BatchConversionManager:
 
         if error or not audio_path or not sheet.tracks:
             # Ligne cue invalide : un job en erreur (output_path None → non exécuté).
+            # error_kind : côté UI, un cue inexploitable est un problème de
+            # fichier (comme une entrée manquante), pas un plantage FFmpeg —
+            # il ne doit pas déclencher le formulaire de rapport d'erreur.
             jobs.append(BatchJob(
                 index=len(jobs), meta=meta, target_format=target_format, settings=job_settings,
                 output_path=None, weight=1.0, state=JOB_STATE_ERROR,
                 error_message=error or _translate("This cue sheet cannot be split."),
+                error_kind="cue_invalid",
             ))
             return
 
