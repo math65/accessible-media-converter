@@ -198,6 +198,7 @@ class MetadataEditorDialog(wx.Dialog):
     def _build_tag_fields(self):
         tag_box = wx.StaticBox(self.scroll, label=_("Tags"))
         tag_box.SetWindowStyle(tag_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        self.tag_box = tag_box
         tag_sizer = wx.StaticBoxSizer(tag_box, wx.VERTICAL)
 
         # The grid is rebuilt when the field set changes, so it lives in its own
@@ -220,15 +221,15 @@ class MetadataEditorDialog(wx.Dialog):
         grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=10)
         grid.AddGrowableCol(1, 1)
         for field_key, label_msgid in fields:
-            label = wx.StaticText(self.scroll, label=_(label_msgid) + ":")
+            label = wx.StaticText(self.tag_box, label=_(label_msgid) + ":")
             if field_key in MULTILINE_TAG_KEYS:
                 text_ctrl = wx.TextCtrl(
-                    self.scroll, value=self._values.get(field_key, ""),
+                    self.tag_box, value=self._values.get(field_key, ""),
                     style=wx.TE_MULTILINE, size=(-1, 70),
                 )
                 grid.Add(label, 0, wx.ALIGN_TOP | wx.TOP, 4)
             else:
-                text_ctrl = wx.TextCtrl(self.scroll, value=self._values.get(field_key, ""))
+                text_ctrl = wx.TextCtrl(self.tag_box, value=self._values.get(field_key, ""))
                 grid.Add(label, 0, wx.ALIGN_CENTER_VERTICAL)
             text_ctrl.SetName(_(label_msgid))
             grid.Add(text_ctrl, 0, wx.EXPAND)
@@ -257,22 +258,22 @@ class MetadataEditorDialog(wx.Dialog):
         if not self.is_batch:
             state = _("present") if getattr(self.metas[0], "has_cover_art", False) else _("none")
             self.lbl_cover_state = wx.StaticText(
-                self.scroll, label=_("Embedded cover art: {state}").format(state=state)
+                cover_box, label=_("Embedded cover art: {state}").format(state=state)
             )
             cover_sizer.Add(self.lbl_cover_state, 0, wx.ALL, 6)
 
-        self.rb_cover_keep = wx.RadioButton(self.scroll, label=_("Keep current cover"), style=wx.RB_GROUP)
-        self.rb_cover_replace = wx.RadioButton(self.scroll, label=_("Replace with an image file..."))
-        self.rb_cover_remove = wx.RadioButton(self.scroll, label=_("Remove cover"))
+        self.rb_cover_keep = wx.RadioButton(cover_box, label=_("Keep current cover"), style=wx.RB_GROUP)
+        self.rb_cover_replace = wx.RadioButton(cover_box, label=_("Replace with an image file..."))
+        self.rb_cover_remove = wx.RadioButton(cover_box, label=_("Remove cover"))
         self.rb_cover_keep.SetValue(True)
         for radio in (self.rb_cover_keep, self.rb_cover_replace, self.rb_cover_remove):
             radio.SetName(radio.GetLabel())
             cover_sizer.Add(radio, 0, wx.LEFT | wx.RIGHT | wx.TOP, 6)
 
         picker_row = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_picker = wx.StaticText(self.scroll, label=_("Image file:"))
+        lbl_picker = wx.StaticText(cover_box, label=_("Image file:"))
         self.cover_picker = wx.FilePickerCtrl(
-            self.scroll,
+            cover_box,
             message=_("Choose a cover image"),
             wildcard=_("Images") + " (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png",
             style=wx.FLP_USE_TEXTCTRL | wx.FLP_OPEN | wx.FLP_FILE_MUST_EXIST,
@@ -296,10 +297,10 @@ class MetadataEditorDialog(wx.Dialog):
         target_sizer = wx.StaticBoxSizer(target_box, wx.VERTICAL)
 
         self.rb_target_convert = wx.RadioButton(
-            self.scroll, label=_("When converting (output file)"), style=wx.RB_GROUP
+            target_box, label=_("When converting (output file)"), style=wx.RB_GROUP
         )
         self.rb_target_inplace = wx.RadioButton(
-            self.scroll, label=_("Re-tag the original file now (no re-encoding)")
+            target_box, label=_("Re-tag the original file now (no re-encoding)")
         )
         self.rb_target_convert.SetValue(True)
         for radio in (self.rb_target_convert, self.rb_target_inplace):

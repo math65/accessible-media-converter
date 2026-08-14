@@ -169,25 +169,25 @@ class TrackPanel(wx.Panel):
         grid = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=10)
         grid.AddGrowableCol(1, 1)
 
-        lbl_lang = wx.StaticText(self, label=_("Language:"))
-        self.combo_lang = wx.Choice(self, choices=[item[0] for item in self.languages_choices])
+        lbl_lang = wx.StaticText(self.detail_box, label=_("Language:"))
+        self.combo_lang = wx.Choice(self.detail_box, choices=[item[0] for item in self.languages_choices])
         self.combo_lang.SetName(_("Language"))
         self.combo_lang.SetToolTip(_("Track language"))
         grid.Add(lbl_lang, 0, wx.ALIGN_CENTER_VERTICAL)
         grid.Add(self.combo_lang, 1, wx.EXPAND)
 
-        lbl_title = wx.StaticText(self, label=_("Track Title:"))
-        self.txt_title = wx.TextCtrl(self)
+        lbl_title = wx.StaticText(self.detail_box, label=_("Track Title:"))
+        self.txt_title = wx.TextCtrl(self.detail_box)
         self.txt_title.SetName(_("Track title"))
         grid.Add(lbl_title, 0, wx.ALIGN_CENTER_VERTICAL)
         grid.Add(self.txt_title, 1, wx.EXPAND)
 
         self.detail_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 10)
 
-        self.detail_sizer.Add(wx.StaticText(self, label=_("Attributes:")), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+        self.detail_sizer.Add(wx.StaticText(self.detail_box, label=_("Attributes:")), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
         self.base_flags_sizer = wx.WrapSizer(wx.HORIZONTAL, wx.WRAPSIZER_DEFAULT_FLAGS)
         for disposition_name in self.visible_dispositions:
-            checkbox = self._create_disposition_checkbox(disposition_name)
+            checkbox = self._create_disposition_checkbox(disposition_name, parent=self.detail_box)
             self.base_flags_sizer.Add(checkbox, 0, wx.RIGHT | wx.BOTTOM, 12)
             if disposition_name in self.base_dispositions:
                 self.base_checkboxes[disposition_name] = checkbox
@@ -216,6 +216,7 @@ class TrackPanel(wx.Panel):
             normalized_entry.setdefault("language", "und")
             normalized_entry.setdefault("title", "")
             normalized_entry.setdefault("keep", True)
+            normalized_entry.setdefault("usable", True)
             normalized_entry.setdefault("dispositions", {})
             for disposition_name in self.base_dispositions + self.advanced_dispositions:
                 normalized_entry["dispositions"].setdefault(disposition_name, False)
@@ -233,7 +234,12 @@ class TrackPanel(wx.Panel):
         self.list_ctrl.DeleteAllItems()
         for index, track in enumerate(self.tracks_data):
             row = self.list_ctrl.InsertItem(index, track["ui_id"])
-            self.list_ctrl.SetItem(row, 1, track["codec_name"].upper())
+            codec_label = track["codec_name"].upper()
+            if not track.get("usable", True):
+                # Flux dont FFmpeg n'a pas pu lire les paramètres : décoché par
+                # défaut, l'annoncer explicitement au lecteur d'écran.
+                codec_label += " — " + _("unreadable stream")
+            self.list_ctrl.SetItem(row, 1, codec_label)
             self.list_ctrl.CheckItem(row, bool(track.get("keep", True)))
             self._update_row_display(row)
 

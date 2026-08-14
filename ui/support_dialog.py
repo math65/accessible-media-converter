@@ -75,8 +75,9 @@ class SupportContactDialog(wx.Dialog):
         root.Add(form_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         message_box = wx.StaticBoxSizer(wx.VERTICAL, panel, _("Describe your issue"))
-        message_box.GetStaticBox().SetWindowStyle(message_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
-        self.txt_user_message = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
+        message_static_box = message_box.GetStaticBox()
+        message_static_box.SetWindowStyle(message_static_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        self.txt_user_message = wx.TextCtrl(message_static_box, style=wx.TE_MULTILINE)
         self.txt_user_message.SetMinSize((-1, 180))
         self.txt_user_message.SetName(_("Describe your issue"))
         self.txt_user_message.SetToolTip(_("Describe the issue you want to report to support."))
@@ -92,9 +93,10 @@ class SupportContactDialog(wx.Dialog):
 
         self.technical_panel = wx.Panel(panel)
         technical_sizer = wx.StaticBoxSizer(wx.VERTICAL, self.technical_panel, _("Technical information"))
-        technical_sizer.GetStaticBox().SetWindowStyle(technical_sizer.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        technical_static_box = technical_sizer.GetStaticBox()
+        technical_static_box.SetWindowStyle(technical_static_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_technical_info = wx.TextCtrl(
-            self.technical_panel,
+            technical_static_box,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
         )
         self.txt_technical_info.SetMinSize((-1, 150))
@@ -118,23 +120,24 @@ class SupportContactDialog(wx.Dialog):
         fallback_root.Add(fallback_intro, 0, wx.EXPAND | wx.ALL, 8)
 
         details_box = wx.StaticBoxSizer(wx.VERTICAL, self.fallback_panel, _("Support details"))
-        details_box.GetStaticBox().SetWindowStyle(details_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        details_static_box = details_box.GetStaticBox()
+        details_static_box.SetWindowStyle(details_static_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         details_grid = wx.FlexGridSizer(cols=3, vgap=8, hgap=8)
         details_grid.AddGrowableCol(1, 1)
 
-        lbl_address = wx.StaticText(self.fallback_panel, label=_("Contact address"))
+        lbl_address = wx.StaticText(details_static_box, label=_("Contact address"))
         self.txt_address = wx.TextCtrl(
-            self.fallback_panel,
+            details_static_box,
             value=self.contact_email,
             style=wx.TE_READONLY,
         )
         self.txt_address.SetName(_("Contact address"))
-        self.btn_copy_address = wx.Button(self.fallback_panel, label=_("Copy address"))
+        self.btn_copy_address = wx.Button(details_static_box, label=_("Copy address"))
 
-        lbl_subject = wx.StaticText(self.fallback_panel, label=_("Subject"))
-        self.txt_subject = wx.TextCtrl(self.fallback_panel, style=wx.TE_READONLY)
+        lbl_subject = wx.StaticText(details_static_box, label=_("Subject"))
+        self.txt_subject = wx.TextCtrl(details_static_box, style=wx.TE_READONLY)
         self.txt_subject.SetName(_("Subject"))
-        self.btn_copy_subject = wx.Button(self.fallback_panel, label=_("Copy subject"))
+        self.btn_copy_subject = wx.Button(details_static_box, label=_("Copy subject"))
 
         details_grid.Add(lbl_address, 0, wx.ALIGN_CENTER_VERTICAL)
         details_grid.Add(self.txt_address, 1, wx.EXPAND)
@@ -146,9 +149,10 @@ class SupportContactDialog(wx.Dialog):
         fallback_root.Add(details_box, 0, wx.EXPAND | wx.BOTTOM, 8)
 
         report_box = wx.StaticBoxSizer(wx.VERTICAL, self.fallback_panel, _("Report preview"))
-        report_box.GetStaticBox().SetWindowStyle(report_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        report_static_box = report_box.GetStaticBox()
+        report_static_box.SetWindowStyle(report_static_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_report_preview = wx.TextCtrl(
-            self.fallback_panel,
+            report_static_box,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
         )
         self.txt_report_preview.SetMinSize((-1, 180))

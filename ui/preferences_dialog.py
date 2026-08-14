@@ -56,10 +56,10 @@ class PreferencesDialog(wx.Dialog):
         language_sizer = wx.StaticBoxSizer(language_box, wx.VERTICAL)
 
         language_row = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_language = wx.StaticText(panel, label=_("Application language"))
+        lbl_language = wx.StaticText(language_box, label=_("Application language"))
         self.language_values = (AUTO_LANGUAGE_CODE, "fr", "en")
         self.choice_ui_language = wx.Choice(
-            panel,
+            language_box,
             choices=self._build_ui_language_choice_labels(),
         )
         self.choice_ui_language.SetSelection(self._get_ui_language_selection())
@@ -75,17 +75,17 @@ class PreferencesDialog(wx.Dialog):
         output_box.SetWindowStyle(output_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         output_sizer = wx.StaticBoxSizer(output_box, wx.VERTICAL)
 
-        self.rb_source = wx.RadioButton(panel, label=_("Same as source file"), style=wx.RB_GROUP)
+        self.rb_source = wx.RadioButton(output_box, label=_("Same as source file"), style=wx.RB_GROUP)
         self.rb_source.SetName(_("Output in source folder"))
         output_sizer.Add(self.rb_source, 0, wx.ALL, 5)
 
-        self.rb_custom = wx.RadioButton(panel, label=_("Specific folder:"))
+        self.rb_custom = wx.RadioButton(output_box, label=_("Specific folder:"))
         self.rb_custom.SetName(_("Output in specific folder"))
         output_sizer.Add(self.rb_custom, 0, wx.TOP | wx.LEFT, 5)
 
         hbox_custom = wx.BoxSizer(wx.HORIZONTAL)
-        self.txt_path = wx.TextCtrl(panel, value=self.custom_path, style=wx.TE_READONLY)
-        self.btn_browse = wx.Button(panel, label=_("Browse..."))
+        self.txt_path = wx.TextCtrl(output_box, value=self.custom_path, style=wx.TE_READONLY)
+        self.btn_browse = wx.Button(output_box, label=_("Browse..."))
         self.txt_path.SetName(_("Custom output folder path"))
         self.btn_browse.SetName(_("Browse output folder"))
         self.txt_path.SetToolTip(_("Selected destination folder path."))
@@ -93,14 +93,14 @@ class PreferencesDialog(wx.Dialog):
         hbox_custom.Add(self.btn_browse, 0, wx.ALIGN_CENTER_VERTICAL)
         output_sizer.Add(hbox_custom, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
 
-        self.rb_ask = wx.RadioButton(panel, label=_("Ask every time (Batch)"))
+        self.rb_ask = wx.RadioButton(output_box, label=_("Ask every time (Batch)"))
         self.rb_ask.SetName(_("Ask output folder each time"))
         output_sizer.Add(self.rb_ask, 0, wx.ALL, 5)
 
         policy_row = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_policy = wx.StaticText(panel, label=_("Existing file policy"))
+        lbl_policy = wx.StaticText(output_box, label=_("Existing file policy"))
         self.choice_existing_output_policy = wx.Choice(
-            panel,
+            output_box,
             choices=[
                 _("Rename automatically"),
                 _("Overwrite existing file"),
@@ -115,12 +115,12 @@ class PreferencesDialog(wx.Dialog):
         policy_row.Add(self.choice_existing_output_policy, 1, wx.EXPAND)
         output_sizer.Add(policy_row, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.chk_open_output_folder = wx.CheckBox(panel, label=_("Open output folder when done"))
+        self.chk_open_output_folder = wx.CheckBox(output_box, label=_("Open output folder when done"))
         self.chk_open_output_folder.SetName(_("Open output folder when done"))
         output_sizer.Add(self.chk_open_output_folder, 0, wx.ALL, 5)
 
         self.chk_preserve_metadata = wx.CheckBox(
-            panel,
+            output_box,
             label=_("Preserve original metadata (tags, chapters, cover art)"),
         )
         self.chk_preserve_metadata.SetName(_("Preserve original metadata"))
@@ -130,7 +130,7 @@ class PreferencesDialog(wx.Dialog):
         output_sizer.Add(self.chk_preserve_metadata, 0, wx.ALL, 5)
 
         self.chk_preserve_folder_structure = wx.CheckBox(
-            panel,
+            output_box,
             label=_("Preserve original subfolder structure"),
         )
         self.chk_preserve_folder_structure.SetName(_("Preserve original subfolder structure"))
@@ -141,10 +141,10 @@ class PreferencesDialog(wx.Dialog):
         output_sizer.Add(self.chk_preserve_folder_structure, 0, wx.ALL, 5)
 
         chapter_naming_row = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_chapter_naming = wx.StaticText(panel, label=_("M4B chapter naming"))
+        lbl_chapter_naming = wx.StaticText(output_box, label=_("M4B chapter naming"))
         self.m4b_chapter_naming_modes = list(M4B_CHAPTER_NAMING_MODES)
         self.choice_m4b_chapter_naming = wx.Choice(
-            panel,
+            output_box,
             choices=[
                 _("Title, otherwise number"),
                 _("Title, otherwise file name"),
@@ -167,9 +167,9 @@ class PreferencesDialog(wx.Dialog):
         execution_sizer = wx.StaticBoxSizer(execution_box, wx.VERTICAL)
 
         jobs_row = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_jobs = wx.StaticText(panel, label=_("Max concurrent conversions"))
+        lbl_jobs = wx.StaticText(execution_box, label=_("Max concurrent conversions"))
         self.choice_max_jobs = wx.Choice(
-            panel,
+            execution_box,
             choices=[
                 _("1 conversion"),
                 _("2 conversions"),
@@ -186,9 +186,9 @@ class PreferencesDialog(wx.Dialog):
         execution_sizer.Add(jobs_row, 0, wx.ALL, 5)
 
         threads_row = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_threads = wx.StaticText(panel, label=_("FFmpeg threads per conversion"))
+        lbl_threads = wx.StaticText(execution_box, label=_("FFmpeg threads per conversion"))
         self.choice_ffmpeg_threads = wx.Choice(
-            panel,
+            execution_box,
             choices=self._build_ffmpeg_thread_choice_labels(),
         )
         self.choice_ffmpeg_threads.SetName(_("FFmpeg threads per conversion"))
@@ -198,12 +198,12 @@ class PreferencesDialog(wx.Dialog):
         threads_row.Add(self.choice_ffmpeg_threads, 0, wx.ALIGN_CENTER_VERTICAL)
         execution_sizer.Add(threads_row, 0, wx.ALL, 5)
 
-        self.chk_continue_on_error = wx.CheckBox(panel, label=_("Continue batch after an error"))
+        self.chk_continue_on_error = wx.CheckBox(execution_box, label=_("Continue batch after an error"))
         self.chk_continue_on_error.SetName(_("Continue batch after an error"))
         execution_sizer.Add(self.chk_continue_on_error, 0, wx.ALL, 5)
 
         self.chk_check_updates_on_startup = wx.CheckBox(
-            panel,
+            execution_box,
             label=_("Check for updates automatically at startup"),
         )
         self.chk_check_updates_on_startup.SetName(_("Check for updates automatically at startup"))
@@ -213,7 +213,7 @@ class PreferencesDialog(wx.Dialog):
         execution_sizer.Add(self.chk_check_updates_on_startup, 0, wx.ALL, 5)
 
         self.chk_include_prereleases = wx.CheckBox(
-            panel,
+            execution_box,
             label=_("Also offer pre-release versions (beta/release candidates)"),
         )
         self.chk_include_prereleases.SetName(

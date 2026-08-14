@@ -98,14 +98,14 @@ class SettingsDialog(wx.Dialog):
         audio_sizer = wx.StaticBoxSizer(audio_box, wx.VERTICAL)
 
         row_mode = wx.BoxSizer(wx.HORIZONTAL)
-        self.rb_convert = wx.RadioButton(self, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
-        self.rb_copy = wx.RadioButton(self, label=_("Copy Stream (Advanced)"))
+        self.rb_convert = wx.RadioButton(audio_box, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
+        self.rb_copy = wx.RadioButton(audio_box, label=_("Copy Stream (Advanced)"))
         row_mode.Add(self.rb_convert, 0, wx.RIGHT, 15)
         row_mode.Add(self.rb_copy, 0)
         audio_sizer.Add(row_mode, 0, wx.ALL, 5)
 
         self.lbl_copy_warn = wx.StaticText(
-            self,
+            audio_box,
             label=_(
                 "Keep original quality and speed up conversion.\n"
                 "Warning: The output format must support the source codec."
@@ -114,7 +114,7 @@ class SettingsDialog(wx.Dialog):
         self.lbl_copy_warn.SetForegroundColour(wx.Colour(100, 100, 100))
         audio_sizer.Add(self.lbl_copy_warn, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.panel_audio_opts = wx.Panel(self)
+        self.panel_audio_opts = wx.Panel(audio_box)
         self.audio_grid = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
         self.audio_grid.AddGrowableCol(1, 1)
 
@@ -201,13 +201,13 @@ class SettingsDialog(wx.Dialog):
         video_sizer = wx.StaticBoxSizer(video_box, wx.VERTICAL)
 
         row_vmode = wx.BoxSizer(wx.HORIZONTAL)
-        self.rb_v_convert = wx.RadioButton(self, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
-        self.rb_v_copy = wx.RadioButton(self, label=_("Copy Stream (Advanced)"))
+        self.rb_v_convert = wx.RadioButton(video_box, label=_("Re-encode (Recommended)"), style=wx.RB_GROUP)
+        self.rb_v_copy = wx.RadioButton(video_box, label=_("Copy Stream (Advanced)"))
         row_vmode.Add(self.rb_v_convert, 0, wx.RIGHT, 15)
         row_vmode.Add(self.rb_v_copy, 0)
         video_sizer.Add(row_vmode, 0, wx.ALL, 5)
 
-        self.panel_video_opts = wx.Panel(self)
+        self.panel_video_opts = wx.Panel(video_box)
         self.video_grid = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
         self.video_grid.AddGrowableCol(1, 1)
 
@@ -773,7 +773,7 @@ class SettingsDialog(wx.Dialog):
         image_box.SetWindowStyle(image_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         image_sizer = wx.StaticBoxSizer(image_box, wx.VERTICAL)
 
-        self.panel_image_opts = wx.Panel(self)
+        self.panel_image_opts = wx.Panel(image_box)
         self.image_grid = wx.FlexGridSizer(rows=0, cols=2, vgap=10, hgap=10)
         self.image_grid.AddGrowableCol(1, 1)
 

@@ -286,17 +286,18 @@ class MainWindow(wx.Frame):
         self.panel_image_list.list_ctrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.on_list_item_right_click)
         
         controls_box = wx.StaticBoxSizer(wx.VERTICAL, self.content_panel, label=_("Conversion Settings"))
-        controls_box.GetStaticBox().SetWindowStyle(
-            controls_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL
+        controls_static_box = controls_box.GetStaticBox()
+        controls_static_box.SetWindowStyle(
+            controls_static_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL
         )
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        self.lbl_fmt = wx.StaticText(self.content_panel, label=_("Convert to:"))
-        self.combo_format = wx.Choice(self.content_panel)
+        self.lbl_fmt = wx.StaticText(controls_static_box, label=_("Convert to:"))
+        self.combo_format = wx.Choice(controls_static_box)
         self.combo_format.Bind(wx.EVT_CHOICE, self.on_format_changed)
-        self.btn_settings = wx.Button(self.content_panel, label=_("&Settings / Quality..."))
+        self.btn_settings = wx.Button(controls_static_box, label=_("&Settings / Quality..."))
         self.btn_settings.Bind(wx.EVT_BUTTON, self.on_open_settings)
-        self.btn_presets = wx.Button(self.content_panel, label=_("&Presets..."))
+        self.btn_presets = wx.Button(controls_static_box, label=_("&Presets..."))
         self.btn_presets.Bind(wx.EVT_BUTTON, self.on_open_presets)
         row1.Add(self.lbl_fmt, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         row1.Add(self.combo_format, 1, wx.EXPAND | wx.RIGHT, 10)
@@ -304,23 +305,23 @@ class MainWindow(wx.Frame):
         row1.Add(self.btn_presets, 0)
         controls_box.Add(row1, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.gauge = wx.Gauge(self.content_panel, range=100, size=(250, 20))
+        self.gauge = wx.Gauge(controls_static_box, range=100, size=(250, 20))
         controls_box.Add(self.gauge, 0, wx.EXPAND | wx.TOP, 10)
         self.gauge.Hide()
 
-        self.lbl_progress = wx.StaticText(self.content_panel, label="")
+        self.lbl_progress = wx.StaticText(controls_static_box, label="")
         controls_box.Add(self.lbl_progress, 0, wx.EXPAND | wx.TOP, 5)
         self.lbl_progress.Hide()
         
         self.btn_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.btn_convert = wx.Button(self.content_panel, label=_("&Start Conversion"))
+        self.btn_convert = wx.Button(controls_static_box, label=_("&Start Conversion"))
         self.btn_convert.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_convert.Bind(wx.EVT_BUTTON, self.on_convert)
-        self.btn_merge = wx.Button(self.content_panel, label=_("&Merge Files"))
+        self.btn_merge = wx.Button(controls_static_box, label=_("&Merge Files"))
         self.btn_merge.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_merge.SetToolTip(_("Merge the listed files into one, using the selected output format."))
         self.btn_merge.Bind(wx.EVT_BUTTON, self.on_merge)
-        self.btn_stop = wx.Button(self.content_panel, label=_("Stop"))
+        self.btn_stop = wx.Button(controls_static_box, label=_("Stop"))
         self.btn_stop.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
         self.btn_stop.SetForegroundColour(wx.Colour(200, 0, 0))
         self.btn_stop.Bind(wx.EVT_BUTTON, self.on_stop)

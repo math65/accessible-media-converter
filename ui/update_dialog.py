@@ -55,9 +55,10 @@ class UpdateDialog(wx.Dialog):
         root.Add(info_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         notes_box = wx.StaticBoxSizer(wx.VERTICAL, panel, _("Release Notes"))
-        notes_box.GetStaticBox().SetWindowStyle(notes_box.GetStaticBox().GetWindowStyle() & ~wx.TAB_TRAVERSAL)
+        notes_static_box = notes_box.GetStaticBox()
+        notes_static_box.SetWindowStyle(notes_static_box.GetWindowStyle() & ~wx.TAB_TRAVERSAL)
         self.txt_release_notes = wx.TextCtrl(
-            panel,
+            notes_static_box,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.VSCROLL | wx.HSCROLL,
         )
         self.txt_release_notes.SetMinSize((-1, 320))
