@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.0`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.1`.
 
 ## Running and building
 
@@ -53,7 +53,19 @@ powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1
 
 In development, `core/i18n.py` loads `.po` files directly via `polib` — no need to compile `.mo` files while iterating on translations.
 
-There is no automated test suite. Validation is manual (smoke test the built exe, run updater smoke check).
+**Run the test suite:**
+```powershell
+.venv\Scripts\python.exe -m unittest discover -s tests -t .
+```
+
+`tests/` is a regression suite over `core/` only — **no wxPython import, no window opens**, so it
+runs headless in a couple of seconds. It covers the field bugs fixed in v1.20.1 (batch track config
+applied to a file with fewer streams, unreadable audio streams in TV captures, cue resolution, error
+report contents) and includes real conversions driven by the embedded FFmpeg with fixtures generated
+on the fly (`tests/test_end_to_end_ffmpeg.py`, skipped when `bin/ffmpeg.exe` is missing).
+
+The suite does **not** cover the UI: accessibility validation stays manual (smoke test the built exe
+with NVDA, run the updater smoke check).
 
 ## Architecture
 
@@ -83,7 +95,7 @@ There is no automated test suite. Validation is manual (smoke test the built exe
 
 The support form (`core/support.py`) posts to `https://mathieumartin.ovh/api/feedback/report`,
 the **generic multi-app endpoint** of the shared platform repo `app-backend`
-(`C:\Users\mathi\dev\app-backend`) — a single **Go** binary (stdlib, no dependencies)
+(`D:\dev\app-backend`) — a single **Go** binary (stdlib, no dependencies)
 deployed to `/opt/app-backend-go/`, which handles all `/api/*` for every app.
 
 - **Client contract (since v1.10.2)**: multipart `report` (JSON) + optional `log_file`,
@@ -154,6 +166,43 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.1 — in preparation (2026-08-14).** Bugfix release driven by **three field error reports on
+  v1.20.0, from three different users (NOT Sèb)**. One carried a comment ("4 failures out of 40
+  conversions"); a reply was written and sent by Mathieu, promising the fix by auto-update.
+  - **Batch track config could map a stream that does not exist** (the "4 out of 40"). "Manage Tracks
+    (N files)…" copies the reference file's config verbatim, and `normalize_track_settings`
+    (`core/track_settings.py`) **kept** entries whose `original_index` is absent from the target file
+    (shorter track list) → `-map 0:4` into the void → FFmpeg refused the whole command
+    ("Stream map '' matches no streams" / "Failed to set value '0:4' for option 'map'"). Unknown
+    entries are now **dropped** whenever the real streams are known (`drop_unknown_entries`, gated on
+    `meta is not None` so serialization round-trips still keep everything), plus a belt-and-braces
+    guard `ConversionTask._filter_entries_against_source` that never maps a missing stream.
+  - **TV captures with an unreadable audio stream.** An Arte `.mpg` carried an audio stream whose
+    parameters FFmpeg could not determine ("unspecified sample rate"); it was copied anyway and the
+    MP4 muxer refused to write the header. Now: `broadcast_input_args()` (`core/ffmpeg_helpers.py`)
+    applies `-fflags +genpts -probesize 200M -analyzeduration 60M` to the whole broadcast family —
+    `TRANSPORT_STREAM_EXTENSIONS` extended with `.mpg/.mpeg/.vob/.m2t/.tp/.trp` — in **both** the
+    prober and `ConversionTask` (ffprobe timeout raised to 120 s for those). A stream that stays
+    unreadable is detected via `MediaTrack.sample_rate` / `is_usable()`, left **unchecked by default**
+    (`build_default_track_settings`), labelled "unreadable stream" in the track manager, and never
+    mapped. `get_default_audio_track` never proposes one either.
+  - **Error reports arrived empty.** A failure occurring before FFmpeg ran produced
+    "(no output captured)" and nothing else: `build_error_report_message` never included the
+    application's `error_message`. It now does (`core/error_report.py`, plumbed through
+    `ui/error_report_dialog.py`). A cue sheet that cannot be split is now `error_kind="cue_invalid"`,
+    treated like `input_missing`: reason shown in the list row, **no** support form. Cue robustness:
+    `_cue_stem` strips repeated `.cue` extensions ("Album.cue.cue"), and the multi-`FILE` message
+    explains there is nothing to split.
+  - **Resource leak**: `ConversionTask` never closed the FFmpeg pipes (`_close_process_streams`,
+    progress loop extracted into `_read_ffmpeg_progress`). Visible as `ResourceWarning` in the new tests.
+  - **Dependencies bumped**: wxPython 4.2.5 → **4.3.1** (wxWidgets 3.3), pyinstaller 6.22, plus
+    platformdirs / platform-utils / packaging. wxWidgets 3.3 requires controls of a
+    `wxStaticBoxSizer` to be **children of the wxStaticBox**, not of the surrounding panel —
+    ~30 warnings, on the very code path that owns group announcements and tab order for NVDA.
+    **58 controls reparented across 7 UI files**; zero warnings left. ⚠️ Still needs a real NVDA pass.
+  - **First automated test suite** (see "Run the test suite"): 25 tests, including real FFmpeg
+    conversions and a headless UI smoke test that fails if the StaticBox warnings ever come back.
 
 - **v1.20.0 — published 2026-07-02, tag `v1.20.0`, commit `e30b2c2`.** Small stable: **presets now
   apply per-file from the context menu.** Tester Sèb reported that choosing a preset via the file-list
