@@ -201,8 +201,15 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
     `wxStaticBoxSizer` to be **children of the wxStaticBox**, not of the surrounding panel —
     ~30 warnings, on the very code path that owns group announcements and tab order for NVDA.
     **58 controls reparented across 7 UI files**; zero warnings left. ⚠️ Still needs a real NVDA pass.
-  - **First automated test suite** (see "Run the test suite"): 25 tests, including real FFmpeg
+  - **Embedded FFmpeg 8.1.2 → 9.0.1** (GyanD essentials, released 2026-08-12 — a **major** bump
+    taken two days after upstream). Covered by a new audit test that really converts into **every**
+    output format the app offers (31 cases: audio incl. MP3 ABR/VBR, FLAC 24, ALAC, M4B, loudnorm;
+    video incl. TS→MP4 and copy paths; every image format; both concat merges). All green on 9.0.1 —
+    none of the ~40 command fragments the app emits was removed upstream.
+  - **First automated test suite** (see "Run the test suite"): 29 tests, including real FFmpeg
     conversions and a headless UI smoke test that fails if the StaticBox warnings ever come back.
+    It immediately paid for itself: its `ResourceWarning`s exposed the unclosed FFmpeg pipes in
+    **both** `ConversionTask` and `MergeTask`.
 
 - **v1.20.0 — published 2026-07-02, tag `v1.20.0`, commit `e30b2c2`.** Small stable: **presets now
   apply per-file from the context menu.** Tester Sèb reported that choosing a preset via the file-list
