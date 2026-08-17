@@ -167,7 +167,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
-- **v1.20.1 — in preparation (2026-08-14).** Bugfix release driven by **three field error reports on
+- **v1.20.1 — published 2026-08-17, tag `v1.20.1`, commit `80fe1ea`.** Bugfix release driven by **three field error reports on
   v1.20.0, from three different users (NOT Sèb)**. One carried a comment ("4 failures out of 40
   conversions"); a reply was written and sent by Mathieu, promising the fix by auto-update.
   - **Batch track config could map a stream that does not exist** (the "4 out of 40"). "Manage Tracks
@@ -200,7 +200,8 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
     platformdirs / platform-utils / packaging. wxWidgets 3.3 requires controls of a
     `wxStaticBoxSizer` to be **children of the wxStaticBox**, not of the surrounding panel —
     ~30 warnings, on the very code path that owns group announcements and tab order for NVDA.
-    **58 controls reparented across 7 UI files**; zero warnings left. ⚠️ Still needs a real NVDA pass.
+    **58 controls reparented across 7 UI files**; zero warnings left. **Validated by Mathieu in real
+    use before the release** (wxPython 4.3.1 build tested, nothing broken).
   - **Embedded FFmpeg 8.1.2 → 9.0.1** (GyanD essentials, released 2026-08-12 — a **major** bump
     taken two days after upstream). Covered by a new audit test that really converts into **every**
     output format the app offers (31 cases: audio incl. MP3 ABR/VBR, FLAC 24, ALAC, M4B, loudnorm;
