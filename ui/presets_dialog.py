@@ -21,6 +21,7 @@ from core.presets import (
     export_presets,
     find_preset,
     import_presets,
+    is_preset_applicable,
     load_presets,
     normalize_preset,
     save_presets,
@@ -127,7 +128,10 @@ class PresetsDialog(wx.Dialog):
     # ----- list helpers ----------------------------------------------------
 
     def _visible_presets(self):
-        return [p for p in self.presets if p.get("category") == self.category]
+        # Visibility follows the output FORMAT, not the tab a preset was saved
+        # from: the video tab also outputs every audio format (extraction), so an
+        # MP3 preset made on the audio tab belongs here too (and vice versa).
+        return [p for p in self.presets if is_preset_applicable(p, self.category)]
 
     def _refresh_list(self, select_name=None):
         visible = self._visible_presets()
@@ -236,7 +240,9 @@ class PresetsDialog(wx.Dialog):
         preset = self._selected_preset()
         if preset is None:
             return
-        fields = _TEMPLATE_FIELDS.get(self.category)
+        # Template fields follow the preset's own category, so an audio preset
+        # keeps its audio fields even when edited from the video tab.
+        fields = _TEMPLATE_FIELDS.get(preset.get("category"), _TEMPLATE_FIELDS.get(self.category))
         if not fields:
             return
         with _MetadataTemplateDialog(self, fields, preset.get("metadata", {})) as dlg:

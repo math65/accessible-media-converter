@@ -39,6 +39,22 @@ _FORMAT_KEYS_BY_CATEGORY = {
 }
 
 
+def is_preset_applicable(preset, category):
+    """Tell whether ``preset`` can be used from the tab ``category``.
+
+    A preset's category records the tab it was *saved* from, but tabs are not
+    format families: the video tab also produces every audio format (audio
+    extraction), so an MP3 preset made on the audio tab applies verbatim there —
+    and vice versa. Matching on the saved category alone hid those presets
+    (field report: MP3 presets invisible on the video tab). What really decides
+    is whether the preset's output format belongs to the tab's format list.
+    """
+    format_keys = _FORMAT_KEYS_BY_CATEGORY.get(category)
+    if not format_keys:
+        return False
+    return preset.get("format") in format_keys
+
+
 def get_presets_path():
     return os.path.join(get_config_dir(), PRESETS_FILENAME)
 
