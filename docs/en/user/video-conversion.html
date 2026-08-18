@@ -104,6 +104,14 @@
         If you then change the <strong>Encoder Preset</strong>, <strong>CRF</strong>, profile,
         or pixel format, you move away from the global preset and into a more customized setup.
       </p>
+      <p>
+        <strong>Copy Stream (Advanced)</strong> reuses the source video without re-encoding it:
+        instant and lossless, but the output format must be able to hold that codec. Many old AVI
+        files (DivX 3 / msmpeg4v3, for instance) do not fit in an MP4: the app then
+        <strong>re-encodes automatically</strong> instead of failing, and the Status column reads
+        "Done (re-encoded, copy not possible)". Converting those files to <strong>MKV</strong>
+        keeps the copy.
+      </p>
     </section>
 
     <section class="section" id="audio">

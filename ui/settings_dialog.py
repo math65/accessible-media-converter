@@ -588,6 +588,14 @@ class SettingsDialog(wx.Dialog):
             self.combo_video_encoder_preset.SetName(_("Encoder Preset"))
             self.combo_video_profile.SetName(_("H.264 Profile"))
             self.combo_video_pixel_format.SetName(_("Pixel Format"))
+            self.rb_v_convert.SetToolTip(_("Re-encode the video with the settings below."))
+            self.rb_v_copy.SetToolTip(
+                _(
+                    "Keep the source video stream as is. If the output format cannot "
+                    "hold that codec (an old DivX AVI in MP4, for example), the video "
+                    "is re-encoded automatically."
+                )
+            )
             self.combo_crf.SetToolTip(_("Lower CRF means better quality and bigger file."))
             self.combo_video_encoder_preset.SetToolTip(_("Choose the x264 speed preset used for encoding."))
             self.combo_video_profile.SetToolTip(_("Choose the H.264 profile used for compatible outputs."))

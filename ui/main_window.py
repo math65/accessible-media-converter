@@ -17,6 +17,7 @@ from core.batch_manager import (
     JOB_STATE_RUNNING,
     JOB_STATE_SKIPPED,
     JOB_STATE_STOPPED,
+    NOTICE_COPY_REENCODED,
     SKIP_REASON_BATCH_STOPPED,
     SKIP_REASON_EXISTS,
     BatchConversionManager,
@@ -2095,15 +2096,17 @@ class MainWindow(wx.Frame):
         def _run():
             success = True
             error_msg = ""
+            task = self._merge_task
             try:
-                self._merge_task.run(
+                task.run(
                     progress_callback=lambda pct: wx.CallAfter(self._on_merge_progress, pct),
                     stop_check_callback=lambda: self.stop_requested,
                 )
             except Exception as exc:
                 success = False
                 error_msg = str(exc)
-            wx.CallAfter(self._on_merge_complete, success, error_msg)
+            reencoded = bool(getattr(task, 'copy_fallback_kinds', None))
+            wx.CallAfter(self._on_merge_complete, success, error_msg, reencoded)
 
         threading.Thread(target=_run, daemon=True).start()
 
@@ -2113,7 +2116,7 @@ class MainWindow(wx.Frame):
         self.lbl_progress.SetLabel(label)
         self._set_status(label)
 
-    def _on_merge_complete(self, success, error_msg):
+    def _on_merge_complete(self, success, error_msg, reencoded=False):
         should_close = self._pending_close_after_stop
         self._pending_close_after_stop = False
         self.is_converting = False
@@ -2135,7 +2138,14 @@ class MainWindow(wx.Frame):
             return
 
         if success:
-            wx.MessageBox(_("Merge complete."), _("Success"))
+            # La copie du flux a pu être abandonnée en cours de route : le dire,
+            # sinon l'utilisateur croit avoir gardé la qualité d'origine.
+            message = _("Merge complete.")
+            if reencoded:
+                message += "\n" + _(
+                    "The stream could not be copied into this format: the files were re-encoded."
+                )
+            wx.MessageBox(message, _("Success"))
             self._set_status(_("Merge complete."))
         elif error_msg == "Stopped by user":
             self._set_status(_("Stop requested."))
@@ -2158,6 +2168,10 @@ class MainWindow(wx.Frame):
         if state == JOB_STATE_QUEUED:
             return _("Queued")
         if state == JOB_STATE_DONE:
+            if payload.get('notice') == NOTICE_COPY_REENCODED:
+                # La copie du flux était impossible dans ce conteneur : le fichier
+                # est bien converti, mais réencodé — à ne pas passer sous silence.
+                return _("Done (re-encoded, copy not possible)")
             return _("Done")
         if state == JOB_STATE_ERROR:
             if payload.get('error_kind') == 'input_missing':

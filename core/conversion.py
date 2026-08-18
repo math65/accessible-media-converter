@@ -12,6 +12,7 @@ from core.ffmpeg_helpers import (
     apply_common_audio_options,
     apply_metadata_preservation,
     broadcast_input_args,
+    detect_uncopyable_streams,
     get_ffmpeg_path,
     get_ffprobe_path,
     parse_ffmpeg_threads,
@@ -145,6 +146,10 @@ class ConversionTask:
         self.process = None
         self.last_command = []
         self.stderr_lines = []
+        # Flux dont la copie a dû être abandonnée au profit d'un réencodage
+        # (conteneur incapable de les accueillir tels quels) : lu par le
+        # gestionnaire de lot pour le signaler dans la liste des fichiers.
+        self.copy_fallback_kinds = set()
 
         logging.debug("Tâche initialisée : %s -> %s", self.input_path, self.target_format)
 
@@ -493,7 +498,8 @@ class ConversionTask:
             return True
         return out_duration < self.duration * 0.5
 
-    def run(self, progress_callback=None, stop_check_callback=None, drop_cover=False):
+    def run(self, progress_callback=None, stop_check_callback=None, drop_cover=False,
+            force_reencode=None):
         if not os.path.isfile(self.input_path):
             logging.error("Fichier d'entrée introuvable au moment de la conversion : %s", self.input_path)
             raise FileNotFoundError(
@@ -593,8 +599,14 @@ class ConversionTask:
                 cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
                 preserve_metadata = True
 
+        # force_reencode : flux que le conteneur a refusés en copie lors d'une
+        # première tentative (voir la reprise en fin de run).
+        force_reencode = set(force_reencode or ())
+        copy_kinds = set()
+
         audio_mode = self.settings.get('audio_mode', 'convert')
-        if audio_mode == 'copy':
+        if audio_mode == 'copy' and 'audio' not in force_reencode:
+            copy_kinds.add('audio')
             cmd.extend(['-c:a', 'copy'])
         else:
             self._apply_encoded_audio_settings(cmd, mapped_container_tracks)
@@ -602,7 +614,8 @@ class ConversionTask:
         used_cover_copy = False
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             video_mode = self.settings.get('video_mode', 'convert')
-            if video_mode == 'copy':
+            if video_mode == 'copy' and 'video' not in force_reencode:
+                copy_kinds.add('video')
                 cmd.extend(['-c:v', 'copy'])
             else:
                 crf = str(self.settings.get('video_crf', 23))
@@ -687,6 +700,36 @@ class ConversionTask:
         if self.process.returncode != 0:
             if stop_check_callback and stop_check_callback():
                 raise Exception("Stopped by user")
+
+            # Copie impossible dans ce conteneur (un AVI DivX/msmpeg4v3 vers du MP4,
+            # par exemple) : le muxeur n'a pas de tag pour ce codec, refuse d'écrire
+            # l'en-tête, et TOUT le fichier échoue. Plutôt que de rendre l'erreur à
+            # l'utilisateur, on refait la conversion en réencodant le ou les flux
+            # fautifs — c'est bien le format qu'il a demandé, la copie n'était qu'un
+            # raccourci. copy_kinds ne contient que les flux encore en copie, donc
+            # la reprise converge : au pire deux passes (vidéo puis audio).
+            retry_kinds = detect_uncopyable_streams(
+                self.stderr_lines, [self.meta], copy_kinds
+            )
+            if retry_kinds:
+                logging.warning(
+                    "Copie impossible vers %s pour %s (%s) : nouvelle tentative en réencodage.",
+                    self.target_format,
+                    os.path.basename(self.input_path),
+                    ", ".join(sorted(retry_kinds)),
+                )
+                self.copy_fallback_kinds = set(force_reencode) | retry_kinds
+                # La sortie de la tentative avortée n'a plus d'intérêt : la vider
+                # garde le rapport d'erreur (et la détection ci-dessus) sur la
+                # seule commande réellement exécutée en dernier.
+                self.stderr_lines = []
+                return self.run(
+                    progress_callback,
+                    stop_check_callback,
+                    drop_cover=drop_cover,
+                    force_reencode=self.copy_fallback_kinds,
+                )
+
             logging.error(f"FFmpeg a échoué avec le code {self.process.returncode}")
             tail = "\n".join(self.stderr_lines[-50:])
             raise Exception(f"FFmpeg error (code {self.process.returncode}):\n{tail}")
@@ -700,7 +743,12 @@ class ConversionTask:
                         "Sortie tronquée avec copie de pochette (%s) : nouvelle tentative sans pochette (-vn).",
                         os.path.basename(output_path),
                     )
-                    return self.run(progress_callback, stop_check_callback, drop_cover=True)
+                    return self.run(
+                        progress_callback,
+                        stop_check_callback,
+                        drop_cover=True,
+                        force_reencode=force_reencode,
+                    )
                 tail = "\n".join(self.stderr_lines[-50:])
                 logging.error("Fichier de sortie anormalement court : %s", output_path)
                 raise Exception(

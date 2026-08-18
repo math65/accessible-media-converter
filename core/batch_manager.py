@@ -25,6 +25,10 @@ JOB_STATE_STOPPED = "stopped"
 SKIP_REASON_EXISTS = "exists"
 SKIP_REASON_BATCH_STOPPED = "batch_stopped"
 
+# Conversion réussie, mais pas telle que demandée : la copie du flux était
+# impossible dans le conteneur de sortie, le fichier a été réencodé.
+NOTICE_COPY_REENCODED = "copy_reencoded"
+
 
 @dataclass
 class BatchJob:
@@ -45,6 +49,9 @@ class BatchJob:
     error_kind: str = ""
     ffmpeg_command: list = field(default_factory=list)
     ffmpeg_stderr: str = ""
+    # Info non bloquante sur une conversion réussie (ex. « copie impossible,
+    # réencodé ») : affichée dans la colonne État à la place de « Terminé ».
+    notice: str = ""
 
 
 class BatchConversionManager:
@@ -347,6 +354,11 @@ class BatchConversionManager:
             with self._state_lock:
                 self._active_tasks.pop(job.index, None)
 
+        if getattr(task, 'copy_fallback_kinds', None):
+            # Le conteneur a refusé la copie du flux : la conversion a abouti en
+            # réencodant. On le signale, sinon l'utilisateur croit avoir obtenu une
+            # copie sans perte alors que le fichier a été réencodé.
+            job.notice = NOTICE_COPY_REENCODED
         self._set_job_state(job, JOB_STATE_DONE, progress=100)
         return JOB_STATE_DONE
 
@@ -422,6 +434,7 @@ class BatchConversionManager:
             "target_format": job.target_format,
             "ffmpeg_command": job.ffmpeg_command,
             "ffmpeg_stderr": job.ffmpeg_stderr,
+            "notice": job.notice,
             "settings": job.settings,
         }
 

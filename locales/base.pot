@@ -10,51 +10,51 @@ msgstr ""
 msgid "#"
 msgstr ""
 
-#: ui/main_window.py:224
+#: ui/main_window.py:225
 msgid "&About"
 msgstr ""
 
-#: ui/main_window.py:201 ui/main_window.py:257
+#: ui/main_window.py:202 ui/main_window.py:258
 msgid "&Add Files..."
 msgstr ""
 
-#: ui/main_window.py:210
+#: ui/main_window.py:211
 msgid "&Clear List"
 msgstr ""
 
-#: ui/main_window.py:216
+#: ui/main_window.py:217
 msgid "&Documentation..."
 msgstr ""
 
-#: ui/main_window.py:242
+#: ui/main_window.py:243
 msgid "&Edit"
 msgstr ""
 
-#: ui/main_window.py:241
+#: ui/main_window.py:242
 msgid "&File"
 msgstr ""
 
-#: ui/main_window.py:243
+#: ui/main_window.py:244
 msgid "&Help"
 msgstr ""
 
-#: ui/main_window.py:320
+#: ui/main_window.py:321
 msgid "&Merge Files"
 msgstr ""
 
-#: ui/main_window.py:207
+#: ui/main_window.py:208
 msgid "&Paste Files"
 msgstr ""
 
-#: ui/main_window.py:260 ui/main_window.py:300
+#: ui/main_window.py:261 ui/main_window.py:301
 msgid "&Presets..."
 msgstr ""
 
-#: ui/main_window.py:298
+#: ui/main_window.py:299
 msgid "&Settings / Quality..."
 msgstr ""
 
-#: ui/main_window.py:317
+#: ui/main_window.py:318
 msgid "&Start Conversion"
 msgstr ""
 
@@ -86,13 +86,13 @@ msgstr ""
 msgid "4 conversions"
 msgstr ""
 
-#: ui/main_window.py:1933
+#: ui/main_window.py:1934
 msgid ""
 "A conversion is currently running.\n"
 "Do you really want to stop it and exit?"
 msgstr ""
 
-#: ui/main_window.py:734
+#: ui/main_window.py:735
 msgid ""
 "A new version ({version}) is available. Your problem may already be fixed in"
 " it, so please update before sending a report."
@@ -102,11 +102,11 @@ msgstr ""
 msgid "A new version of {app_name} is available."
 msgstr ""
 
-#: ui/presets_dialog.py:260
+#: ui/presets_dialog.py:266
 msgid "A preset named \"{name}\" already exists."
 msgstr ""
 
-#: ui/presets_dialog.py:195
+#: ui/presets_dialog.py:199
 msgid "A preset named \"{name}\" already exists. Replace it?"
 msgstr ""
 
@@ -134,7 +134,7 @@ msgstr ""
 msgid "ALAC - Audio (Extract)"
 msgstr ""
 
-#: ui/main_window.py:2457
+#: ui/main_window.py:2471
 msgid "About"
 msgstr ""
 
@@ -142,11 +142,11 @@ msgstr ""
 msgid "Accessibility issue"
 msgstr ""
 
-#: ui/main_window.py:202
+#: ui/main_window.py:203
 msgid "Add &Folder..."
 msgstr ""
 
-#: ui/main_window.py:346
+#: ui/main_window.py:347
 msgid "Add files"
 msgstr ""
 
@@ -158,11 +158,11 @@ msgstr ""
 msgid "Album artist"
 msgstr ""
 
-#: ui/main_window.py:2383
+#: ui/main_window.py:2397
 msgid "All tasks completed successfully."
 msgstr ""
 
-#: ui/main_window.py:2382
+#: ui/main_window.py:2396
 msgid "All tasks completed!"
 msgstr ""
 
@@ -182,7 +182,7 @@ msgstr ""
 msgid "App version: {value}"
 msgstr ""
 
-#: ui/main_window.py:1353
+#: ui/main_window.py:1354
 msgid "Application Language"
 msgstr ""
 
@@ -194,15 +194,15 @@ msgstr ""
 msgid "Application language"
 msgstr ""
 
-#: ui/presets_dialog.py:79 ui/track_manager.py:421 ui/track_manager.py:480
+#: ui/presets_dialog.py:80 ui/track_manager.py:421 ui/track_manager.py:480
 msgid "Apply"
 msgstr ""
 
-#: ui/main_window.py:1066
+#: ui/main_window.py:1067
 msgid "Apply Preset ({count} files)..."
 msgstr ""
 
-#: ui/main_window.py:1068
+#: ui/main_window.py:1069
 msgid "Apply Preset..."
 msgstr ""
 
@@ -234,7 +234,7 @@ msgstr ""
 msgid "Ask output folder each time"
 msgstr ""
 
-#: ui/main_window.py:2028
+#: ui/main_window.py:2029
 msgid "At least 2 files are required to merge."
 msgstr ""
 
@@ -246,11 +246,11 @@ msgstr ""
 msgid "Attributes:"
 msgstr ""
 
-#: core/support.py:390 ui/main_window.py:1394 ui/main_window.py:1454
+#: core/support.py:390 ui/main_window.py:1395 ui/main_window.py:1455
 msgid "Audio"
 msgstr ""
 
-#: ui/settings_dialog.py:559 ui/settings_dialog.py:600
+#: ui/settings_dialog.py:559 ui/settings_dialog.py:608
 msgid "Audio Codec"
 msgstr ""
 
@@ -262,7 +262,7 @@ msgstr ""
 msgid "Audio Settings"
 msgstr ""
 
-#: ui/main_window.py:456
+#: ui/main_window.py:457
 msgid "Audio Track"
 msgstr ""
 
@@ -274,7 +274,7 @@ msgstr ""
 msgid "Audio extract track dialog"
 msgstr ""
 
-#: ui/main_window.py:1205
+#: ui/main_window.py:1206
 msgid "Audio extraction track selected: {track}"
 msgstr ""
 
@@ -286,7 +286,7 @@ msgstr ""
 msgid "Audio file referenced by the cue sheet not found: {name}"
 msgstr ""
 
-#: ui/main_window.py:277
+#: ui/main_window.py:278
 msgid "Audio files list"
 msgstr ""
 
@@ -302,13 +302,13 @@ msgstr ""
 msgid "Audio settings panel"
 msgstr ""
 
-#: ui/main_window.py:1195
+#: ui/main_window.py:1196
 msgid ""
 "Audio track applied to {applied} files ({unmatched} without a matching "
 "track)."
 msgstr ""
 
-#: ui/main_window.py:1201
+#: ui/main_window.py:1202
 msgid "Audio track applied to {applied} files."
 msgstr ""
 
@@ -352,7 +352,7 @@ msgstr ""
 msgid "BMP - Image (Uncompressed)"
 msgstr ""
 
-#: ui/main_window.py:2386
+#: ui/main_window.py:2400
 msgid ""
 "Batch completed.\n"
 "\n"
@@ -361,11 +361,11 @@ msgid ""
 "Errors: {error}"
 msgstr ""
 
-#: ui/main_window.py:2396
+#: ui/main_window.py:2410
 msgid "Batch finished: {done} done / {skipped} skipped / {error} error"
 msgstr ""
 
-#: ui/main_window.py:2374
+#: ui/main_window.py:2388
 msgid "Batch stopped by user."
 msgstr ""
 
@@ -373,7 +373,7 @@ msgstr ""
 msgid "Best Quality"
 msgstr ""
 
-#: ui/settings_dialog.py:567 ui/settings_dialog.py:606
+#: ui/settings_dialog.py:567 ui/settings_dialog.py:614
 msgid "Bit Depth"
 msgstr ""
 
@@ -385,7 +385,7 @@ msgstr ""
 msgid "Bit depth for lossless formats."
 msgstr ""
 
-#: ui/settings_dialog.py:565 ui/settings_dialog.py:604
+#: ui/settings_dialog.py:565 ui/settings_dialog.py:612
 msgid "Bitrate"
 msgstr ""
 
@@ -413,13 +413,13 @@ msgstr ""
 msgid "CBR {bitrate}"
 msgstr ""
 
-#: ui/settings_dialog.py:649
+#: ui/settings_dialog.py:657
 msgid "CRF {value} ({label})"
 msgstr ""
 
-#: ui/main_window.py:739 ui/metadata_editor.py:315
-#: ui/preferences_dialog.py:236 ui/presets_dialog.py:429
-#: ui/presets_dialog.py:487 ui/settings_dialog.py:246 ui/support_dialog.py:183
+#: ui/main_window.py:740 ui/metadata_editor.py:315
+#: ui/preferences_dialog.py:236 ui/presets_dialog.py:435
+#: ui/presets_dialog.py:493 ui/settings_dialog.py:246 ui/support_dialog.py:183
 #: ui/support_dialog.py:184 ui/track_manager.py:422 ui/track_manager.py:481
 msgid "Cancel"
 msgstr ""
@@ -436,7 +436,7 @@ msgstr ""
 msgid "Cancel track settings"
 msgstr ""
 
-#: ui/settings_dialog.py:563 ui/settings_dialog.py:602
+#: ui/settings_dialog.py:563 ui/settings_dialog.py:610
 msgid "Channels"
 msgstr ""
 
@@ -444,7 +444,7 @@ msgstr ""
 msgid "Channels:"
 msgstr ""
 
-#: core/merge.py:93
+#: core/merge.py:110
 msgid "Chapter {number}"
 msgstr ""
 
@@ -452,7 +452,7 @@ msgstr ""
 msgid "Check GitHub for a new version when the application starts."
 msgstr ""
 
-#: ui/main_window.py:220
+#: ui/main_window.py:221
 msgid "Check for &Updates..."
 msgstr ""
 
@@ -460,15 +460,15 @@ msgstr ""
 msgid "Check for updates automatically at startup"
 msgstr ""
 
-#: ui/main_window.py:632 ui/main_window.py:711
+#: ui/main_window.py:633 ui/main_window.py:712
 msgid "Checking for updates..."
 msgstr ""
 
-#: ui/main_window.py:1024
+#: ui/main_window.py:1025
 msgid "Choose Audio Track ({count} files)..."
 msgstr ""
 
-#: ui/main_window.py:1026 ui/track_manager.py:457
+#: ui/main_window.py:1027 ui/track_manager.py:457
 msgid "Choose Audio Track..."
 msgstr ""
 
@@ -480,11 +480,11 @@ msgstr ""
 msgid "Choose a cover image"
 msgstr ""
 
-#: ui/settings_dialog.py:872
+#: ui/settings_dialog.py:880
 msgid "Choose a target resolution. Aspect ratio is preserved."
 msgstr ""
 
-#: ui/settings_dialog.py:593
+#: ui/settings_dialog.py:601
 msgid "Choose the H.264 profile used for compatible outputs."
 msgstr ""
 
@@ -492,7 +492,7 @@ msgstr ""
 msgid "Choose the audio codec used for the container output."
 msgstr ""
 
-#: ui/settings_dialog.py:869
+#: ui/settings_dialog.py:877
 msgid "Choose the compression algorithm for TIFF."
 msgstr ""
 
@@ -500,7 +500,7 @@ msgstr ""
 msgid "Choose the language used by the application interface."
 msgstr ""
 
-#: ui/settings_dialog.py:594
+#: ui/settings_dialog.py:602
 msgid "Choose the output pixel format."
 msgstr ""
 
@@ -508,7 +508,7 @@ msgstr ""
 msgid "Choose the type of issue you want to report."
 msgstr ""
 
-#: ui/settings_dialog.py:592
+#: ui/settings_dialog.py:600
 msgid "Choose the x264 speed preset used for encoding."
 msgstr ""
 
@@ -516,22 +516,22 @@ msgstr ""
 msgid "Choose what to do if an output file already exists."
 msgstr ""
 
-#: ui/presets_dialog.py:410
+#: ui/presets_dialog.py:416
 msgid ""
 "Choose what to include in the export. The format and encoding settings are "
 "always included."
 msgstr ""
 
-#: ui/main_window.py:773
+#: ui/main_window.py:774
 msgid "Clipboard does not contain files or folders."
 msgstr ""
 
-#: ui/announcement_dialog.py:40 ui/presets_dialog.py:108
+#: ui/announcement_dialog.py:40 ui/presets_dialog.py:109
 #: ui/update_dialog.py:93 ui/update_dialog.py:94
 msgid "Close"
 msgstr ""
 
-#: ui/main_window.py:547
+#: ui/main_window.py:548
 msgid "Closing application to install update..."
 msgstr ""
 
@@ -552,11 +552,11 @@ msgstr ""
 msgid "Composer"
 msgstr ""
 
-#: ui/settings_dialog.py:568 ui/settings_dialog.py:607
+#: ui/settings_dialog.py:568 ui/settings_dialog.py:615
 msgid "Compression"
 msgstr ""
 
-#: ui/settings_dialog.py:800
+#: ui/settings_dialog.py:808
 msgid "Compression Level (0-9):"
 msgstr ""
 
@@ -564,7 +564,7 @@ msgstr ""
 msgid "Compression Level:"
 msgstr ""
 
-#: ui/settings_dialog.py:865
+#: ui/settings_dialog.py:873
 msgid "Compression level"
 msgstr ""
 
@@ -576,7 +576,7 @@ msgstr ""
 msgid "Compression {c}"
 msgstr ""
 
-#: ui/settings_dialog.py:806
+#: ui/settings_dialog.py:814
 msgid "Compression:"
 msgstr ""
 
@@ -584,7 +584,7 @@ msgstr ""
 msgid "Configure settings for: "
 msgstr ""
 
-#: ui/main_window.py:1934
+#: ui/main_window.py:1935
 msgid "Confirm Exit"
 msgstr ""
 
@@ -592,7 +592,7 @@ msgstr ""
 msgid "Constant Bitrate (CBR)"
 msgstr ""
 
-#: ui/main_window.py:222
+#: ui/main_window.py:223
 msgid "Contact &Support..."
 msgstr ""
 
@@ -620,7 +620,7 @@ msgstr ""
 msgid "Conversion Error"
 msgstr ""
 
-#: ui/main_window.py:288
+#: ui/main_window.py:289
 msgid "Conversion Settings"
 msgstr ""
 
@@ -628,19 +628,19 @@ msgstr ""
 msgid "Conversion problem"
 msgstr ""
 
-#: ui/main_window.py:359
+#: ui/main_window.py:360
 msgid "Conversion progress details"
 msgstr ""
 
-#: ui/main_window.py:357
+#: ui/main_window.py:358
 msgid "Conversion progress percentage"
 msgstr ""
 
-#: ui/main_window.py:1998
+#: ui/main_window.py:1999
 msgid "Conversion started."
 msgstr ""
 
-#: ui/main_window.py:2309
+#: ui/main_window.py:2323
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -650,7 +650,7 @@ msgid ""
 "Do you want to delete it?"
 msgstr ""
 
-#: ui/main_window.py:2313
+#: ui/main_window.py:2327
 msgid ""
 "Conversion stopped.\n"
 "\n"
@@ -660,19 +660,19 @@ msgid ""
 "Do you want to delete them?"
 msgstr ""
 
-#: ui/main_window.py:992
+#: ui/main_window.py:993
 msgid "Convert as a Single File"
 msgstr ""
 
-#: ui/main_window.py:349 ui/main_window.py:350 ui/main_window.py:367
+#: ui/main_window.py:350 ui/main_window.py:351 ui/main_window.py:368
 msgid "Convert to"
 msgstr ""
 
-#: ui/main_window.py:295
+#: ui/main_window.py:296
 msgid "Convert to:"
 msgstr ""
 
-#: ui/main_window.py:2153
+#: ui/main_window.py:2163
 msgid "Converting..."
 msgstr ""
 
@@ -708,7 +708,7 @@ msgstr ""
 msgid "Copyright"
 msgstr ""
 
-#: ui/presets_dialog.py:382
+#: ui/presets_dialog.py:388
 msgid "Could not write the export file."
 msgstr ""
 
@@ -724,7 +724,7 @@ msgstr ""
 msgid "Cover image file"
 msgstr ""
 
-#: ui/main_window.py:1863
+#: ui/main_window.py:1864
 msgid "Cue Sheet Tracks"
 msgstr ""
 
@@ -736,11 +736,11 @@ msgstr ""
 msgid "Current version:"
 msgstr ""
 
-#: ui/settings_dialog.py:648 ui/settings_dialog.py:685
+#: ui/settings_dialog.py:656 ui/settings_dialog.py:693
 msgid "Custom"
 msgstr ""
 
-#: ui/main_window.py:1976
+#: ui/main_window.py:1977
 msgid "Custom folder not found. Using source folder."
 msgstr ""
 
@@ -752,19 +752,19 @@ msgstr ""
 msgid "Default"
 msgstr ""
 
-#: ui/presets_dialog.py:83
+#: ui/presets_dialog.py:84
 msgid "Delete"
 msgstr ""
 
-#: ui/main_window.py:2323 ui/main_window.py:2349
+#: ui/main_window.py:2337 ui/main_window.py:2363
 msgid "Delete Partial Files"
 msgstr ""
 
-#: ui/presets_dialog.py:275
+#: ui/presets_dialog.py:281
 msgid "Delete Preset"
 msgstr ""
 
-#: ui/presets_dialog.py:274
+#: ui/presets_dialog.py:280
 msgid "Delete the preset \"{name}\"?"
 msgstr ""
 
@@ -781,7 +781,7 @@ msgid ""
 "Describe your issue below. The report will be sent directly to support."
 msgstr ""
 
-#: ui/main_window.py:129
+#: ui/main_window.py:130
 msgid "Details (Codec/Bitrate)"
 msgstr ""
 
@@ -797,15 +797,19 @@ msgstr ""
 msgid "Disc number"
 msgstr ""
 
-#: ui/main_window.py:2418
+#: ui/main_window.py:2432
 msgid "Documentation"
 msgstr ""
 
-#: ui/main_window.py:2161 ui/main_window.py:2394
+#: ui/main_window.py:2175 ui/main_window.py:2408
 msgid "Done"
 msgstr ""
 
-#: ui/main_window.py:218
+#: ui/main_window.py:2174
+msgid "Done (re-encoded, copy not possible)"
+msgstr ""
+
+#: ui/main_window.py:219
 msgid "Download Media (&DownAccess)..."
 msgstr ""
 
@@ -829,15 +833,15 @@ msgstr ""
 msgid "Downloading update... {percent}%"
 msgstr ""
 
-#: ui/main_window.py:204
+#: ui/main_window.py:205
 msgid "E&xit"
 msgstr ""
 
-#: ui/main_window.py:1043
+#: ui/main_window.py:1044
 msgid "Edit Metadata ({count} files)..."
 msgstr ""
 
-#: ui/main_window.py:1045
+#: ui/main_window.py:1046
 msgid "Edit Metadata..."
 msgstr ""
 
@@ -849,7 +853,7 @@ msgstr ""
 msgid "Edit metadata dialog"
 msgstr ""
 
-#: ui/presets_dialog.py:81
+#: ui/presets_dialog.py:82
 msgid "Edit metadata..."
 msgstr ""
 
@@ -861,15 +865,15 @@ msgstr ""
 msgid "Embedded cover art: {state}"
 msgstr ""
 
-#: ui/main_window.py:344
+#: ui/main_window.py:345
 msgid "Empty file list panel"
 msgstr ""
 
-#: ui/settings_dialog.py:863
+#: ui/settings_dialog.py:871
 msgid "Enable lossless compression for WebP."
 msgstr ""
 
-#: ui/settings_dialog.py:588 ui/settings_dialog.py:612
+#: ui/settings_dialog.py:588 ui/settings_dialog.py:620
 msgid "Encoder Preset"
 msgstr ""
 
@@ -889,17 +893,17 @@ msgstr ""
 msgid "Episode title"
 msgstr ""
 
-#: ui/main_window.py:1326 ui/main_window.py:2145 ui/main_window.py:2169
-#: ui/main_window.py:2427 ui/main_window.py:2439 ui/main_window.py:515
-#: ui/main_window.py:540 ui/main_window.py:662 ui/main_window.py:670
+#: ui/main_window.py:1327 ui/main_window.py:2155 ui/main_window.py:2183
+#: ui/main_window.py:2441 ui/main_window.py:2453 ui/main_window.py:516
+#: ui/main_window.py:541 ui/main_window.py:663 ui/main_window.py:671
 msgid "Error"
 msgstr ""
 
-#: ui/main_window.py:2164
+#: ui/main_window.py:2178
 msgid "Error (file not found)"
 msgstr ""
 
-#: ui/main_window.py:2168
+#: ui/main_window.py:2182
 msgid "Error: {reason}"
 msgstr ""
 
@@ -919,23 +923,23 @@ msgstr ""
 msgid "Existing output policy: {value}"
 msgstr ""
 
-#: ui/presets_dialog.py:428
+#: ui/presets_dialog.py:434
 msgid "Export"
 msgstr ""
 
-#: ui/presets_dialog.py:401
+#: ui/presets_dialog.py:407
 msgid "Export Options"
 msgstr ""
 
-#: ui/presets_dialog.py:370 ui/presets_dialog.py:383
+#: ui/presets_dialog.py:376 ui/presets_dialog.py:389
 msgid "Export Presets"
 msgstr ""
 
-#: ui/presets_dialog.py:402
+#: ui/presets_dialog.py:408
 msgid "Export options dialog"
 msgstr ""
 
-#: ui/presets_dialog.py:85
+#: ui/presets_dialog.py:86
 msgid "Export..."
 msgstr ""
 
@@ -971,15 +975,15 @@ msgstr ""
 msgid "Fields left empty are not changed on the selected files."
 msgstr ""
 
-#: ui/main_window.py:343
+#: ui/main_window.py:344
 msgid "File categories"
 msgstr ""
 
-#: core/conversion.py:495 core/merge.py:123
+#: core/conversion.py:563 core/merge.py:140
 msgid "File not found (it may have been moved or deleted): {name}"
 msgstr ""
 
-#: ui/main_window.py:128
+#: ui/main_window.py:129
 msgid "Filename"
 msgstr ""
 
@@ -1024,7 +1028,7 @@ msgstr ""
 msgid "H.264 CRF {crf}"
 msgstr ""
 
-#: ui/settings_dialog.py:589 ui/settings_dialog.py:613
+#: ui/settings_dialog.py:589 ui/settings_dialog.py:621
 msgid "H.264 Profile"
 msgstr ""
 
@@ -1048,11 +1052,11 @@ msgstr ""
 msgid "How chapters are named when merging files into an M4B audiobook."
 msgstr ""
 
-#: core/probe.py:137 ui/main_window.py:1398 ui/main_window.py:1454
+#: core/probe.py:137 ui/main_window.py:1399 ui/main_window.py:1455
 msgid "Image"
 msgstr ""
 
-#: ui/settings_dialog.py:772
+#: ui/settings_dialog.py:780
 msgid "Image Settings"
 msgstr ""
 
@@ -1060,19 +1064,19 @@ msgstr ""
 msgid "Image file:"
 msgstr ""
 
-#: ui/main_window.py:279
+#: ui/main_window.py:280
 msgid "Image files list"
 msgstr ""
 
-#: ui/settings_dialog.py:854
+#: ui/settings_dialog.py:862
 msgid "Image format settings dialog"
 msgstr ""
 
-#: ui/settings_dialog.py:859
+#: ui/settings_dialog.py:867
 msgid "Image quality"
 msgstr ""
 
-#: ui/settings_dialog.py:855
+#: ui/settings_dialog.py:863
 msgid "Image settings panel"
 msgstr ""
 
@@ -1080,25 +1084,25 @@ msgstr ""
 msgid "Images"
 msgstr ""
 
-#: ui/presets_dialog.py:286 ui/presets_dialog.py:299 ui/presets_dialog.py:308
-#: ui/presets_dialog.py:328
+#: ui/presets_dialog.py:292 ui/presets_dialog.py:305 ui/presets_dialog.py:314
+#: ui/presets_dialog.py:334
 msgid "Import Presets"
 msgstr ""
 
-#: ui/presets_dialog.py:84
+#: ui/presets_dialog.py:85
 msgid "Import..."
 msgstr ""
 
-#: ui/presets_dialog.py:420
+#: ui/presets_dialog.py:426
 msgid "Include the metadata"
 msgstr ""
 
-#: ui/presets_dialog.py:416
+#: ui/presets_dialog.py:422
 msgid "Include the output destination"
 msgstr ""
 
-#: ui/main_window.py:1896 ui/main_window.py:2029 ui/main_window.py:676
-#: ui/main_window.py:764 ui/main_window.py:778 ui/main_window.py:808
+#: ui/main_window.py:1897 ui/main_window.py:2030 ui/main_window.py:677
+#: ui/main_window.py:765 ui/main_window.py:779 ui/main_window.py:809
 msgid "Info"
 msgstr ""
 
@@ -1146,6 +1150,13 @@ msgid ""
 "possible."
 msgstr ""
 
+#: ui/settings_dialog.py:593
+msgid ""
+"Keep the source video stream as is. If the output format cannot hold that "
+"codec (an old DivX AVI in MP4, for example), the video is re-encoded "
+"automatically."
+msgstr ""
+
 #: ui/track_manager.py:418
 msgid "Keyboard shortcuts hint"
 msgstr ""
@@ -1158,7 +1169,7 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: ui/main_window.py:1357 ui/main_window.py:1379
+#: ui/main_window.py:1358 ui/main_window.py:1380
 msgid "Language change saved. It will be applied on next launch."
 msgstr ""
 
@@ -1170,7 +1181,7 @@ msgstr ""
 msgid "Language: {value}"
 msgstr ""
 
-#: ui/main_window.py:1550
+#: ui/main_window.py:1551
 msgid "List cleared."
 msgstr ""
 
@@ -1183,11 +1194,11 @@ msgid "Loaded video files: {value}"
 msgstr ""
 
 #: core/formatting.py:242 core/formatting.py:552 core/formatting.py:553
-#: ui/settings_dialog.py:795
+#: ui/settings_dialog.py:803
 msgid "Lossless"
 msgstr ""
 
-#: ui/settings_dialog.py:862
+#: ui/settings_dialog.py:870
 msgid "Lossless mode"
 msgstr ""
 
@@ -1195,7 +1206,7 @@ msgstr ""
 msgid "Low"
 msgstr ""
 
-#: ui/settings_dialog.py:591
+#: ui/settings_dialog.py:599
 msgid "Lower CRF means better quality and bigger file."
 msgstr ""
 
@@ -1235,23 +1246,23 @@ msgstr ""
 msgid "MP4 - Video (H.264)"
 msgstr ""
 
-#: ui/main_window.py:342
+#: ui/main_window.py:343
 msgid "Main panel"
 msgstr ""
 
-#: ui/presets_dialog.py:43
+#: ui/presets_dialog.py:44
 msgid "Manage Presets"
 msgstr ""
 
-#: ui/main_window.py:1017
+#: ui/main_window.py:1018
 msgid "Manage Tracks ({count} files)..."
 msgstr ""
 
-#: ui/main_window.py:1019
+#: ui/main_window.py:1020
 msgid "Manage Tracks..."
 msgstr ""
 
-#: ui/main_window.py:261 ui/main_window.py:354
+#: ui/main_window.py:262 ui/main_window.py:355
 msgid "Manage presets"
 msgstr ""
 
@@ -1267,7 +1278,7 @@ msgstr ""
 msgid "Max concurrent conversions: {value}"
 msgstr ""
 
-#: ui/main_window.py:1506
+#: ui/main_window.py:1507
 msgid "Media Files"
 msgstr ""
 
@@ -1275,43 +1286,43 @@ msgstr ""
 msgid "Medium"
 msgstr ""
 
-#: ui/main_window.py:2138 ui/main_window.py:2139
+#: ui/main_window.py:2143 ui/main_window.py:2149
 msgid "Merge complete."
 msgstr ""
 
-#: ui/main_window.py:2144 ui/main_window.py:2148
+#: ui/main_window.py:2154 ui/main_window.py:2158
 msgid "Merge failed."
 msgstr ""
 
-#: ui/main_window.py:362
+#: ui/main_window.py:363
 msgid "Merge files"
 msgstr ""
 
-#: ui/main_window.py:322
+#: ui/main_window.py:323
 msgid "Merge the listed files into one, using the selected output format."
 msgstr ""
 
-#: ui/main_window.py:2086 ui/main_window.py:2089 ui/main_window.py:2112
+#: ui/main_window.py:2087 ui/main_window.py:2090 ui/main_window.py:2115
 msgid "Merging files..."
 msgstr ""
 
-#: ui/main_window.py:458
+#: ui/main_window.py:459
 msgid "Metadata"
 msgstr ""
 
-#: ui/main_window.py:1329
+#: ui/main_window.py:1330
 msgid "Metadata rewrite finished with errors."
 msgstr ""
 
-#: ui/main_window.py:1331
+#: ui/main_window.py:1332
 msgid "Metadata rewritten on the original file(s)."
 msgstr ""
 
-#: ui/presets_dialog.py:246
+#: ui/presets_dialog.py:252
 msgid "Metadata updated."
 msgstr ""
 
-#: ui/main_window.py:1283
+#: ui/main_window.py:1284
 msgid "Metadata will be applied during conversion."
 msgstr ""
 
@@ -1319,11 +1330,11 @@ msgstr ""
 msgid "Mono"
 msgstr ""
 
-#: ui/main_window.py:981 ui/track_manager.py:156
+#: ui/main_window.py:982 ui/track_manager.py:156
 msgid "Move Down"
 msgstr ""
 
-#: ui/main_window.py:978 ui/track_manager.py:155
+#: ui/main_window.py:979 ui/track_manager.py:155
 msgid "Move Up"
 msgstr ""
 
@@ -1335,7 +1346,7 @@ msgstr ""
 msgid "Move selected track up"
 msgstr ""
 
-#: ui/presets_dialog.py:252
+#: ui/presets_dialog.py:258
 msgid "New name:"
 msgstr ""
 
@@ -1344,27 +1355,27 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: ui/main_window.py:778 ui/main_window.py:779
+#: ui/main_window.py:779 ui/main_window.py:780
 msgid "No compatible media files found in the clipboard."
 msgstr ""
 
-#: ui/main_window.py:764 ui/main_window.py:765
+#: ui/main_window.py:765 ui/main_window.py:766
 msgid "No compatible media files found in this folder."
 msgstr ""
 
-#: ui/main_window.py:808 ui/main_window.py:809
+#: ui/main_window.py:809 ui/main_window.py:810
 msgid "No compatible media files found."
 msgstr ""
 
-#: ui/main_window.py:1500
+#: ui/main_window.py:1501
 msgid "No files loaded."
 msgstr ""
 
-#: ui/main_window.py:345
+#: ui/main_window.py:346
 msgid "No files selected information"
 msgstr ""
 
-#: ui/main_window.py:251
+#: ui/main_window.py:252
 msgid ""
 "No files selected.\n"
 "\n"
@@ -1373,7 +1384,7 @@ msgid ""
 "or use File > Add Folder."
 msgstr ""
 
-#: ui/main_window.py:1961
+#: ui/main_window.py:1962
 msgid "No files to convert."
 msgstr ""
 
@@ -1385,19 +1396,19 @@ msgstr ""
 msgid "No release notes provided."
 msgstr ""
 
-#: ui/main_window.py:1896
+#: ui/main_window.py:1897
 msgid "No usable cue sheet was found in this file."
 msgstr ""
 
-#: ui/presets_dialog.py:307
+#: ui/presets_dialog.py:313
 msgid "No valid preset found in this file."
 msgstr ""
 
-#: ui/settings_dialog.py:807
+#: ui/settings_dialog.py:815
 msgid "None"
 msgstr ""
 
-#: ui/settings_dialog.py:569 ui/settings_dialog.py:608
+#: ui/settings_dialog.py:569 ui/settings_dialog.py:616
 msgid "Normalize for streaming"
 msgstr ""
 
@@ -1422,11 +1433,11 @@ msgid "OGG - Audio (Vorbis)"
 msgstr ""
 
 #: ui/metadata_editor.py:314 ui/preferences_dialog.py:235
-#: ui/presets_dialog.py:486 ui/settings_dialog.py:245
+#: ui/presets_dialog.py:492 ui/settings_dialog.py:245
 msgid "OK"
 msgstr ""
 
-#: ui/main_window.py:1507
+#: ui/main_window.py:1508
 msgid "Open Media"
 msgstr ""
 
@@ -1434,11 +1445,11 @@ msgstr ""
 msgid "Open Release Page"
 msgstr ""
 
-#: ui/main_window.py:347
+#: ui/main_window.py:348
 msgid "Open a file browser to add media files."
 msgstr ""
 
-#: ui/main_window.py:353
+#: ui/main_window.py:354
 msgid "Open format-specific settings."
 msgstr ""
 
@@ -1482,23 +1493,23 @@ msgstr ""
 msgid "Output"
 msgstr ""
 
-#: ui/main_window.py:1799
+#: ui/main_window.py:1800
 msgid "Output Settings"
 msgstr ""
 
-#: ui/main_window.py:1051
+#: ui/main_window.py:1052
 msgid "Output Settings ({count} files)..."
 msgstr ""
 
-#: ui/main_window.py:1053
+#: ui/main_window.py:1054
 msgid "Output Settings..."
 msgstr ""
 
-#: ui/main_window.py:1798
+#: ui/main_window.py:1799
 msgid "Output format for the selected file(s):"
 msgstr ""
 
-#: ui/main_window.py:1626
+#: ui/main_window.py:1627
 msgid "Output format selected: {format}"
 msgstr ""
 
@@ -1510,15 +1521,15 @@ msgstr ""
 msgid "Output in specific folder"
 msgstr ""
 
-#: ui/main_window.py:1837
+#: ui/main_window.py:1838
 msgid "Output settings reset for {count} file(s)."
 msgstr ""
 
-#: ui/main_window.py:1825
+#: ui/main_window.py:1826
 msgid "Output settings set for {count} file(s)."
 msgstr ""
 
-#: ui/main_window.py:465
+#: ui/main_window.py:466
 msgid "Output: {desc}"
 msgstr ""
 
@@ -1530,7 +1541,7 @@ msgstr ""
 msgid "PNG - Image (Lossless)"
 msgstr ""
 
-#: ui/settings_dialog.py:866
+#: ui/settings_dialog.py:874
 msgid "PNG compression from 0 (fast) to 9 (smallest)."
 msgstr ""
 
@@ -1538,7 +1549,7 @@ msgstr ""
 msgid "Packaged"
 msgstr ""
 
-#: ui/settings_dialog.py:590 ui/settings_dialog.py:614
+#: ui/settings_dialog.py:590 ui/settings_dialog.py:622
 msgid "Pixel Format"
 msgstr ""
 
@@ -1570,7 +1581,7 @@ msgstr ""
 msgid "Please review the support form fields and try again."
 msgstr ""
 
-#: ui/main_window.py:747
+#: ui/main_window.py:748
 msgid "Please update before reporting a problem."
 msgstr ""
 
@@ -1582,7 +1593,7 @@ msgstr ""
 msgid "Please wait for the update download to finish."
 msgstr ""
 
-#: ui/main_window.py:213 ui/preferences_dialog.py:23
+#: ui/main_window.py:214 ui/preferences_dialog.py:23
 msgid "Preferences"
 msgstr ""
 
@@ -1590,7 +1601,7 @@ msgstr ""
 msgid "Preferences dialog"
 msgstr ""
 
-#: ui/main_window.py:1995
+#: ui/main_window.py:1996
 msgid "Preparing conversion..."
 msgstr ""
 
@@ -1606,72 +1617,72 @@ msgstr ""
 msgid "Preserve original subfolder structure"
 msgstr ""
 
-#: ui/main_window.py:1755
+#: ui/main_window.py:1756
 msgid "Preset \"{name}\" applied ({format})."
 msgstr ""
 
-#: ui/main_window.py:1749
+#: ui/main_window.py:1750
 msgid "Preset \"{name}\" applied ({format}); metadata set on {count} file(s)."
 msgstr ""
 
-#: ui/main_window.py:1726
+#: ui/main_window.py:1727
 msgid "Preset \"{name}\" applied to {count} file(s) ({format})."
 msgstr ""
 
-#: ui/main_window.py:1720
+#: ui/main_window.py:1721
 msgid ""
 "Preset \"{name}\" applied to {count} file(s) ({format}); metadata included."
 msgstr ""
 
-#: ui/presets_dialog.py:215
+#: ui/presets_dialog.py:219
 msgid "Preset \"{name}\" applied."
 msgstr ""
 
-#: ui/presets_dialog.py:208
+#: ui/presets_dialog.py:212
 msgid "Preset \"{name}\" saved."
 msgstr ""
 
-#: ui/presets_dialog.py:233
+#: ui/presets_dialog.py:237
 msgid "Preset \"{name}\" updated."
 msgstr ""
 
-#: ui/presets_dialog.py:453
+#: ui/presets_dialog.py:459
 msgid "Preset Metadata"
 msgstr ""
 
-#: ui/presets_dialog.py:281
+#: ui/presets_dialog.py:287
 msgid "Preset deleted."
 msgstr ""
 
-#: ui/presets_dialog.py:287 ui/presets_dialog.py:372
+#: ui/presets_dialog.py:293 ui/presets_dialog.py:378
 msgid "Preset files (*.json)|*.json"
 msgstr ""
 
-#: ui/presets_dialog.py:454
+#: ui/presets_dialog.py:460
 msgid "Preset metadata dialog"
 msgstr ""
 
-#: ui/presets_dialog.py:185
+#: ui/presets_dialog.py:189
 msgid "Preset name:"
 msgstr ""
 
-#: ui/presets_dialog.py:267
+#: ui/presets_dialog.py:273
 msgid "Preset renamed."
 msgstr ""
 
-#: ui/presets_dialog.py:70
+#: ui/presets_dialog.py:71
 msgid "Presets"
 msgstr ""
 
-#: ui/presets_dialog.py:44
+#: ui/presets_dialog.py:45
 msgid "Presets dialog"
 msgstr ""
 
-#: ui/presets_dialog.py:72
+#: ui/presets_dialog.py:73
 msgid "Presets list"
 msgstr ""
 
-#: ui/main_window.py:1039
+#: ui/main_window.py:1040
 msgid "Preview Tracks..."
 msgstr ""
 
@@ -1679,11 +1690,11 @@ msgstr ""
 msgid "Published:"
 msgstr ""
 
-#: ui/settings_dialog.py:566 ui/settings_dialog.py:605
+#: ui/settings_dialog.py:566 ui/settings_dialog.py:613
 msgid "Quality"
 msgstr ""
 
-#: ui/settings_dialog.py:789
+#: ui/settings_dialog.py:797
 msgid "Quality (1-100):"
 msgstr ""
 
@@ -1699,7 +1710,7 @@ msgstr ""
 msgid "Quality (VBR):"
 msgstr ""
 
-#: ui/settings_dialog.py:860
+#: ui/settings_dialog.py:868
 msgid "Quality from 1 (lowest) to 100 (highest)."
 msgstr ""
 
@@ -1711,11 +1722,11 @@ msgstr ""
 msgid "Quality {q}"
 msgstr ""
 
-#: ui/main_window.py:2159
+#: ui/main_window.py:2169
 msgid "Queued"
 msgstr ""
 
-#: ui/settings_dialog.py:564 ui/settings_dialog.py:603
+#: ui/settings_dialog.py:564 ui/settings_dialog.py:611
 msgid "Rate Mode"
 msgstr ""
 
@@ -1731,15 +1742,19 @@ msgstr ""
 msgid "Re-encode audio with detailed settings."
 msgstr ""
 
+#: ui/settings_dialog.py:591
+msgid "Re-encode the video with the settings below."
+msgstr ""
+
 #: ui/metadata_editor.py:303
 msgid "Re-tag the original file now (no re-encoding)"
 msgstr ""
 
-#: ui/main_window.py:2178 ui/main_window.py:467
+#: ui/main_window.py:2192 ui/main_window.py:468
 msgid "Ready"
 msgstr ""
 
-#: ui/main_window.py:175 ui/main_window.py:750
+#: ui/main_window.py:176 ui/main_window.py:751
 msgid "Ready. Add files to begin."
 msgstr ""
 
@@ -1757,7 +1772,7 @@ msgstr ""
 msgid "Release notes for the selected update."
 msgstr ""
 
-#: ui/main_window.py:211
+#: ui/main_window.py:212
 msgid "Remove &Selected"
 msgstr ""
 
@@ -1765,7 +1780,7 @@ msgstr ""
 msgid "Remove cover"
 msgstr ""
 
-#: ui/presets_dialog.py:252 ui/presets_dialog.py:261
+#: ui/presets_dialog.py:258 ui/presets_dialog.py:267
 msgid "Rename Preset"
 msgstr ""
 
@@ -1773,15 +1788,15 @@ msgstr ""
 msgid "Rename automatically"
 msgstr ""
 
-#: ui/presets_dialog.py:82
+#: ui/presets_dialog.py:83
 msgid "Rename..."
 msgstr ""
 
-#: ui/presets_dialog.py:196 ui/presets_dialog.py:224
+#: ui/presets_dialog.py:200 ui/presets_dialog.py:228
 msgid "Replace Preset"
 msgstr ""
 
-#: ui/presets_dialog.py:223
+#: ui/presets_dialog.py:227
 msgid "Replace the settings of \"{name}\" with the current ones?"
 msgstr ""
 
@@ -1789,7 +1804,7 @@ msgstr ""
 msgid "Replace with an image file..."
 msgstr ""
 
-#: ui/presets_dialog.py:80
+#: ui/presets_dialog.py:81
 msgid "Replace with current settings"
 msgstr ""
 
@@ -1797,23 +1812,23 @@ msgstr ""
 msgid "Report preview"
 msgstr ""
 
-#: ui/main_window.py:1057
+#: ui/main_window.py:1058
 msgid "Reset Output Settings"
 msgstr ""
 
-#: ui/settings_dialog.py:871
+#: ui/settings_dialog.py:879
 msgid "Resize"
 msgstr ""
 
-#: ui/settings_dialog.py:814
+#: ui/settings_dialog.py:822
 msgid "Resize:"
 msgstr ""
 
-#: ui/main_window.py:1365
+#: ui/main_window.py:1366
 msgid "Restart Required"
 msgstr ""
 
-#: ui/main_window.py:1286
+#: ui/main_window.py:1287
 msgid "Rewriting metadata..."
 msgstr ""
 
@@ -1829,7 +1844,7 @@ msgstr ""
 msgid "Same as source file"
 msgstr ""
 
-#: ui/settings_dialog.py:562 ui/settings_dialog.py:601
+#: ui/settings_dialog.py:562 ui/settings_dialog.py:609
 msgid "Sample Rate"
 msgstr ""
 
@@ -1837,11 +1852,11 @@ msgstr ""
 msgid "Sample Rate:"
 msgstr ""
 
-#: ui/presets_dialog.py:185
+#: ui/presets_dialog.py:189
 msgid "Save Preset"
 msgstr ""
 
-#: ui/presets_dialog.py:78
+#: ui/presets_dialog.py:79
 msgid "Save current settings as preset..."
 msgstr ""
 
@@ -1849,7 +1864,7 @@ msgstr ""
 msgid "Save preferences"
 msgstr ""
 
-#: ui/main_window.py:262 ui/main_window.py:355
+#: ui/main_window.py:263 ui/main_window.py:356
 msgid "Save, apply, import or export encoding presets."
 msgstr ""
 
@@ -1857,19 +1872,19 @@ msgstr ""
 msgid "Season"
 msgstr ""
 
-#: ui/main_window.py:208
+#: ui/main_window.py:209
 msgid "Select &All"
 msgstr ""
 
-#: ui/main_window.py:2066
+#: ui/main_window.py:2067
 msgid "Select Output File"
 msgstr ""
 
-#: ui/main_window.py:1979 ui/main_window.py:2053 ui/preferences_dialog.py:322
+#: ui/main_window.py:1980 ui/main_window.py:2054 ui/preferences_dialog.py:322
 msgid "Select Output Folder"
 msgstr ""
 
-#: ui/main_window.py:755
+#: ui/main_window.py:756
 msgid "Select a folder to add"
 msgstr ""
 
@@ -1881,7 +1896,7 @@ msgstr ""
 msgid "Select the single audio track to extract."
 msgstr ""
 
-#: ui/main_window.py:351
+#: ui/main_window.py:352
 msgid "Select the target output format."
 msgstr ""
 
@@ -1917,11 +1932,11 @@ msgstr ""
 msgid "Set how many conversions can run at the same time."
 msgstr ""
 
-#: ui/main_window.py:352
+#: ui/main_window.py:353
 msgid "Settings and quality"
 msgstr ""
 
-#: ui/main_window.py:1647
+#: ui/main_window.py:1648
 msgid "Settings updated for format: {format}"
 msgstr ""
 
@@ -1933,7 +1948,7 @@ msgstr ""
 msgid "Show technical details"
 msgstr ""
 
-#: ui/main_window.py:358
+#: ui/main_window.py:359
 msgid "Shows conversion progress from 0 to 100 percent."
 msgstr ""
 
@@ -1941,15 +1956,15 @@ msgstr ""
 msgid "Skip existing file"
 msgstr ""
 
-#: ui/main_window.py:2177
+#: ui/main_window.py:2191
 msgid "Skipped"
 msgstr ""
 
-#: ui/main_window.py:2176
+#: ui/main_window.py:2190
 msgid "Skipped (Batch stopped)"
 msgstr ""
 
-#: ui/main_window.py:2174
+#: ui/main_window.py:2188
 msgid "Skipped (Exists)"
 msgstr ""
 
@@ -1957,18 +1972,18 @@ msgstr ""
 msgid "Smallest Size"
 msgstr ""
 
-#: ui/main_window.py:1325
+#: ui/main_window.py:1326
 msgid "Some files could not be re-tagged:"
 msgstr ""
 
-#: ui/main_window.py:2346
+#: ui/main_window.py:2360
 msgid ""
 "Some partially generated files could not be deleted.\n"
 "\n"
 "{paths}"
 msgstr ""
 
-#: ui/presets_dialog.py:326
+#: ui/presets_dialog.py:332
 msgid ""
 "Some presets already exist (e.g. \"{name}\"). Overwrite existing presets? "
 "Choose No to keep both (imported ones are renamed)."
@@ -1982,7 +1997,7 @@ msgstr ""
 msgid "Specific folder:"
 msgstr ""
 
-#: ui/main_window.py:989
+#: ui/main_window.py:990
 msgid "Split by Embedded Cue Sheet"
 msgstr ""
 
@@ -1990,11 +2005,11 @@ msgstr ""
 msgid "Standard"
 msgstr ""
 
-#: ui/main_window.py:361
+#: ui/main_window.py:362
 msgid "Start conversion"
 msgstr ""
 
-#: ui/main_window.py:130
+#: ui/main_window.py:131
 msgid "Status"
 msgstr ""
 
@@ -2006,28 +2021,28 @@ msgstr ""
 msgid "Stereo (Downmix)"
 msgstr ""
 
-#: ui/main_window.py:1991 ui/main_window.py:2082 ui/main_window.py:324
+#: ui/main_window.py:1992 ui/main_window.py:2083 ui/main_window.py:325
 msgid "Stop"
 msgstr ""
 
-#: ui/main_window.py:363
+#: ui/main_window.py:364
 msgid "Stop conversion"
 msgstr ""
 
-#: ui/main_window.py:1925 ui/main_window.py:2141
+#: ui/main_window.py:1926 ui/main_window.py:2151
 msgid "Stop requested."
 msgstr ""
 
-#: ui/main_window.py:522 ui/main_window.py:526 ui/main_window.py:623
-#: ui/main_window.py:627
+#: ui/main_window.py:523 ui/main_window.py:527 ui/main_window.py:624
+#: ui/main_window.py:628
 msgid "Stop the current conversion before installing an update."
 msgstr ""
 
-#: ui/main_window.py:2171
+#: ui/main_window.py:2185
 msgid "Stopped by user"
 msgstr ""
 
-#: ui/main_window.py:1919
+#: ui/main_window.py:1920
 msgid "Stopping..."
 msgstr ""
 
@@ -2039,7 +2054,7 @@ msgstr ""
 msgid "Subtitles"
 msgstr ""
 
-#: ui/main_window.py:2138 ui/main_window.py:2382
+#: ui/main_window.py:2148 ui/main_window.py:2396
 msgid "Success"
 msgstr ""
 
@@ -2067,7 +2082,7 @@ msgstr ""
 msgid "TIFF - Image (Lossless)"
 msgstr ""
 
-#: ui/settings_dialog.py:868
+#: ui/settings_dialog.py:876
 msgid "TIFF compression"
 msgstr ""
 
@@ -2103,7 +2118,7 @@ msgstr ""
 msgid "The GitHub release does not define a valid version tag."
 msgstr ""
 
-#: ui/main_window.py:1359
+#: ui/main_window.py:1360
 msgid ""
 "The application language has changed.\n"
 "\n"
@@ -2116,7 +2131,7 @@ msgid ""
 "Would you like to send an error report to support?"
 msgstr ""
 
-#: core/conversion.py:702
+#: core/conversion.py:811
 msgid ""
 "The converted file is unexpectedly short — the conversion likely failed."
 msgstr ""
@@ -2137,7 +2152,7 @@ msgstr ""
 msgid "The installer failed its integrity check and was not installed."
 msgstr ""
 
-#: ui/main_window.py:2414
+#: ui/main_window.py:2428
 msgid ""
 "The local documentation could not be opened.\n"
 "\n"
@@ -2145,7 +2160,7 @@ msgid ""
 "{path}"
 msgstr ""
 
-#: ui/main_window.py:2410
+#: ui/main_window.py:2424
 msgid ""
 "The local documentation files were not found.\n"
 "\n"
@@ -2153,7 +2168,7 @@ msgid ""
 "{path}"
 msgstr ""
 
-#: ui/main_window.py:1350
+#: ui/main_window.py:1351
 msgid ""
 "The new language will be applied the next time the application starts "
 "because a conversion is currently running."
@@ -2163,6 +2178,11 @@ msgstr ""
 msgid ""
 "The report could not be sent automatically. You can copy the details below "
 "and send them manually."
+msgstr ""
+
+#: ui/main_window.py:2145
+msgid ""
+"The stream could not be copied into this format: the files were re-encoded."
 msgstr ""
 
 #: core/support.py:227
@@ -2177,13 +2197,13 @@ msgstr ""
 msgid "The update check timed out."
 msgstr ""
 
-#: ui/presets_dialog.py:463
+#: ui/presets_dialog.py:469
 msgid ""
 "These tags are applied to every file when the preset is used. Leave a field "
 "empty to leave it unchanged."
 msgstr ""
 
-#: core/batch_manager.py:153
+#: core/batch_manager.py:160
 msgid "This cue sheet cannot be split."
 msgstr ""
 
@@ -2201,15 +2221,15 @@ msgid ""
 " Add the audio files themselves instead."
 msgstr ""
 
-#: ui/presets_dialog.py:298
+#: ui/presets_dialog.py:304
 msgid "This file is not a valid presets file."
 msgstr ""
 
-#: ui/main_window.py:1915
+#: ui/main_window.py:1916
 msgid "This file will be converted as a single file."
 msgstr ""
 
-#: ui/main_window.py:1903
+#: ui/main_window.py:1904
 msgid "This file will be split into {count} tracks."
 msgstr ""
 
@@ -2226,7 +2246,7 @@ msgstr ""
 msgid "Title, otherwise number"
 msgstr ""
 
-#: ui/main_window.py:420
+#: ui/main_window.py:421
 msgid "To split"
 msgstr ""
 
@@ -2262,7 +2282,7 @@ msgstr ""
 msgid "Track number"
 msgstr ""
 
-#: ui/main_window.py:1160
+#: ui/main_window.py:1161
 msgid "Track settings applied to {count} files."
 msgstr ""
 
@@ -2270,11 +2290,11 @@ msgstr ""
 msgid "Track title"
 msgstr ""
 
-#: core/conversion.py:112 ui/main_window.py:1859
+#: core/conversion.py:170 ui/main_window.py:1860
 msgid "Track {number}"
 msgstr ""
 
-#: ui/main_window.py:454
+#: ui/main_window.py:455
 msgid "Tracks"
 msgstr ""
 
@@ -2282,8 +2302,8 @@ msgstr ""
 msgid "Ultra Slow"
 msgstr ""
 
-#: ui/main_window.py:653 ui/main_window.py:663 ui/main_window.py:670
-#: ui/main_window.py:671
+#: ui/main_window.py:654 ui/main_window.py:664 ui/main_window.py:671
+#: ui/main_window.py:672
 msgid "Unable to check for updates."
 msgstr ""
 
@@ -2303,11 +2323,11 @@ msgstr ""
 msgid "Unable to download the installer from GitHub."
 msgstr ""
 
-#: ui/main_window.py:2438
+#: ui/main_window.py:2452
 msgid "Unable to open the DownAccess page."
 msgstr ""
 
-#: ui/main_window.py:2426
+#: ui/main_window.py:2440
 msgid "Unable to open the GitHub repository page."
 msgstr ""
 
@@ -2315,7 +2335,7 @@ msgstr ""
 msgid "Unable to open the release page."
 msgstr ""
 
-#: ui/main_window.py:1376
+#: ui/main_window.py:1377
 msgid "Unable to restart the application after changing language."
 msgstr ""
 
@@ -2332,7 +2352,7 @@ msgstr ""
 msgid "Unable to send the support report right now."
 msgstr ""
 
-#: ui/main_window.py:539 ui/main_window.py:543
+#: ui/main_window.py:540 ui/main_window.py:544
 msgid "Unable to start the update installer."
 msgstr ""
 
@@ -2348,7 +2368,7 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: ui/main_window.py:1862 ui/main_window.py:414
+#: ui/main_window.py:1863 ui/main_window.py:415
 msgid "Unknown album"
 msgstr ""
 
@@ -2360,7 +2380,7 @@ msgstr ""
 msgid "Update Available"
 msgstr ""
 
-#: ui/main_window.py:689 ui/main_window.py:733
+#: ui/main_window.py:690 ui/main_window.py:734
 msgid "Update available: {version}"
 msgstr ""
 
@@ -2372,7 +2392,7 @@ msgstr ""
 msgid "Update installation cancelled."
 msgstr ""
 
-#: ui/main_window.py:739
+#: ui/main_window.py:740
 msgid "Update now"
 msgstr ""
 
@@ -2380,7 +2400,7 @@ msgstr ""
 msgid "Update problem"
 msgstr ""
 
-#: ui/main_window.py:738
+#: ui/main_window.py:739
 msgid "Update required"
 msgstr ""
 
@@ -2393,11 +2413,11 @@ msgstr ""
 msgid "Use Tab to navigate audio options."
 msgstr ""
 
-#: ui/settings_dialog.py:856
+#: ui/settings_dialog.py:864
 msgid "Use Tab to navigate image options."
 msgstr ""
 
-#: ui/main_window.py:132
+#: ui/main_window.py:133
 msgid ""
 "Use arrows to browse files. Alt+Up/Down reorders the focused file. Press "
 "Delete to remove selected entries."
@@ -2427,11 +2447,11 @@ msgid ""
 "Do you want to continue?"
 msgstr ""
 
-#: core/support.py:390 ui/main_window.py:1396 ui/main_window.py:1454
+#: core/support.py:390 ui/main_window.py:1397 ui/main_window.py:1455
 msgid "Video"
 msgstr ""
 
-#: ui/settings_dialog.py:586 ui/settings_dialog.py:610
+#: ui/settings_dialog.py:586 ui/settings_dialog.py:618
 msgid "Video Preset"
 msgstr ""
 
@@ -2447,7 +2467,7 @@ msgstr ""
 msgid "Video Tracks"
 msgstr ""
 
-#: ui/main_window.py:278
+#: ui/main_window.py:279
 msgid "Video files list"
 msgstr ""
 
@@ -2459,7 +2479,7 @@ msgstr ""
 msgid "Video mode re-encode"
 msgstr ""
 
-#: ui/settings_dialog.py:587 ui/settings_dialog.py:611
+#: ui/settings_dialog.py:587 ui/settings_dialog.py:619
 msgid "Video quality CRF"
 msgstr ""
 
@@ -2471,7 +2491,7 @@ msgstr ""
 msgid "Video: Copy"
 msgstr ""
 
-#: ui/main_window.py:217
+#: ui/main_window.py:218
 msgid "View on &GitHub..."
 msgstr ""
 
@@ -2491,7 +2511,7 @@ msgstr ""
 msgid "WMA - Audio (Legacy)"
 msgstr ""
 
-#: ui/main_window.py:1976 ui/main_window.py:523 ui/main_window.py:624
+#: ui/main_window.py:1977 ui/main_window.py:524 ui/main_window.py:625
 #: ui/track_manager.py:442
 msgid "Warning"
 msgstr ""
@@ -2523,7 +2543,7 @@ msgstr ""
 msgid "Yes, send report"
 msgstr ""
 
-#: ui/main_window.py:676 ui/main_window.py:677
+#: ui/main_window.py:677 ui/main_window.py:678
 msgid "You are up to date."
 msgstr ""
 
@@ -2552,11 +2572,11 @@ msgstr ""
 msgid "unreadable stream"
 msgstr ""
 
-#: ui/main_window.py:1861
+#: ui/main_window.py:1862
 msgid "{album} — {count} tracks"
 msgstr ""
 
-#: ui/main_window.py:415
+#: ui/main_window.py:416
 msgid "{album} — {count} tracks (CUE)"
 msgstr ""
 
@@ -2564,43 +2584,43 @@ msgstr ""
 msgid "{app_name} - {issue} - v{version}"
 msgstr ""
 
-#: ui/main_window.py:1486
+#: ui/main_window.py:1487
 msgid ""
 "{audio_count} audio, {video_count} video, {image_count} image file(s) "
 "loaded."
 msgstr ""
 
-#: ui/main_window.py:762
+#: ui/main_window.py:763
 msgid "{count} file(s) added from folder."
 msgstr ""
 
-#: ui/main_window.py:1535
+#: ui/main_window.py:1536
 msgid "{count} file(s) added."
 msgstr ""
 
-#: ui/main_window.py:787
+#: ui/main_window.py:788
 msgid "{count} file(s) pasted from the clipboard."
 msgstr ""
 
-#: ui/main_window.py:799
+#: ui/main_window.py:800
 msgid ""
 "{count} file(s) received; they will be added when the current conversion "
 "finishes."
 msgstr ""
 
-#: ui/main_window.py:1580
+#: ui/main_window.py:1581
 msgid "{count} file(s) removed."
 msgstr ""
 
-#: ui/main_window.py:1615
+#: ui/main_window.py:1616
 msgid "{count} file(s) selected."
 msgstr ""
 
-#: ui/presets_dialog.py:388
+#: ui/presets_dialog.py:394
 msgid "{count} preset(s) exported."
 msgstr ""
 
-#: ui/presets_dialog.py:315
+#: ui/presets_dialog.py:321
 msgid "{count} preset(s) imported."
 msgstr ""
 
@@ -2616,7 +2636,7 @@ msgstr ""
 msgid "{count}x Subtitles"
 msgstr ""
 
-#: ui/main_window.py:2156 ui/main_window.py:2212
+#: ui/main_window.py:2166 ui/main_window.py:2226
 msgid "{eta} remaining"
 msgstr ""
 
@@ -2624,28 +2644,28 @@ msgstr ""
 msgid "{field} must be a whole number."
 msgstr ""
 
-#: ui/main_window.py:448
+#: ui/main_window.py:449
 msgid "{name} moved, {pos} of {total}"
 msgstr ""
 
-#: ui/main_window.py:2280
+#: ui/main_window.py:2294
 msgid ""
 "{paths}\n"
 "...and {count} more file(s)."
 msgstr ""
 
-#: ui/main_window.py:2194
+#: ui/main_window.py:2208
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error"
 msgstr ""
 
-#: ui/main_window.py:2198
+#: ui/main_window.py:2212
 msgid ""
 "{progress}% - {running} running / {queued} queued / {done} done / {skipped} "
 "skipped / {error} error / {stopped} stopped"
 msgstr ""
 
-#: ui/main_window.py:1456
+#: ui/main_window.py:1457
 msgid "{tab} tab selected."
 msgstr ""

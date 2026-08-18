@@ -11,6 +11,7 @@ from core.ffmpeg_helpers import (
     apply_audio_codec_args,
     apply_common_audio_options,
     apply_metadata_preservation,
+    detect_uncopyable_streams,
     get_ffmpeg_path,
     is_transport_stream,
     parse_ffmpeg_threads,
@@ -38,9 +39,25 @@ class MergeTask:
         self.ffmpeg_exe = get_ffmpeg_path()
         self.process = None
         self.stderr_lines = []
+        # Flux dont la copie a dû être abandonnée au profit d'un réencodage
+        # (conteneur incapable de les accueillir tels quels).
+        self.copy_fallback_kinds = set()
         self.total_duration = sum(
             float(getattr(m, 'duration', 0) or 0) for m in input_list
         )
+
+    def _close_process_streams(self):
+        """Les tubes du sous-processus ne se referment pas tout seuls : sans ça
+        les descripteurs restent ouverts jusqu'au ramasse-miettes."""
+        if self.process is None:
+            return
+        for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
+            if stream is None:
+                continue
+            try:
+                stream.close()
+            except OSError:
+                pass
 
     def stop(self):
         if self.process and self.process.poll() is None:
@@ -115,7 +132,7 @@ class MergeTask:
             start_ms = end_ms
         return '\n'.join(lines) + '\n'
 
-    def run(self, progress_callback=None, stop_check_callback=None):
+    def run(self, progress_callback=None, stop_check_callback=None, force_reencode=None):
         for meta in self.input_list:
             if not os.path.isfile(meta.full_path):
                 logging.error("Fichier d'entrée introuvable au moment de la fusion : %s", meta.full_path)
@@ -128,6 +145,9 @@ class MergeTask:
 
         is_m4b = self.target_format == 'm4b'
         meta_path = None
+        # Flux que le conteneur a refusés en copie lors d'une première tentative.
+        force_reencode = set(force_reencode or ())
+        copy_kinds = set()
 
         list_fd, list_path = tempfile.mkstemp(suffix='.txt', prefix='amc_concat_')
         try:
@@ -154,7 +174,8 @@ class MergeTask:
 
             if self.target_format in VIDEO_CONTAINER_OUTPUTS:
                 video_mode = self.settings.get('video_mode', 'convert')
-                if video_mode == 'copy':
+                if video_mode == 'copy' and 'video' not in force_reencode:
+                    copy_kinds.add('video')
                     cmd.extend(['-c:v', 'copy'])
                 else:
                     crf = str(self.settings.get('video_crf', 23))
@@ -165,13 +186,15 @@ class MergeTask:
                         video_profile = str(self.settings.get('video_profile', 'high') or 'high')
                         cmd.extend(['-profile:v', video_profile])
                 audio_mode = self.settings.get('audio_mode', 'convert')
-                if audio_mode == 'copy':
+                if audio_mode == 'copy' and 'audio' not in force_reencode:
+                    copy_kinds.add('audio')
                     cmd.extend(['-c:a', 'copy'])
                 else:
                     self._apply_audio_codec_settings(cmd)
             else:
                 audio_mode = self.settings.get('audio_mode', 'convert')
-                if audio_mode == 'copy':
+                if audio_mode == 'copy' and 'audio' not in force_reencode:
+                    copy_kinds.add('audio')
                     cmd.extend(['-c:a', 'copy'])
                 else:
                     self._apply_audio_codec_settings(cmd)
@@ -244,6 +267,32 @@ class MergeTask:
             if self.process.returncode != 0:
                 if stop_check_callback and stop_check_callback():
                     raise Exception("Stopped by user")
+
+                # Même filet que pour une conversion simple : si le conteneur de
+                # sortie n'accepte pas le codec copié tel quel (AVI DivX vers MP4),
+                # on refait la fusion en réencodant le flux fautif au lieu de rendre
+                # une erreur de muxeur incompréhensible.
+                retry_kinds = detect_uncopyable_streams(
+                    self.stderr_lines, self.input_list, copy_kinds
+                )
+                if retry_kinds:
+                    logging.warning(
+                        "Fusion : copie impossible vers %s (%s), nouvelle tentative en réencodage.",
+                        self.target_format,
+                        ", ".join(sorted(retry_kinds)),
+                    )
+                    self.copy_fallback_kinds = set(force_reencode) | retry_kinds
+                    self.stderr_lines = []
+                    # self.process va être remplacé par celui de la reprise : fermer
+                    # ses tubes maintenant, sinon le finally ne verra plus ce
+                    # processus-ci et laissera trois descripteurs derrière lui.
+                    self._close_process_streams()
+                    return self.run(
+                        progress_callback,
+                        stop_check_callback,
+                        force_reencode=self.copy_fallback_kinds,
+                    )
+
                 logging.error("FFmpeg (fusion) a échoué avec le code %s", self.process.returncode)
                 tail = "\n".join(self.stderr_lines[-50:])
                 raise Exception(f"FFmpeg merge error (code {self.process.returncode}):\n{tail}")
@@ -251,16 +300,7 @@ class MergeTask:
             logging.info("Fusion terminée avec succès.")
 
         finally:
-            # Les tubes du sous-processus ne se referment pas tout seuls : sans ça
-            # les descripteurs restent ouverts jusqu'au ramasse-miettes.
-            if self.process is not None:
-                for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
-                    if stream is None:
-                        continue
-                    try:
-                        stream.close()
-                    except OSError:
-                        pass
+            self._close_process_streams()
             try:
                 os.unlink(list_path)
             except Exception:

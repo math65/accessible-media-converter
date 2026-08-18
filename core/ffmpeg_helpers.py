@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import sys
 
 
@@ -56,6 +57,64 @@ def _bin_path(executable):
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     return os.path.join(base_path, 'bin', executable)
 
+
+
+# Le muxeur refuse un flux copié tel quel quand le conteneur n'a pas de tag pour
+# son codec : « Could not find tag for codec msmpeg4v3 in stream #0, codec not
+# currently supported in container ». Rien n'est écrit, tout le fichier échoue.
+_COPY_TAG_ERROR_RE = re.compile(
+    r"Could not find tag for codec ([\w.+-]+) in stream #\d+", re.IGNORECASE
+)
+
+
+def detect_uncopyable_streams(stderr_lines, metas, copy_kinds):
+    """Quels flux en mode « copie » le conteneur de sortie a-t-il refusés ?
+
+    Renvoie un sous-ensemble de ``copy_kinds`` ({'video', 'audio'}) déduit du
+    message du muxeur. Le codec cité est rapproché de ceux des sources (``metas``,
+    plusieurs pour une fusion) afin de ne réencoder que le flux fautif ; faute de
+    correspondance — ou de métadonnées — on réencode tout ce qui était en copie
+    plutôt que d'échouer.
+    """
+    if not copy_kinds:
+        return set()
+    codecs = set()
+    for line in stderr_lines or ():
+        match = _COPY_TAG_ERROR_RE.search(line)
+        if match:
+            codecs.add(match.group(1).lower())
+    if not codecs:
+        return set()
+
+    video_codecs = set()
+    audio_codecs = set()
+
+    def collect(target, tracks, fallback):
+        for track in tracks or ():
+            name = str(getattr(track, 'codec_name', '') or '').lower()
+            if name:
+                target.add(name)
+        name = str(fallback or '').lower()
+        if name:
+            target.add(name)
+
+    for meta in metas or ():
+        if meta is None:
+            continue
+        collect(video_codecs, getattr(meta, 'video_tracks', ()), getattr(meta, 'video_codec', ''))
+        collect(audio_codecs, getattr(meta, 'audio_tracks', ()), getattr(meta, 'audio_codec', ''))
+
+    kinds = set()
+    for codec in codecs:
+        if codec in video_codecs:
+            kinds.add('video')
+        elif codec in audio_codecs:
+            kinds.add('audio')
+        else:
+            # Codec non rattachable (source non sondée, nom différent côté muxeur) :
+            # on ne sait pas lequel est fautif, on réencode tout ce qui était copié.
+            return set(copy_kinds)
+    return kinds & set(copy_kinds)
 
 def get_ffmpeg_path():
     candidate = _bin_path('ffmpeg.exe')
