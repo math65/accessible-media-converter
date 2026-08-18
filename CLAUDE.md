@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.2`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.3`.
 
 ## Running and building
 
@@ -166,6 +166,31 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.3 — published 2026-08-18, tag `v1.20.3`.** Second field report of the day, from a
+  **different user than Sèb** (215 video files loaded, MP4 H.264 output, "Copy Stream (Advanced)"
+  on for video): every old AVI failed. Their video is **msmpeg4v3 (DivX 3)**, which the MP4 muxer
+  cannot tag — "Could not find tag for codec msmpeg4v3 in stream #0" → header refused, nothing
+  written, the **whole file** fails with raw FFmpeg output as the only explanation.
+  - **Copy is only a shortcut; the requested format was MP4/H.264.** When the muxer refuses a copied
+    stream, `ConversionTask.run` (and `MergeTask.run`) now **re-runs the conversion re-encoding the
+    offending stream** — `run(..., force_reencode={'video'|'audio'})`. Detection lives in
+    `core/ffmpeg_helpers.detect_uncopyable_streams(stderr_lines, metas, copy_kinds)`: it parses the
+    muxer message and matches the named codec against the source's codecs so only the guilty side is
+    re-encoded (here video; audio was already being encoded to AAC); with no match — or no probe
+    metadata — everything still in copy mode is re-encoded. **The fallback only fires after a real
+    FFmpeg refusal**, never on a guessed codec allowlist, so a genuinely copyable H.264 → MP4 is
+    still copied. Convergence is bounded (at most video then audio).
+  - **Not silent**: `BatchJob.notice = NOTICE_COPY_REENCODED` (`core/batch_manager.py`) flows through
+    the job event and the Status column reads "Done (re-encoded, copy not possible)"; the merge says
+    it in its completion box. Tooltip added on the video copy radio; EN/FR audio + video docs note
+    the fallback and that an **MKV output keeps the copy** for these files.
+  - **Leak fixed on the way**: `MergeTask` replaced `self.process` on retry, so the `finally` no
+    longer saw the first process and left three descriptors behind — `_close_process_streams()`
+    extracted and called before the retry (same pattern as `ConversionTask`).
+  - `tests/test_copy_fallback.py`: 7 detection cases + 4 real conversions with the embedded FFmpeg
+    (DivX 3 AVI → re-encoded MP4, H.264 control still copied, batch notice, merge). Suite: 47 tests.
+    Embedded FFmpeg unchanged (**9.0.1**). ⚠️ Published **without** real-world NVDA validation.
 
 - **v1.20.2 — published 2026-08-18, tag `v1.20.2`.** One-bug release from a **field report by Sèb**
   on v1.20.1: with a video loaded and the output set to "MP3 - Audio (Extract)", **none of his audio
