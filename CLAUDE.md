@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.1`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.2`.
 
 ## Running and building
 
@@ -166,6 +166,22 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.2 — published 2026-08-18, tag `v1.20.2`.** One-bug release from a **field report by Sèb**
+  on v1.20.1: with a video loaded and the output set to "MP3 - Audio (Extract)", **none of his audio
+  presets showed up**. `PresetsDialog._visible_presets` (`ui/presets_dialog.py`) filtered on the
+  preset's stored **category** — the tab it was saved from — but tabs are not format families:
+  `VIDEO_OUTPUT_FORMAT_KEYS` contains every `AUDIO_OUTPUT_FORMAT_KEYS` (audio extraction), so an MP3
+  preset made on the audio tab was hidden exactly where it applies verbatim. Visibility now follows
+  the preset's **output format** via the new `core.presets.is_preset_applicable(preset, category)`:
+  audio presets appear on the video tab and vice versa, MP4/MKV stay out of the audio tab, image stays
+  isolated both ways. The stored `category` now only drives the metadata-template field set — and
+  `on_edit_metadata` reads it from the **preset** rather than the tab, so an audio preset edited from
+  the video tab keeps its audio fields instead of switching to series/season/episode. New
+  `tests/test_presets.py` (6 cases, incl. the reported one and a loop over all 8 audio formats);
+  EN/FR presets docs fixed (the "presets are grouped by the active tab" paragraph had become false).
+  No new translatable string. Embedded FFmpeg unchanged (**9.0.1**). ⚠️ Published **without**
+  real-world NVDA validation (logic covered by the tests).
 
 - **v1.20.1 — published 2026-08-17, tag `v1.20.1`, commit `80fe1ea`.** Bugfix release driven by **three field error reports on
   v1.20.0, from three different users (NOT Sèb)**. One carried a comment ("4 failures out of 40
