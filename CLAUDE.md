@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.3`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.4`.
 
 ## Running and building
 
@@ -166,6 +166,40 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.4 — published 2026-08-25, tag `v1.20.4`.** One-bug release from an **AppleVis comment**
+  (user « Nut », 2026-08-21, on the thread presenting AMC and DownAccess): after converting a song,
+  **the year was missing** from the file's properties even with "Preserve original metadata" ticked —
+  while title, artist and album showed fine.
+  - **The first diagnosis was wrong, and had already been published.** « Windows only reads ID3v2.3
+    (TYER), not ID3v2.4 (TDRC) » — false. Querying the Explorer property system itself
+    (`Shell.Application` COM, `GetDetailsOf($item, 15)` = the "Year" column) shows Windows 11 reads
+    **both** versions. **That COM query is the right tool** for any "it doesn't show up in Windows"
+    report: it returns exactly what Explorer displays, where ffprobe reads everything back happily and
+    never sees the problem. A correction was published on the thread.
+  - **Real cause**: Windows only parses a date tag when the value is `YYYY` or `YYYY-MM-DD`.
+    **iTunes / Apple Music** files carry a full ISO timestamp (`1998-05-03T07:00:00Z`), which
+    `-map_metadata 0` copied verbatim → blank year, everything else intact. Three container rules,
+    all measured: **MP3** — the timestamp in TDRC stays blank, but ID3v2.3 makes FFmpeg reduce it to
+    TYER (4 digits) which always parses; **FLAC** — strictest of all, needs the **bare year**, even a
+    valid `1998-05-03` leaves the column empty; **WMA/ASF** — FFmpeg's generic `date` tag is *never*
+    read, only the native **`WM/Year`** attribute shows (no `date` value works, tested). WAV shows no
+    metadata at all in Explorer (not even title) — out of scope.
+  - **Fix** (`core/ffmpeg_helpers.py`): `normalize_date_tag(value, year_only=)` +
+    `apply_date_tag_compat(cmd, meta, target_format)`, called by `ConversionTask` after
+    `-map_metadata 0` and **guarded on `override_tags.get('date')`** so a date edited in the metadata
+    editor stays authoritative; `YEAR_ONLY_OUTPUT_FORMATS = ('flac',)`,
+    `ASF_YEAR_OUTPUT_FORMATS = ('wma',)`. Plus `apply_id3v2_compat_args(cmd, output_path)`
+    (`-id3v2_version 3` on `.mp3` outputs — a **private mp3-muxer option**, never emit it for another
+    container or the whole command fails) in `ConversionTask`, `MergeTask` and `MetadataRetagTask`.
+    A value already readable, empty, or with no identifiable year is left untouched.
+  - **False lead dropped on the way**: "OGG loses all its tags". No — Vorbis comments are **per
+    stream**, they live in ffprobe's `stream_tags`, not `format_tags`.
+  - `tests/test_year_metadata.py` (13 cases). Suite: 47 → **60 tests**. Embedded FFmpeg unchanged
+    (**9.0.1**, already the latest GyanD release). ⚠️ Published **without** real-world NVDA validation.
+  - Tooling: the `/update-ffmpeg` skill was **folded into `/release`** as step 2 (refresh before the
+    build, verify in `dist/` at step 6), and that step now runs the test suite when FFmpeg changes —
+    it is the audit that converts into all 31 output formats.
 
 - **v1.20.3 — published 2026-08-18, tag `v1.20.3`.** Second field report of the day, from a
   **different user than Sèb** (215 video files loaded, MP4 H.264 output, "Copy Stream (Advanced)"
