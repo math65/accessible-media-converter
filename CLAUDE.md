@@ -258,7 +258,7 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   - **Embedded libmp3lame is still LAME 3.100** (verified: `lame-3.100` build paths inside the binary
     and the `LAME3.100` tag written into encoded MP3s) even though **LAME 4.0 shipped upstream
     2026-07-11**. Nothing to do on our side — it depends on GyanD rebuilding against it; worth
-    re-checking at each `/update-ffmpeg`.
+    re-checking at each release (the FFmpeg refresh is step 2 of `/release`).
   - **First automated test suite** (see "Run the test suite"): 30 tests, including real FFmpeg
     conversions and a headless UI smoke test that fails if the StaticBox warnings ever come back.
     It immediately paid for itself: its `ResourceWarning`s exposed the unclosed FFmpeg pipes in
