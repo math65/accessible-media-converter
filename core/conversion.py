@@ -10,6 +10,8 @@ from core.ffmpeg_helpers import (
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
     apply_common_audio_options,
+    apply_date_tag_compat,
+    apply_id3v2_compat_args,
     apply_metadata_preservation,
     broadcast_input_args,
     detect_uncopyable_streams,
@@ -599,6 +601,13 @@ class ConversionTask:
                 cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
                 preserve_metadata = True
 
+            if preserve_metadata and not override_tags.get('date') and self.meta is not None:
+                # La date heritee de la source peut etre un horodatage complet (fichiers
+                # iTunes) que Windows n'affiche pas : on la ramene a une forme lisible.
+                # Apres les tags edites il ecraserait le choix de l'utilisateur, d'ou la
+                # garde sur override_tags.
+                apply_date_tag_compat(cmd, self.meta, self.target_format)
+
         # force_reencode : flux que le conteneur a refusés en copie lors d'une
         # première tentative (voir la reprise en fin de run).
         force_reencode = set(force_reencode or ())
@@ -672,6 +681,8 @@ class ConversionTask:
         if self.target_format == 'm4b':
             # Le muxer ipod gère .m4b (sinon FFmpeg ne déduit pas le conteneur).
             cmd.extend(['-f', 'ipod'])
+
+        apply_id3v2_compat_args(cmd, output_path)
 
         cmd.append(output_path)
         self.last_command = list(cmd)

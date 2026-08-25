@@ -154,6 +154,117 @@ def apply_metadata_preservation(cmd, settings):
     return False
 
 
+# ── Annee visible sous Windows ────────────────────────────────────────────────
+# Signale sur AppleVis le 2026-08-21 : apres conversion, « the year is missing even
+# though the box to preserve full metadata and cover art is checked » — titre, artiste
+# et album, eux, s'affichent.
+#
+# Cause reelle (verifiee en interrogeant le systeme de proprietes de l'Explorateur
+# lui-meme, pas une supposition) : Windows lit tres bien l'ID3v2.4, MAIS il n'analyse
+# la date que si la valeur vaut « AAAA » ou « AAAA-MM-JJ ». Les fichiers iTunes /
+# Apple Music stockent un horodatage ISO complet dans leur tag date
+# (« 1998-05-03T07:00:00Z ») ; `-map_metadata 0` le recopie tel quel et l'Explorateur
+# renonce, laissant l'annee vide pendant que le reste s'affiche. Meme symptome observe
+# avec « 1998/05/03 » ou « (1998) ».
+#
+# Deux garde-fous complementaires, l'un n'annule pas l'autre :
+#   1. normalize_date_tag() ramene la valeur a une forme lisible — seul remede pour les
+#      sorties FLAC et WMA, ou l'horodatage brut reste sinon invisible sous Windows ;
+#   2. l'ID3v2.3 sur les sorties MP3, ou FFmpeg range l'annee dans TYER (4 chiffres,
+#      toujours analysable) au lieu du TDRC libre de l'ID3v2.4 ; c'est aussi ce que
+#      produisent LAME et les encodeurs grand public, donc un gain de compatibilite
+#      avec les vieux lecteurs. Contrepartie acceptee : une date complete se scinde en
+#      TYER + TDAT au lieu d'un TDRC unique.
+ID3V2_COMPAT_VERSION = '3'
+
+# Une annee sur 4 chiffres, eventuellement suivie d'un mois et d'un jour quel que soit
+# le separateur. Volontairement permissif : on cherche a recuperer l'annee, pas a
+# valider une date.
+_DATE_VALUE_RE = re.compile(r'(\d{4})(?:[-/.](\d{1,2})[-/.](\d{1,2}))?')
+_WINDOWS_READABLE_DATE_RE = re.compile(r'^\d{4}(-\d{2}-\d{2})?$')
+_YEAR_ONLY_RE = re.compile(r'^\d{4}$')
+
+
+# Le FLAC est le plus exigeant des conteneurs qu'on produit : Windows n'affiche son
+# annee que si le commentaire Vorbis DATE vaut exactement « AAAA » — meme un
+# « 1998-05-03 » parfaitement valide laisse la colonne vide. Les autres (MP3, M4A,
+# M4B, OGG) acceptent la date complete. On ne reduit donc a l'annee seule que la ou
+# c'est necessaire, pour ne pas jeter le mois et le jour partout ailleurs.
+YEAR_ONLY_OUTPUT_FORMATS = ('flac',)
+
+# Conteneurs ASF : l'annee passe par l'attribut natif WM/Year (voir plus bas).
+ASF_YEAR_OUTPUT_FORMATS = ('wma',)
+
+
+def normalize_date_tag(value, year_only=False):
+    """Ramene une date de tag a « AAAA-MM-JJ », ou a « AAAA » si year_only.
+
+    Renvoie None quand il n'y a rien a faire : valeur deja lisible telle quelle, vide,
+    ou sans annee identifiable (on prefere alors laisser la valeur d'origine intacte
+    plutot que d'inventer une date).
+    """
+    if not isinstance(value, str):
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    if value == value[:4] and _YEAR_ONLY_RE.match(value):
+        return None
+    if not year_only and _WINDOWS_READABLE_DATE_RE.match(value):
+        return None
+    match = _DATE_VALUE_RE.search(value)
+    if not match:
+        return None
+    year, month, day = match.groups()
+    if month and day and not year_only:
+        return f"{year}-{int(month):02d}-{int(day):02d}"
+    return year
+
+
+def date_tag_year(value):
+    """Annee sur 4 chiffres contenue dans une date de tag, ou None."""
+    if not isinstance(value, str):
+        return None
+    match = _DATE_VALUE_RE.search(value.strip())
+    return match.group(1) if match else None
+
+
+def apply_date_tag_compat(cmd, meta, target_format=None):
+    """Reecrit le tag date herite de la source s'il est illisible pour Windows.
+
+    A placer apres `-map_metadata 0` (la derniere occurrence de `-metadata` gagne) et
+    avant les tags edites par l'utilisateur, qui doivent rester prioritaires.
+    """
+    tags = getattr(meta, 'format_tags', None) or {}
+    raw = tags.get('date') or tags.get('year')
+    normalized = normalize_date_tag(
+        raw, year_only=target_format in YEAR_ONLY_OUTPUT_FORMATS
+    )
+    if normalized:
+        cmd.extend(['-metadata', f'date={normalized}'])
+
+    if target_format in ASF_YEAR_OUTPUT_FORMATS:
+        # L'ASF est un cas a part : Windows n'y lit pas le tag `date` generique de
+        # FFmpeg, seulement l'attribut natif WM/Year. Sans lui l'annee d'un WMA reste
+        # invisible quelle que soit sa valeur — verifie, y compris avec un simple
+        # « 1998 ». On ecrit les deux : `date` pour les lecteurs tiers, WM/Year pour
+        # l'Explorateur.
+        year = date_tag_year(normalized or raw)
+        if year:
+            cmd.extend(['-metadata', f'WM/Year={year}'])
+
+
+def apply_id3v2_compat_args(cmd, output_path):
+    """Force l'ID3v2.3 sur les sorties MP3.
+
+    C'est une option privee du muxeur mp3 : elle doit etre placee avant le fichier de
+    sortie, et ne doit surtout pas etre emise pour un autre conteneur (FFmpeg refuse
+    l'option inconnue et toute la commande echoue).
+    """
+    if os.path.splitext(output_path or '')[1].lower() == '.mp3':
+        cmd.extend(['-id3v2_version', ID3V2_COMPAT_VERSION])
+
+
 def apply_common_audio_options(cmd, settings):
     sample_rate = settings.get('audio_sample_rate', 'original')
     if sample_rate != 'original':

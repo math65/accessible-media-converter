@@ -9,7 +9,7 @@ import os
 import subprocess
 import tempfile
 
-from core.ffmpeg_helpers import get_ffmpeg_path
+from core.ffmpeg_helpers import apply_id3v2_compat_args, get_ffmpeg_path
 from core.metadata_edit import (
     build_tag_metadata_args,
     cover_stream_args,
@@ -52,6 +52,7 @@ class MetadataRetagTask:
 
         cmd.extend(['-map_metadata', '0', '-map_chapters', '0'])
         cmd.extend(build_tag_metadata_args(tags))
+        apply_id3v2_compat_args(cmd, temp_path)
         cmd.append(temp_path)
         return cmd
 

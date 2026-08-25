@@ -10,6 +10,7 @@ from core.ffmpeg_helpers import (
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
     apply_common_audio_options,
+    apply_id3v2_compat_args,
     apply_metadata_preservation,
     detect_uncopyable_streams,
     get_ffmpeg_path,
@@ -214,6 +215,8 @@ class MergeTask:
 
             if is_m4b:
                 cmd.extend(['-f', 'ipod'])  # muxer qui gère .m4b
+
+            apply_id3v2_compat_args(cmd, self.output_path)
 
             cmd.append(self.output_path)
 
