@@ -29,6 +29,10 @@ SKIP_REASON_BATCH_STOPPED = "batch_stopped"
 # Conversion réussie, mais pas telle que demandée : la copie du flux était
 # impossible dans le conteneur de sortie, le fichier a été réencodé.
 NOTICE_COPY_REENCODED = "copy_reencoded"
+# Un sous-titre a dû être retiré : le conteneur MP4 ne sait pas écrire un
+# silence de plus de ~4295 s entre deux répliques, et le garder coûte tout
+# l'audio du fichier (voir core/ffmpeg_helpers).
+NOTICE_SUBTITLE_DROPPED = "subtitle_dropped"
 
 
 @dataclass
@@ -360,6 +364,10 @@ class BatchConversionManager:
             # réencodant. On le signale, sinon l'utilisateur croit avoir obtenu une
             # copie sans perte alors que le fichier a été réencodé.
             job.notice = NOTICE_COPY_REENCODED
+        if getattr(task, 'dropped_subtitle_tracks', None):
+            # Perdre une piste de sous-titres se voit moins qu'un réencodage :
+            # ça prime sur la notice de copie si les deux sont vraies.
+            job.notice = NOTICE_SUBTITLE_DROPPED
         self._set_job_state(job, JOB_STATE_DONE, progress=100)
         return JOB_STATE_DONE
 

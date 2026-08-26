@@ -15,10 +15,12 @@ from core.ffmpeg_helpers import (
     apply_id3v2_compat_args,
     apply_metadata_preservation,
     broadcast_input_args,
+    detect_oversized_subtitle_streams,
     detect_uncopyable_streams,
     get_ffmpeg_path,
     get_ffprobe_path,
     parse_ffmpeg_threads,
+    parse_oversized_subtitle_stream,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
 from core.probe import parse_stream_duration
@@ -154,6 +156,18 @@ class ConversionTask:
         # (conteneur incapable de les accueillir tels quels) : lu par le
         # gestionnaire de lot pour le signaler dans la liste des fichiers.
         self.copy_fallback_kinds = set()
+        # Sous-titres retirés parce que le muxeur MP4 n'a pas su écrire leurs
+        # silences (voir ffmpeg_helpers) : lu par le gestionnaire de lot pour le
+        # signaler dans la liste des fichiers.
+        self.dropped_subtitle_tracks = set()
+        # Flux de SORTIE refusés par le muxeur pendant l'exécution en cours.
+        # Repéré à la volée : le tampon stderr ne garde que 200 lignes et le
+        # message peut survenir loin de la fin sur un film long.
+        self._oversized_subtitle_outputs = set()
+        # Indices source mappés, dans l'ordre des -map (= ordre des flux de
+        # sortie), pour retrouver la piste visée par un message du muxeur.
+        self._mapped_source_indices = []
+        self._last_mapped_entries = {}
 
         logging.debug("Tâche initialisée : %s -> %s", self.input_path, self.target_format)
 
@@ -277,14 +291,24 @@ class ConversionTask:
         apply_audio_codec_args(cmd, self._get_target_audio_codec(), self.settings)
         self._apply_audio_normalization_filters(cmd, mapped_container_tracks)
 
-    def _filter_subtitle_entries_for_container(self, subtitle_entries):
+    def _filter_subtitle_entries_for_container(self, subtitle_entries, drop_indices=()):
         if self.target_format not in ['mp4', 'mov']:
             return subtitle_entries
 
+        drop_indices = set(drop_indices or ())
         compatible_entries = []
         for track_entry in subtitle_entries:
             codec_name = str(track_entry.get("codec_name", "")).lower()
             original_index = track_entry.get("original_index")
+
+            if original_index in drop_indices:
+                # Silence trop long pour tx3g : la garder condamne l'audio.
+                logging.warning(
+                    "Sous-titre #%s retiré de %s : le conteneur ne sait pas écrire ses silences.",
+                    original_index,
+                    self.target_format.upper(),
+                )
+                continue
 
             if codec_name in MP4_TEXT_SUBTITLE_CODECS:
                 if codec_name != "mov_text":
@@ -340,7 +364,7 @@ class ConversionTask:
             filtered_entries.append(entry)
         return filtered_entries
 
-    def _apply_video_container_track_mapping(self, cmd):
+    def _apply_video_container_track_mapping(self, cmd, drop_subtitles=()):
         effective_track_settings = get_effective_track_settings(self.meta)
 
         mapped_entries = {
@@ -353,7 +377,8 @@ class ConversionTask:
             "subtitle": self._filter_subtitle_entries_for_container(
                 self._filter_entries_against_source(
                     "subtitle", get_kept_track_entries(effective_track_settings, "subtitle")
-                )
+                ),
+                drop_indices=drop_subtitles,
             ),
         }
 
@@ -364,10 +389,13 @@ class ConversionTask:
         mapping_used = "personnalise" if getattr(self.meta, "track_settings", None) else "par defaut"
         logging.info("Utilisation du mapping vidéo explicite (%s).", mapping_used)
 
+        self._last_mapped_entries = mapped_entries
+        self._mapped_source_indices = []
         for track_type in ("video", "audio", "subtitle"):
             kept_entries = mapped_entries[track_type]
             for output_index, track_entry in enumerate(kept_entries):
                 cmd.extend(["-map", f"0:{track_entry['original_index']}"])
+                self._mapped_source_indices.append(track_entry['original_index'])
                 self._apply_track_entry_metadata(cmd, track_type, output_index, track_entry)
 
         return mapped_entries
@@ -573,7 +601,10 @@ class ConversionTask:
         return False
 
     def run(self, progress_callback=None, stop_check_callback=None, drop_cover=False,
-            force_reencode=None):
+            force_reencode=None, drop_subtitles=None):
+        drop_subtitles = set(drop_subtitles or ())
+        # Chaque tentative repart avec ses propres constats de muxage.
+        self._oversized_subtitle_outputs = set()
         if not os.path.isfile(self.input_path):
             logging.error("Fichier d'entrée introuvable au moment de la conversion : %s", self.input_path)
             raise FileNotFoundError(
@@ -627,7 +658,9 @@ class ConversionTask:
         mapped_container_tracks = None
 
         if self.target_format in VIDEO_CONTAINER_OUTPUTS and self.meta is not None:
-            mapped_container_tracks = self._apply_video_container_track_mapping(cmd)
+            mapped_container_tracks = self._apply_video_container_track_mapping(
+                cmd, drop_subtitles=drop_subtitles
+            )
         else:
             logging.debug("Mode automatique (pas de mapping vidéo explicite)")
 
@@ -811,6 +844,7 @@ class ConversionTask:
                     stop_check_callback,
                     drop_cover=drop_cover,
                     force_reencode=self.copy_fallback_kinds,
+                    drop_subtitles=drop_subtitles,
                 )
 
             logging.error(f"FFmpeg a échoué avec le code {self.process.returncode}")
@@ -831,6 +865,24 @@ class ConversionTask:
                         stop_check_callback,
                         drop_cover=True,
                         force_reencode=force_reencode,
+                        drop_subtitles=drop_subtitles,
+                    )
+                culprits = self._subtitle_streams_to_drop(drop_subtitles)
+                if culprits:
+                    logging.warning(
+                        "Sortie tronquée (%s) : nouvelle tentative sans le(s) sous-titre(s) %s, "
+                        "dont le conteneur ne sait pas écrire les silences.",
+                        os.path.basename(output_path),
+                        ", ".join(str(index) for index in sorted(culprits)),
+                    )
+                    self.dropped_subtitle_tracks |= culprits
+                    self.stderr_lines = []
+                    return self.run(
+                        progress_callback,
+                        stop_check_callback,
+                        drop_cover=drop_cover,
+                        force_reencode=force_reencode,
+                        drop_subtitles=drop_subtitles | culprits,
                     )
                 tail = "\n".join(self.stderr_lines[-50:])
                 logging.error("Fichier de sortie anormalement court : %s", output_path)
@@ -841,6 +893,33 @@ class ConversionTask:
                     + (f"\n{tail}" if tail else "")
                 )
             logging.info("Conversion terminée avec succès.")
+
+    def _subtitle_streams_to_drop(self, already_dropped):
+        """Sous-titres à retirer pour récupérer l'audio de la sortie.
+
+        Passé un certain silence entre deux répliques, le muxeur MP4 refuse
+        l'échantillon vide qui devrait le combler ET cesse d'écrire l'audio,
+        tout en terminant en code 0 (mécanisme détaillé dans ffmpeg_helpers).
+        On ne retire que la piste que FFmpeg a lui-même nommée, jamais sur une
+        supposition de durée : sans message, l'échec remonte tel quel.
+        """
+        if self.target_format not in ('mp4', 'mov'):
+            return set()
+        flagged = set(self._oversized_subtitle_outputs)
+        flagged |= detect_oversized_subtitle_streams(self.stderr_lines)
+        if not flagged:
+            return set()
+
+        subtitle_indices = {
+            entry.get('original_index')
+            for entry in (self._last_mapped_entries or {}).get('subtitle', ())
+        }
+        culprits = set()
+        for output_index in flagged:
+            if 0 <= output_index < len(self._mapped_source_indices):
+                culprits.add(self._mapped_source_indices[output_index])
+        culprits &= subtitle_indices
+        return culprits - set(already_dropped or ())
 
     def _close_process_streams(self):
         for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
@@ -865,6 +944,9 @@ class ConversionTask:
                 stripped = line.strip()
                 logging.debug(f"FFmpeg output: {stripped}")
                 self.stderr_lines.append(stripped)
+                flagged = parse_oversized_subtitle_stream(stripped)
+                if flagged is not None:
+                    self._oversized_subtitle_outputs.add(flagged)
                 if len(self.stderr_lines) > 200:
                     self.stderr_lines.pop(0)
 

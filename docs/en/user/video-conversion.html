@@ -112,6 +112,16 @@
         "Done (re-encoded, copy not possible)". Converting those files to <strong>MKV</strong>
         keeps the copy.
       </p>
+
+      <p>
+        Another case, on long films: some carry a <strong>"forced" subtitle track</strong> holding
+        only two or three cues, very far apart. MP4 cannot write a gap of more than an hour between
+        two cues; the resulting file then keeps the picture but <strong>loses the sound</strong>,
+        without reporting any error at all. The app detects this, redoes the conversion
+        <strong>without that subtitle track</strong>, and the Status column reads
+        "Done (incompatible subtitle removed)": the audio is complete, only that track is missing.
+        Here too, an <strong>MKV</strong> output keeps every subtitle.
+      </p>
     </section>
 
     <section class="section" id="audio">

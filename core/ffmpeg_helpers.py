@@ -317,3 +317,54 @@ def apply_audio_codec_args(cmd, codec_key, settings):
             cmd.extend(['-sample_fmt', 's16p'])
         elif depth == '24':
             cmd.extend(['-sample_fmt', 's32p'])
+
+
+# --- Sous-titres tx3g : silences trop longs pour le conteneur MP4 -----------
+#
+# Le muxeur MP4 range les sous-titres tx3g dans une base de temps en
+# MICROSECONDES et comble chaque silence entre deux répliques par un échantillon
+# vide. Passé la capacité d'un entier 32 bits, il refuse cet échantillon
+# (« Packet duration: N / dts: N in stream X is out of range ») **et cesse
+# d'écrire l'audio du fichier**, tout en terminant en code 0 avec une vidéo
+# complète et un index valide. Symptôme : un film parfait à l'image, muet après
+# quelques secondes, qu'aucun contrôle de durée global ne détecte (la durée d'un
+# conteneur est celle de son flux le plus long).
+#
+# Mesures (FFmpeg 9.0.1 embarqué) : le refus apparaît dès ~2148 s de silence
+# (INT32_MAX µs) ; l'audio, lui, survit encore à 4350 s et disparaît à 4662 s
+# (cas réel) comme à 4700 s. Le seuil exact de la perte audio n'a pas été
+# cerné — on ne s'y fie donc pas : la détection s'appuie sur le refus réel du
+# muxeur, jamais sur une durée devinée (même principe que le repli de copie).
+# Autres conditions observées : l'audio doit être RÉENCODÉ (en `-c:a copy` rien
+# ne casse) et le silence doit tomber pendant que l'audio coule encore.
+#
+# Cas réel (août 2026) : quatre films d'un utilisateur, tous de plus de 71 min,
+# dont un sous-titre « forcé » ne portait que trois répliques (12 s, 100 s, puis
+# 4767 s) — un silence de 4662 s. Reproduit à 10 Ko près sur 9,9 Go.
+#
+# La base de temps des pistes tx3g est imposée par FFmpeg (`-enc_time_base` n'a
+# aucun effet) et relire les temps des sous-titres coûte une lecture complète du
+# fichier (51 s sur 10 Go, intenable sur un lot). On s'appuie donc sur le message
+# du muxeur, qui nomme lui-même le flux de SORTIE fautif : gratuit et sûr.
+_OVERSIZED_SUBTITLE_RE = re.compile(r"in stream (\d+) is out of range")
+
+
+def parse_oversized_subtitle_stream(line):
+    """Index du flux de SORTIE refusé par le muxeur, ou None."""
+    match = _OVERSIZED_SUBTITLE_RE.search(line or "")
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except (TypeError, ValueError):
+        return None
+
+
+def detect_oversized_subtitle_streams(stderr_lines):
+    """Indices des flux de sortie que le muxeur a refusés (voir ci-dessus)."""
+    found = set()
+    for line in stderr_lines or ():
+        index = parse_oversized_subtitle_stream(line)
+        if index is not None:
+            found.add(index)
+    return found

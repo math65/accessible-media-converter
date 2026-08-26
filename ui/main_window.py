@@ -18,6 +18,7 @@ from core.batch_manager import (
     JOB_STATE_SKIPPED,
     JOB_STATE_STOPPED,
     NOTICE_COPY_REENCODED,
+    NOTICE_SUBTITLE_DROPPED,
     SKIP_REASON_BATCH_STOPPED,
     SKIP_REASON_EXISTS,
     BatchConversionManager,
@@ -2209,6 +2210,10 @@ class MainWindow(wx.Frame):
         if state == JOB_STATE_QUEUED:
             return _("Queued")
         if state == JOB_STATE_DONE:
+            if payload.get('notice') == NOTICE_SUBTITLE_DROPPED:
+                # Le fichier est bon et le son complet, mais une piste de
+                # sous-titres manque : à dire, sinon la perte passe inaperçue.
+                return _("Done (incompatible subtitle removed)")
             if payload.get('notice') == NOTICE_COPY_REENCODED:
                 # La copie du flux était impossible dans ce conteneur : le fichier
                 # est bien converti, mais réencodé — à ne pas passer sous silence.

@@ -113,6 +113,17 @@
         colonne État affiche « Terminé (réencodé, copie impossible) ». Convertir ces fichiers vers du
         <strong>MKV</strong> permet en revanche de garder la copie.
       </p>
+
+      <p>
+        Autre cas, sur les films longs : certains portent une piste de
+        <strong>sous-titres « forcés »</strong> ne contenant que deux ou trois répliques, très
+        espacées. Le format MP4 ne sait pas écrire un silence de plus d'une heure entre deux
+        répliques ; le fichier produit garde alors l'image mais <strong>perd le son</strong>, sans
+        afficher la moindre erreur. L'application détecte ce cas, refait la conversion
+        <strong>sans cette piste de sous-titres</strong>, et la colonne État affiche
+        « Terminé (sous-titre incompatible retiré) » : le son est complet, seule cette piste manque.
+        Une sortie <strong>MKV</strong> conserve là encore la totalité des sous-titres.
+      </p>
     </section>
 
     <section class="section" id="audio">

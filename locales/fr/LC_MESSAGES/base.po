@@ -2778,6 +2778,9 @@ msgstr "flux illisible"
 msgid "Done (re-encoded, copy not possible)"
 msgstr "Terminé (réencodé, copie impossible)"
 
+msgid "Done (incompatible subtitle removed)"
+msgstr "Terminé (sous-titre incompatible retiré)"
+
 #: ui/settings_dialog.py:593
 msgid ""
 "Keep the source video stream as is. If the output format cannot hold that "
