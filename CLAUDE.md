@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.4`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.5`.
 
 ## Running and building
 
@@ -166,6 +166,41 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.5 — prepared 2026-08-26, NOT YET BUILT OR PUBLISHED.** Driven by the August 2026 field
+  investigation with **Manu** (`[[project_field_bugs_2026_08]]`): four of his MP4s had a complete
+  video track but audio truncated at an arbitrary point (17,6 s / 750,8 s / 574,8 s / 0,13 s), the
+  audio bytes genuinely absent. **AMC was exonerated** — its audio disposition vocabulary cannot
+  emit `descriptions`, which those files carry — but the investigation exposed a real blind spot.
+  - **A container's duration is that of its LONGEST stream.** A file whose video is complete but
+    whose audio dies early therefore looks perfect to every global check, including
+    `ConversionTask._output_looks_truncated`. Two new defences:
+    **(1) at load** — `MediaTrack.duration` is now captured (`parse_stream_duration`: `duration`,
+    then `duration_ts x time_base`, then the **`DURATION` tag — the only source in Matroska**, whose
+    headers carry no per-track duration; without it every MKV would escape the check),
+    `find_short_tracks(meta)` flags audio tracks under half the container, `meta.short_audio_tracks`
+    feeds an **`Incomplete audio` marker in the Status column** and **one** summary dialog per add
+    (never one per file — batches run to 464 files). **(2) at output** —
+    `_probe_stream_durations` + `_expected_duration_for_kind` compare each stream against the
+    **matching SOURCE track**, so a source that legitimately holds 17 s of audio is not reported as
+    a failed conversion (the user was already warned at load). Unknown durations are never flagged.
+  - **AMC now keeps a log.** `setup_logger()` only ever had a `StreamHandler` to stdout and the
+    packaged exe has no console: **nothing was ever written to disk**, so no field bug was traceable
+    after the fact. Added a `RotatingFileHandler` on
+    `%APPDATA%\AccessibleMediaConverter\debug.log` (1 MB x 3), `read_log_tail()`, and
+    `build_debug_log_attachment()` which concatenates the verbose re-run **and** the app log into the
+    single `log_file` the API accepts. The **support form**, which sent no log at all, now attaches it too.
+  - **Three error-report defects fixed.** `summarize_ffmpeg_stderr` keeps the **head as well as the
+    tail** (`stderr_lines[-50:]` dropped the `Input #0 ... from '<path>'` header on multi-stream
+    sources — the source path vanished from reports); `_drop_stderr_echo` removes the tail the
+    `raise` already glued onto `error_message` (it appeared twice); and **`rerun_ffmpeg_verbose` no
+    longer overwrites the user's output file** — the command carries `-y` and ends with the output
+    path, so the diagnostic re-wrote a file that may since have been produced correctly. It now
+    redirects to a temp dir, removed afterwards.
+  - `tests/test_truncated_audio.py` (22 cases, incl. real FFmpeg fixtures: 60 s of video with 5 s of
+    audio, plus a healthy control). Suite: 60 -> **82 tests**. Embedded FFmpeg unchanged (**9.0.1**).
+  - ⚠️ **Not yet validated with NVDA, not built, not released.** Remaining: `build_release.ps1`,
+    commit, tag, GitHub release.
 
 - **v1.20.4 — published 2026-08-25, tag `v1.20.4`.** One-bug release from an **AppleVis comment**
   (user « Nut », 2026-08-21, on the thread presenting AMC and DownAccess): after converting a song,
