@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+import json
 import logging
 import builtins
 
@@ -20,6 +21,7 @@ from core.ffmpeg_helpers import (
     parse_ffmpeg_threads,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
+from core.probe import parse_stream_duration
 from core.metadata_edit import (
     build_tag_metadata_args,
     cover_stream_args,
@@ -484,21 +486,91 @@ class ConversionTask:
         except (ValueError, subprocess.SubprocessError, OSError):
             return None
 
+    def _probe_stream_durations(self, path):
+        """Durées par flux du fichier, groupées par type : {'audio': [...], ...}.
+
+        Les flux dont la durée est inconnue sont omis (Matroska sans tag).
+        """
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        durations = {}
+        try:
+            result = subprocess.run(
+                [
+                    self.ffprobe_exe, '-v', 'error',
+                    '-show_entries', 'stream=codec_type,duration,duration_ts,time_base:stream_tags=DURATION',
+                    '-print_format', 'json', path,
+                ],
+                capture_output=True, text=True, timeout=30,
+                startupinfo=startupinfo, creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+            for stream in (json.loads(result.stdout or '{}').get('streams') or []):
+                kind = stream.get('codec_type')
+                value = parse_stream_duration(stream)
+                if kind and value is not None:
+                    durations.setdefault(kind, []).append(value)
+        except (ValueError, subprocess.SubprocessError, OSError):
+            return {}
+        return durations
+
+    def _expected_duration_for_kind(self, kind):
+        """Durée attendue dans la sortie pour ce type de flux.
+
+        On se réfère à la piste SOURCE correspondante quand sa durée est connue :
+        une source dont l'audio ne fait que 17 s produit légitimement 17 s de son,
+        ce n'est pas la conversion qui a échoué (l'utilisateur a déjà été prévenu
+        au chargement). Sans mesure côté source — ou sur un extrait, où les durées
+        de pistes ne s'appliquent plus — on retombe sur la durée de référence.
+        """
+        if self.clip or self.meta is None:
+            return self.duration
+        tracks = getattr(self.meta, f"{kind}_tracks", None) or []
+        known = [
+            track.duration for track in tracks
+            if getattr(track, 'duration', None) is not None
+        ]
+        if not known:
+            return self.duration
+        return max(known)
+
     def _output_looks_truncated(self, output_path):
         """Heuristique conservatrice : une conversion saine conserve la durée.
 
-        On ne contrôle que les médias temporels dont la durée source est connue et
-        non négligeable, et on ne signale que les sorties manifestement amputées
-        (moins de la moitié de la source) afin d'éviter tout faux positif.
+        Deux contrôles. Celui du CONTENEUR attrape les sorties globalement
+        amputées. Celui par FLUX comble le trou qu'il laissait : la durée d'un
+        conteneur est celle de son flux le plus long, donc une sortie dont la
+        vidéo est complète mais dont l'audio meurt en route affichait 100 % et
+        passait pour une réussite (cas terrain d'août 2026).
+
+        On ne signale que les amputations franches (moins de la moitié de
+        l'attendu) pour éviter tout faux positif — un générique muet, une piste
+        d'audiodescription plus courte que le film sont légitimes.
         """
         if not self.duration or self.duration <= 5:
             return False
         if not os.path.isfile(output_path):
             return True
+
         out_duration = self._probe_duration(output_path)
         if out_duration is None:
             return True
-        return out_duration < self.duration * 0.5
+        if out_duration < self.duration * 0.5:
+            return True
+
+        for kind, values in self._probe_stream_durations(output_path).items():
+            if kind not in ('audio', 'video'):
+                continue
+            expected = self._expected_duration_for_kind(kind)
+            if not expected or expected <= 5:
+                continue
+            shortest = min(values)
+            if shortest < expected * 0.5:
+                logging.error(
+                    "Flux %s tronqué dans la sortie : %.1f s pour %.1f s attendues (%s).",
+                    kind, shortest, expected, os.path.basename(output_path),
+                )
+                return True
+        return False
 
     def run(self, progress_callback=None, stop_check_callback=None, drop_cover=False,
             force_reencode=None):

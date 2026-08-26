@@ -14,6 +14,102 @@ FFPROBE_TIMEOUT_SECONDS = 30
 FFPROBE_BROADCAST_TIMEOUT_SECONDS = 120
 
 
+# Seuil de détection d'une piste anormalement courte : une piste dont la durée
+# est inférieure à ce ratio de celle du conteneur est signalée. Volontairement
+# permissif — un générique de fin muet ou une piste d'audiodescription qui
+# s'arrête un peu avant la fin sont légitimes ; on ne vise que les amputations
+# franches (une piste à 17 s sur un film d'1 h 19, soit 0,4 %).
+SHORT_TRACK_RATIO = 0.5
+# En deçà de cette durée de conteneur, le ratio n'a pas de sens (jingles,
+# fichiers de test) : on ne contrôle rien.
+SHORT_TRACK_MIN_CONTAINER_DURATION = 30.0
+
+
+def _format_duration(seconds):
+    """hh:mm:ss lisible dans le journal ; '?' si inconnue."""
+    if seconds is None:
+        return "?"
+    try:
+        total = int(round(float(seconds)))
+    except (TypeError, ValueError):
+        return "?"
+    return f"{total // 3600:02d}:{(total % 3600) // 60:02d}:{total % 60:02d}"
+
+
+def parse_stream_duration(stream):
+    """Durée d'un flux ffprobe en secondes, ou None si le format ne la porte pas.
+
+    Trois sources, par ordre de fiabilité :
+      1. `duration` — présent en MP4/MOV, calculé depuis la table d'échantillons ;
+      2. `duration_ts` x `time_base` — même information, quand seule la forme
+         entière est exposée ;
+      3. le tag `DURATION` — **le seul disponible en Matroska**, qui ne stocke
+         aucune durée par piste dans ses en-têtes, au format `HH:MM:SS.nnnnnnnnn`.
+
+    Sans le point 3, tout MKV renverrait None et échapperait au contrôle.
+    """
+    if not isinstance(stream, dict):
+        return None
+
+    try:
+        value = float(stream.get('duration'))
+        if value > 0:
+            return value
+    except (TypeError, ValueError):
+        pass
+
+    try:
+        ticks = float(stream.get('duration_ts'))
+        numerator, _, denominator = str(stream.get('time_base', '')).partition('/')
+        scale = float(numerator) / float(denominator)
+        value = ticks * scale
+        if value > 0:
+            return value
+    except (TypeError, ValueError, ZeroDivisionError):
+        pass
+
+    tags = stream.get('tags') or {}
+    if isinstance(tags, dict):
+        for key, raw in tags.items():
+            if str(key).lower() != 'duration':
+                continue
+            try:
+                hours, minutes, seconds = str(raw).split(':')
+                value = int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+                if value > 0:
+                    return value
+            except (TypeError, ValueError):
+                pass
+    return None
+
+
+def find_short_tracks(meta, ratio=SHORT_TRACK_RATIO):
+    """Pistes dont la durée est nettement inférieure à celle du conteneur.
+
+    Renvoie une liste de (track, duration, container_duration). C'est le signal
+    qui manquait pour l'affaire des MP4 à l'audio amputé : la durée du conteneur
+    est celle du flux le PLUS LONG, donc un fichier dont la vidéo est complète
+    mais dont l'audio meurt en route paraît intact à tout contrôle global.
+
+    Les pistes de durée inconnue (Matroska sans tag) ne sont jamais signalées :
+    en l'absence de mesure, aucun soupçon.
+    """
+    container = getattr(meta, 'duration', 0) or 0
+    if container < SHORT_TRACK_MIN_CONTAINER_DURATION:
+        return []
+
+    findings = []
+    for track in list(getattr(meta, 'audio_tracks', []) or []):
+        duration = getattr(track, 'duration', None)
+        if duration is None:
+            continue
+        if track.is_attached_pic():
+            continue
+        if duration < container * ratio:
+            findings.append((track, duration, container))
+    return findings
+
+
 def _translate(msgid):
     translator = builtins.__dict__.get('_')
     if callable(translator):
@@ -26,7 +122,7 @@ def _translatef(msgid, **kwargs):
 
 class MediaTrack:
     def __init__(self, stream_index, codec_type, codec_name, language='und', title=None,
-                 disposition=None, sample_rate=None):
+                 disposition=None, sample_rate=None, duration=None):
         self.index = stream_index
         self.codec_type = codec_type
         self.codec_name = codec_name
@@ -37,6 +133,11 @@ class MediaTrack:
         # quand ffprobe n'a pas pu lire les paramètres du flux (capture TV
         # abîmée) : voir is_usable().
         self.sample_rate = sample_rate
+        # Durée du FLUX (secondes), distincte de celle du conteneur. None quand
+        # le format ne la porte pas — c'est le cas courant en Matroska, où elle
+        # n'existe que sous forme de tag optionnel. Ne jamais confondre None
+        # (inconnue) avec 0 (vide) : seule la première interdit tout contrôle.
+        self.duration = duration
 
     def is_usable(self):
         """False si FFmpeg n'a pas pu déterminer les paramètres du flux.
@@ -82,6 +183,10 @@ class MediaMetadata:
         self.track_settings = None
         self.audio_extract_track = None
         self.format_tags = {}
+        # Pistes audio dont la durée est nettement inférieure à celle du
+        # conteneur : liste de (track, duration, container_duration). Renseignée
+        # par la sonde, consommée par l'UI pour prévenir AVANT la conversion.
+        self.short_audio_tracks = []
         self.has_cover_art = False
         self.metadata_overrides = None
         # Override de sortie par fichier : {"format": fmt_key, "settings": {...}}.
@@ -223,6 +328,7 @@ class FileProber:
                 track = MediaTrack(
                     idx, c_type, c_name, lang, title, disposition,
                     sample_rate=self._parse_sample_rate(stream),
+                    duration=parse_stream_duration(stream),
                 )
 
                 if c_type == 'video' and disposition.get('attached_pic', 0) == 1:
@@ -252,6 +358,7 @@ class FileProber:
                 meta.has_video = False
             else:
                 self._detect_embedded_cue(meta, data)
+                self._log_probe_result(meta)
 
         except subprocess.TimeoutExpired:
             logging.error("ffprobe timeout (%ss) on %s", FFPROBE_TIMEOUT_SECONDS, file_path)
@@ -314,6 +421,48 @@ class FileProber:
         sheet.audio_ref = audio_path  # chemin absolu résolu, consommé par le batch
         finalize_tracks(sheet.tracks, int(round((meta.duration or 0) * 1000)))
         return meta
+
+    def _log_probe_result(self, meta):
+        """Trace le résultat de la sonde : une ligne par fichier, le détail
+        piste par piste uniquement si une durée s'écarte de celle du conteneur.
+
+        Le journal reste lisible sur un lot de 464 fichiers tout en portant, là
+        où ça compte, l'information qu'aucun en-tête FFmpeg n'affiche : la durée
+        de chaque piste.
+        """
+        try:
+            logging.info(
+                "Sonde : %s — conteneur %s, %d vidéo / %d audio / %d sous-titres",
+                meta.filename,
+                _format_duration(meta.duration),
+                len(meta.video_tracks),
+                len(meta.audio_tracks),
+                len(meta.subtitle_tracks),
+            )
+
+            short_tracks = find_short_tracks(meta)
+            if not short_tracks:
+                return
+
+            meta.short_audio_tracks = short_tracks
+            logging.warning(
+                "Sonde : %s — %d piste(s) audio anormalement courte(s) par rapport au conteneur (%s).",
+                meta.filename,
+                len(short_tracks),
+                _format_duration(meta.duration),
+            )
+            for track in meta.audio_tracks:
+                duration = getattr(track, 'duration', None)
+                logging.warning(
+                    "  piste #%s (%s, %s) : %s",
+                    track.index,
+                    track.codec_name,
+                    track.language or 'und',
+                    _format_duration(duration) if duration is not None else "durée inconnue",
+                )
+        except Exception:
+            # Le journal ne doit jamais faire échouer une analyse.
+            logging.exception("Échec de la journalisation de la sonde")
 
     def _detect_embedded_cue(self, meta, data):
         """Signale un cue sheet embarqué : tag CUESHEET (texte, EAC/foobar) ou

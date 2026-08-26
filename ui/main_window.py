@@ -383,6 +383,8 @@ class MainWindow(wx.Frame):
         if not hasattr(meta, 'cue_sheet'):
             meta.cue_sheet = None
             meta.cue_error = None
+        if not hasattr(meta, 'short_audio_tracks'):
+            meta.short_audio_tracks = []
 
         if meta.is_image:
             self.image_data.append(meta)
@@ -451,6 +453,14 @@ class MainWindow(wx.Frame):
 
     def _get_media_status_label(self, meta):
         suffixes = []
+        # Une piste audio nettement plus courte que le conteneur signale un
+        # fichier source amputé : la conversion produira un son incomplet. En
+        # tête du libellé pour que le lecteur d'écran l'annonce immédiatement.
+        if getattr(meta, 'short_audio_tracks', None):
+            return _("Incomplete audio") + " — " + self._base_media_status_label(meta, suffixes)
+        return self._base_media_status_label(meta, suffixes)
+
+    def _base_media_status_label(self, meta, suffixes):
         if getattr(meta, 'track_settings', None):
             suffixes.append(_("Tracks"))
         if getattr(meta, 'audio_extract_track', None):
@@ -1513,6 +1523,7 @@ class MainWindow(wx.Frame):
         wx.BeginBusyCursor()
         added_count = 0
         first_added_target = None
+        incomplete_audio = []
         for entry in paths:
             path, relative_dir = entry if isinstance(entry, tuple) else (entry, "")
             if not self._is_supported_media_file(path):
@@ -1529,15 +1540,45 @@ class MainWindow(wx.Frame):
                     first_added_target = ('video', self.panel_video_list.list_ctrl, index)
                 else:
                     first_added_target = ('audio', self.panel_audio_list.list_ctrl, index)
+            if getattr(meta, 'short_audio_tracks', None):
+                incomplete_audio.append(meta)
             added_count += 1
         wx.EndBusyCursor()
         self._update_ui_state()
         if added_count:
             self._set_status(_("{count} file(s) added.").format(count=added_count))
+        if incomplete_audio:
+            self._warn_incomplete_audio(incomplete_audio)
         return {
             'count': added_count,
             'first_added_target': first_added_target,
         }
+
+    # Nombre de fichiers nommés dans l'avertissement : au-delà, la boîte devient
+    # illisible au lecteur d'écran sur un gros lot.
+    MAX_LISTED_INCOMPLETE_FILES = 10
+
+    def _warn_incomplete_audio(self, metas):
+        """Prévient une seule fois, à l'ajout, que des fichiers ont un son amputé.
+
+        Ces fichiers se convertissent sans erreur : leur durée de conteneur est
+        celle de la vidéo, donc complète. Seule une comparaison piste par piste
+        les révèle, et sans cet avertissement l'utilisateur ne découvre le
+        problème qu'en écoutant le résultat.
+        """
+        names = [meta.filename for meta in metas[:self.MAX_LISTED_INCOMPLETE_FILES]]
+        listing = "\n".join(names)
+        if len(metas) > len(names):
+            listing += "\n" + _("... and {count} more file(s).").format(
+                count=len(metas) - len(names)
+            )
+        message = _(
+            "{count} file(s) contain an audio track far shorter than the video. "
+            "The missing audio is not present in the file, so converting them "
+            "will produce incomplete sound.\n\n{listing}\n\n"
+            "This is a defect of the source file(s), not of the conversion."
+        ).format(count=len(metas), listing=listing)
+        wx.MessageBox(message, _("Incomplete audio detected"), wx.OK | wx.ICON_WARNING, self)
 
     def on_clear_list(self, event):
         if self.is_converting: return

@@ -4,6 +4,7 @@ import threading
 import wx
 
 from core.app_info import SUPPORT_EMAIL
+from core.error_report import build_debug_log_attachment
 from core.support import (
     build_support_report,
     build_support_subject,
@@ -293,6 +294,11 @@ class SupportContactDialog(wx.Dialog):
         self._set_feedback(success_message)
 
     def _send_worker(self, email_address, issue_type, user_message, debug_log=""):
+        # Le formulaire de support n'attachait rien : un signalement d'accessibilité
+        # ou de plantage arrivait sans le moindre journal. On y joint désormais la
+        # fin du journal applicatif, comme le fait le rapport d'erreur automatique.
+        if not debug_log:
+            debug_log = build_debug_log_attachment()
         try:
             send_support_report(
                 email_address,

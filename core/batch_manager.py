@@ -5,6 +5,7 @@ import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 
+from core.error_report import summarize_ffmpeg_stderr
 from core.conversion import ConversionTask, build_cue_track_output_path, build_output_path
 
 
@@ -340,7 +341,7 @@ class BatchConversionManager:
             )
         except Exception as exc:
             job.ffmpeg_command = list(task.last_command) if task.last_command else []
-            job.ffmpeg_stderr = "\n".join(task.stderr_lines[-50:]) if task.stderr_lines else ""
+            job.ffmpeg_stderr = summarize_ffmpeg_stderr(task.stderr_lines)
 
             if str(exc) == "Stopped by user" or self._stop_requested.is_set():
                 self._set_job_state(job, JOB_STATE_STOPPED)
