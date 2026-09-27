@@ -168,6 +168,8 @@ class ConversionTask:
         # sortie), pour retrouver la piste visée par un message du muxeur.
         self._mapped_source_indices = []
         self._last_mapped_entries = {}
+        # Piste source retenue pour une extraction audio d'une vidéo.
+        self._extract_source_index = None
 
         logging.debug("Tâche initialisée : %s -> %s", self.input_path, self.target_format)
 
@@ -515,43 +517,97 @@ class ConversionTask:
             return None
 
     def _probe_stream_durations(self, path):
-        """Durées par flux du fichier, groupées par type : {'audio': [...], ...}.
+        """Flux du fichier dans l'ordre de sortie : [(type, durée, pochette), ...].
 
-        Les flux dont la durée est inconnue sont omis (Matroska sans tag).
+        La durée vaut None quand le format ne la porte pas (Matroska sans tag).
         """
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        durations = {}
+        streams = []
         try:
             result = subprocess.run(
                 [
                     self.ffprobe_exe, '-v', 'error',
-                    '-show_entries', 'stream=codec_type,duration,duration_ts,time_base:stream_tags=DURATION',
+                    '-show_entries',
+                    'stream=codec_type,duration,duration_ts,time_base'
+                    ':stream_tags=DURATION:stream_disposition=attached_pic',
                     '-print_format', 'json', path,
                 ],
                 capture_output=True, text=True, timeout=30,
                 startupinfo=startupinfo, creationflags=subprocess.CREATE_NO_WINDOW,
             )
             for stream in (json.loads(result.stdout or '{}').get('streams') or []):
-                kind = stream.get('codec_type')
-                value = parse_stream_duration(stream)
-                if kind and value is not None:
-                    durations.setdefault(kind, []).append(value)
+                disposition = stream.get('disposition') or {}
+                streams.append((
+                    stream.get('codec_type'),
+                    parse_stream_duration(stream),
+                    bool(disposition.get('attached_pic', 0)),
+                ))
         except (ValueError, subprocess.SubprocessError, OSError):
-            return {}
-        return durations
+            return []
+        return streams
 
-    def _expected_duration_for_kind(self, kind):
-        """Durée attendue dans la sortie pour ce type de flux.
+    def _source_track_duration(self, original_index, kinds=('video', 'audio', 'subtitle')):
+        """Durée connue de la piste source d'indice donné, sinon None."""
+        for kind in kinds:
+            for track in getattr(self.meta, f"{kind}_tracks", None) or []:
+                if getattr(track, 'index', None) == original_index:
+                    return getattr(track, 'duration', None)
+        return None
 
-        On se réfère à la piste SOURCE correspondante quand sa durée est connue :
-        une source dont l'audio ne fait que 17 s produit légitimement 17 s de son,
-        ce n'est pas la conversion qui a échoué (l'utilisateur a déjà été prévenu
-        au chargement). Sans mesure côté source — ou sur un extrait, où les durées
-        de pistes ne s'appliquent plus — on retombe sur la durée de référence.
+    def _expected_container_duration(self):
+        """Durée attendue de la sortie entière.
+
+        Celle du conteneur source, sauf quand on sait quelles pistes partent
+        dans la sortie : extraire une piste de 5 s d'une vidéo de 60 s donne
+        légitimement 5 s. On prend la plus longue des pistes retenues dont la
+        durée est connue ; sans aucune mesure, la durée source.
         """
         if self.clip or self.meta is None:
             return self.duration
+        if self._extract_source_index is not None:
+            indices = [self._extract_source_index]
+        else:
+            indices = list(self._mapped_source_indices)
+        known = [
+            duration for duration in (
+                self._source_track_duration(i, kinds=('video', 'audio')) for i in indices
+            )
+            if duration is not None
+        ]
+        return max(known) if known else self.duration
+
+    def _expected_duration_for_output(self, position, kind):
+        """Durée attendue pour le flux de sortie n° ``position``.
+
+        On se réfère à la piste SOURCE qui l'a produit quand sa durée est
+        connue : une source dont une piste audio ne fait que 17 s produit
+        légitimement 17 s de son, ce n'est pas la conversion qui a échoué
+        (l'utilisateur a déjà été prévenu au chargement). Comparer chaque flux
+        à la plus LONGUE piste du même type faisait échouer toute conversion
+        d'un fichier gardant une piste courte à côté d'une complète.
+        Sans mesure côté source — ou sur un extrait, où les durées de pistes ne
+        s'appliquent plus — on retombe sur la durée de référence.
+        """
+        if self.clip or self.meta is None:
+            return self.duration
+
+        source_index = None
+        if self._mapped_source_indices:
+            # Mapping explicite (sortie vidéo) : l'ordre des -map est celui des
+            # flux de sortie.
+            if position < len(self._mapped_source_indices):
+                source_index = self._mapped_source_indices[position]
+        elif kind == 'audio' and self._extract_source_index is not None:
+            # Extraction audio d'une vidéo : une seule piste choisie.
+            source_index = self._extract_source_index
+
+        if source_index is not None:
+            duration = self._source_track_duration(source_index)
+            return duration if duration is not None else self.duration
+
+        # Sélection automatique de FFmpeg : on ne sait pas quelle piste il a
+        # retenue, on prend la plus longue (hypothèse la plus prudente).
         tracks = getattr(self.meta, f"{kind}_tracks", None) or []
         known = [
             track.duration for track in tracks
@@ -582,20 +638,19 @@ class ConversionTask:
         out_duration = self._probe_duration(output_path)
         if out_duration is None:
             return True
-        if out_duration < self.duration * 0.5:
+        if out_duration < self._expected_container_duration() * 0.5:
             return True
 
-        for kind, values in self._probe_stream_durations(output_path).items():
-            if kind not in ('audio', 'video'):
+        for position, (kind, value, is_cover) in enumerate(self._probe_stream_durations(output_path)):
+            if kind not in ('audio', 'video') or is_cover or value is None:
                 continue
-            expected = self._expected_duration_for_kind(kind)
+            expected = self._expected_duration_for_output(position, kind)
             if not expected or expected <= 5:
                 continue
-            shortest = min(values)
-            if shortest < expected * 0.5:
+            if value < expected * 0.5:
                 logging.error(
-                    "Flux %s tronqué dans la sortie : %.1f s pour %.1f s attendues (%s).",
-                    kind, shortest, expected, os.path.basename(output_path),
+                    "Flux %s n°%s tronqué dans la sortie : %.1f s pour %.1f s attendues (%s).",
+                    kind, position, value, expected, os.path.basename(output_path),
                 )
                 return True
         return False
@@ -667,6 +722,7 @@ class ConversionTask:
         if self._is_video_to_audio_conversion():
             selected_track, selection_source = self._resolve_audio_extract_track()
             if selected_track is not None:
+                self._extract_source_index = selected_track.index
                 cmd.extend(['-map', f"0:{selected_track.index}"])
                 self._apply_audio_track_metadata(cmd, selected_track)
                 logging.info(

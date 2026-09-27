@@ -57,6 +57,13 @@ class BatchJob:
     # Info non bloquante sur une conversion réussie (ex. « copie impossible,
     # réencodé ») : affichée dans la colonne État à la place de « Terminé ».
     notice: str = ""
+    # Ligne de la liste de fichiers dont ce job est issu. Distincte de ``index``
+    # dès qu'un cue se développe en plusieurs pistes : un album de 12 pistes
+    # donne 12 jobs pour une seule ligne, et tous les fichiers suivants se
+    # retrouvaient décalés d'autant.
+    row: int = -1
+    # Découpage cue : (numéro, total) de la piste, pour l'annoncer dans la ligne.
+    cue_track: tuple | None = None
 
 
 class BatchConversionManager:
@@ -115,11 +122,14 @@ class BatchConversionManager:
     def _prepare_jobs(self):
         reserved_paths = set()
         jobs = []
-        for meta in self.media_list:
+        for row, meta in enumerate(self.media_list):
+            first_job = len(jobs)
             if getattr(meta, 'cue_sheet', None) is not None:
                 self._append_cue_jobs(jobs, meta, reserved_paths)
             else:
                 self._append_normal_job(jobs, meta, reserved_paths)
+            for job in jobs[first_job:]:
+                job.row = row
         return jobs
 
     def _append_normal_job(self, jobs, meta, reserved_paths):
@@ -188,6 +198,7 @@ class BatchConversionManager:
                 input_path=audio_path,
                 clip=(track.start_ms, track.end_ms),
                 tag_overrides=self._build_cue_tags(sheet, track, total),
+                cue_track=(track.number, total),
             )
             if skip_reason:
                 job.state = JOB_STATE_SKIPPED
@@ -433,6 +444,8 @@ class BatchConversionManager:
     def _build_job_event(self, job):
         return {
             "index": job.index,
+            "row": job.row,
+            "cue_track": job.cue_track,
             "state": job.state,
             "progress": job.progress,
             "skip_reason": job.skip_reason,

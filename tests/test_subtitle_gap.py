@@ -143,9 +143,10 @@ class LateCueEndToEndTests(unittest.TestCase):
             task.run()
 
             self.assertEqual(task.dropped_subtitle_tracks, {2})
-            durations = task._probe_stream_durations(output)
-            self.assertGreater(min(durations["audio"]), 4700)
-            self.assertNotIn("subtitle", durations)
+            streams = task._probe_stream_durations(output)
+            audio = [value for kind, value, _is_cover in streams if kind == "audio"]
+            self.assertGreater(min(audio), 4700)
+            self.assertNotIn("subtitle", [kind for kind, _value, _is_cover in streams])
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
 

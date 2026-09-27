@@ -150,6 +150,7 @@ class MainWindow(wx.Frame):
         self._pending_external_paths = []
         self.batch_manager = None
         self._current_batch_list_ctrl = None
+        self._batch_error_rows = set()
         self._merge_task = None
         self._error_report_dialog = None
         
@@ -1323,6 +1324,8 @@ class MainWindow(wx.Frame):
                 fresh = self.prober.analyze(meta.full_path)
                 meta.format_tags = fresh.format_tags
                 meta.has_cover_art = fresh.has_cover_art
+                meta.cover_stream_indices = fresh.cover_stream_indices
+                meta.video_stream_count = fresh.video_stream_count
             except Exception:
                 logging.exception("Re-probe après re-tag impossible : %s", getattr(meta, 'full_path', ''))
             meta.metadata_overrides = None
@@ -2026,7 +2029,8 @@ class MainWindow(wx.Frame):
         self.is_converting = True
         self.stop_requested = False
         self._current_batch_list_ctrl = lst
-        
+        self._batch_error_rows = set()
+
         self.btn_convert.Hide()
         self.btn_merge.Hide()
         self.btn_stop.Show()
@@ -2114,6 +2118,19 @@ class MainWindow(wx.Frame):
             if dlg.ShowModal() == wx.ID_CANCEL:
                 return
             output_path = dlg.GetPath()
+
+        # FFmpeg lit la liste de fusion, pas les fichiers eux-mêmes : il ne voit
+        # pas que la sortie est l'une des sources, et « Remplacer » l'écrasait
+        # pendant sa propre lecture — fichier d'origine perdu.
+        output_key = os.path.normcase(os.path.abspath(output_path))
+        if any(os.path.normcase(os.path.abspath(m.full_path)) == output_key for m in data):
+            wx.MessageBox(
+                _("The merged file cannot replace one of the files being merged. "
+                  "Choose another name."),
+                _("Error"),
+                wx.ICON_ERROR,
+            )
+            return
 
         self.is_converting = True
         self.stop_requested = False
@@ -2285,10 +2302,25 @@ class MainWindow(wx.Frame):
     def _on_batch_job_update(self, payload):
         if not self._current_batch_list_ctrl:
             return
-        row_index = payload.get('index', -1)
+        # La ligne d'origine, pas l'indice du job : un cue produit un job par
+        # piste pour une seule ligne de la liste.
+        row_index = payload.get('row', -1)
         if row_index < 0 or row_index >= self._current_batch_list_ctrl.GetItemCount():
             return
-        self._current_batch_list_ctrl.SetItem(row_index, 2, self._format_batch_job_status(payload))
+        status = self._format_batch_job_status(payload)
+        cue_track = payload.get('cue_track')
+        if cue_track:
+            status = _("Track {number} of {total}: {status}").format(
+                number=cue_track[0], total=cue_track[1], status=status
+            )
+            # Les pistes suivantes ne doivent pas effacer l'erreur d'une piste
+            # précédente : elle resterait sinon introuvable dans la liste.
+            if payload.get('state') == JOB_STATE_ERROR:
+                self._batch_error_rows.add(row_index)
+            elif row_index in self._batch_error_rows:
+                status = None
+        if status is not None:
+            self._current_batch_list_ctrl.SetItem(row_index, 2, status)
 
         if payload.get('state') == JOB_STATE_ERROR:
             error_msg = payload.get('error_message', '')

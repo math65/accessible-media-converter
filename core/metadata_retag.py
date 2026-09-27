@@ -31,6 +31,12 @@ class MetadataRetagTask:
         self.last_command = []
         self.stderr_lines = []
 
+    def _kept_video_stream_count(self):
+        """Flux vidéo de la source qui restent dans la sortie (hors pochettes)."""
+        total = getattr(self.meta, 'video_stream_count', 0) or 0
+        covers = len(getattr(self.meta, 'cover_stream_indices', None) or [])
+        return max(0, total - covers)
+
     def _build_command(self, temp_path):
         tags = self.overrides.get('tags', {})
         cover = self.overrides.get('cover', {})
@@ -40,13 +46,21 @@ class MetadataRetagTask:
 
         cmd = [self.ffmpeg_exe, '-y', '-i', self.input_path]
 
+        # Retirer l'ancienne pochette PAR SON INDEX, jamais « tous les flux
+        # vidéo » (-map -0:v) : sur un film, c'est la piste vidéo elle-même qui
+        # partait, et le fichier d'origine était remplacé par une version sans image.
+        drop_covers = []
+        for index in getattr(self.meta, 'cover_stream_indices', None) or []:
+            drop_covers.extend(['-map', f'-0:{index}'])
+
         if action == 'replace' and cover_path and can_cover:
             cmd.extend(['-i', cover_path])
             # Garder tous les flux source sauf l'ancienne pochette, ajouter la nouvelle.
-            cmd.extend(['-map', '0', '-map', '-0:v', '-map', '1:0', '-c', 'copy'])
-            cmd.extend(cover_stream_args(0))
+            cmd.extend(['-map', '0', *drop_covers, '-map', '1:0', '-c', 'copy'])
+            # La nouvelle pochette suit tous les flux vidéo conservés.
+            cmd.extend(cover_stream_args(self._kept_video_stream_count()))
         elif action == 'remove' and can_cover:
-            cmd.extend(['-map', '0', '-map', '-0:v', '-c', 'copy'])
+            cmd.extend(['-map', '0', *drop_covers, '-c', 'copy'])
         else:
             cmd.extend(['-map', '0', '-c', 'copy'])
 

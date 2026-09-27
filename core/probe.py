@@ -188,6 +188,13 @@ class MediaMetadata:
         # par la sonde, consommée par l'UI pour prévenir AVANT la conversion.
         self.short_audio_tracks = []
         self.has_cover_art = False
+        # Indices source des pochettes (flux attached_pic). Le re-tag sur place
+        # retire CES flux-là et eux seuls : « tous les flux vidéo » emportait la
+        # piste vidéo d'un film avec sa pochette.
+        self.cover_stream_indices = []
+        # Nombre TOTAL de flux vidéo du fichier (pochettes et flux masqués de
+        # l'UI compris) : sert à situer une pochette ajoutée après eux.
+        self.video_stream_count = 0
         self.metadata_overrides = None
         # Override de sortie par fichier : {"format": fmt_key, "settings": {...}}.
         # Quand présent, ce fichier est converti avec ce format/qualité au lieu du global.
@@ -331,8 +338,11 @@ class FileProber:
                     duration=parse_stream_duration(stream),
                 )
 
+                if c_type == 'video':
+                    meta.video_stream_count += 1
                 if c_type == 'video' and disposition.get('attached_pic', 0) == 1:
                     meta.has_cover_art = True
+                    meta.cover_stream_indices.append(idx)
 
                 if c_type == 'video':
                     if not track.is_hidden_from_ui():
