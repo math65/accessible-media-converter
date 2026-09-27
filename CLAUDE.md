@@ -167,11 +167,22 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 
 ## Recent changes
 
-- **v1.20.5 — prepared 2026-08-26, NOT YET BUILT OR PUBLISHED.** Driven by the August 2026 field
-  investigation with **Manu** (`[[project_field_bugs_2026_08]]`): four of his MP4s had a complete
-  video track but audio truncated at an arbitrary point (17,6 s / 750,8 s / 574,8 s / 0,13 s), the
-  audio bytes genuinely absent. **AMC was exonerated** — its audio disposition vocabulary cannot
-  emit `descriptions`, which those files carry — but the investigation exposed a real blind spot.
+- **v1.20.5 — published 2026-08-26, tag `v1.20.5`, commit `54427cb`.** Driven by the August 2026
+  field investigation with **Manu** (`[[project_field_bugs_2026_08]]`): four of his MP4s had a
+  complete video track but audio truncated at an arbitrary point (17,6 s / 750,8 s / 574,8 s /
+  0,13 s), the audio bytes genuinely absent. **It WAS AMC** — an earlier "exoneration" rested on
+  tests since falsified.
+  - **Root cause: a subtitle track with too long a silence silences the MP4.** "Forced" subtitle
+    tracks carrying two or three lines more than an hour apart overflow the MP4 muxer's 32-bit
+    sample-duration field: it refuses the empty sample meant to fill the gap ("... in stream N is
+    out of range") **and stops writing audio**, yet exits with code 0, a complete video track and a
+    valid index. Reproduced on the original source to within 10 KB of the user's broken 9.94 GB
+    file. Needs MP4/MOV output **and** re-encoded audio; stream copy is unaffected. **Fix**:
+    `detect_oversized_subtitle_streams` (`core/ffmpeg_helpers.py`) reads the stream FFmpeg itself
+    names in its refusal (never a guessed duration), and `ConversionTask.run(..., drop_subtitles=)`
+    re-runs without it (`_filter_subtitle_entries_for_container`). `BatchJob.notice =
+    NOTICE_SUBTITLE_DROPPED` → Status "Done (incompatible subtitle removed)". An MKV output keeps
+    every subtitle. `tests/test_subtitle_gap.py`. The investigation also exposed the blind spot below.
   - **A container's duration is that of its LONGEST stream.** A file whose video is complete but
     whose audio dies early therefore looks perfect to every global check, including
     `ConversionTask._output_looks_truncated`. Two new defences:
@@ -198,9 +209,10 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
     path, so the diagnostic re-wrote a file that may since have been produced correctly. It now
     redirects to a temp dir, removed afterwards.
   - `tests/test_truncated_audio.py` (22 cases, incl. real FFmpeg fixtures: 60 s of video with 5 s of
-    audio, plus a healthy control). Suite: 60 -> **82 tests**. Embedded FFmpeg unchanged (**9.0.1**).
-  - ⚠️ **Not yet validated with NVDA, not built, not released.** Remaining: `build_release.ps1`,
-    commit, tag, GitHub release.
+    audio, plus a healthy control). Suite: 60 -> **94 tests**. Embedded FFmpeg unchanged (**9.0.1**,
+    verified in `dist/`).
+  - ⚠️ Published **without** real-world NVDA validation. Pending: a reply to Manu (earlier mails
+    told him AMC was not at fault).
 
 - **v1.20.4 — published 2026-08-25, tag `v1.20.4`.** One-bug release from an **AppleVis comment**
   (user « Nut », 2026-08-21, on the thread presenting AMC and DownAccess): after converting a song,
@@ -345,10 +357,6 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
   per-file storage, so it's ignored in per-file mode (destination stays global). Context-menu entry
   renamed **"Manage Presets…" → "Apply Preset…"** (with "(N files)" count); the dialog window title
   stays "Manage Presets". i18n FR + EN/FR presets docs updated. Embedded FFmpeg **8.1.2** (unchanged).
-  - ⚠️ **The file cutter / segment editor is NOT in this release.** It was previewed in the deleted
-    prerelease `v1.20.0-rc1` and is frozen on the unmerged `feature/segment-editor` branch, moving to
-    the standalone app **Accessible Media Editor** (see auto-memory). `1.20.0 > 1.20.0-rc1`, so testers
-    still on rc1 (Sèb) are auto-updated onto this cutter-free stable.
   - ⚠️ Published **without** real-world NVDA validation (logic verified by a scoping test; confirm a
     posteriori). [[project_seb_feedback_loop]]
 
