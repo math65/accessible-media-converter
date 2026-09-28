@@ -146,7 +146,7 @@ Call `_translate()` / `_translatef()` inside functions, never at module level.
 
 ## Critical gotchas
 
-- `bin/ffmpeg.exe` and `bin/ffprobe.exe` are git-tracked despite appearing in `.gitignore`. GitHub will warn on push due to their size.
+- `bin/ffmpeg.exe` and `bin/ffprobe.exe` are **not git-tracked** (since v1.20.6): the FFmpeg 9.0.2 builds are ~100.5 MB each, over GitHub's hard 100 MB per-file limit, which rejects the whole push. On a fresh clone, run `scripts\update_embedded_ffmpeg.ps1` to install them (SHA256-verified GyanD download); `build_release.ps1` refuses to start without them. Never `git add -f` them.
 - Updating `bin/` does **not** update `dist/`. Always rebuild after an FFmpeg update before publishing.
 - The updater in `core/updater.py` only accepts the exact asset `AccessibleMediaConverter-Setup.exe`. The legacy fallback to versioned asset names was removed in v1.8.0.
 - The FFmpeg update script reads the full release list from `GyanD/codexffmpeg` instead of `releases/latest`, because `latest` may not be the most recent build. It decides whether an update is needed by comparing the GyanD release **tag** (which is the exact build token) against the embedded `ffmpeg -version` string, so `-CheckOnly` answers from API metadata alone and downloads nothing.

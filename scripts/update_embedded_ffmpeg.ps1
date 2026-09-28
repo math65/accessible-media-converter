@@ -350,17 +350,29 @@ function Invoke-WithoutWhatIf {
     }
 }
 
-$currentFfmpegVersion = Get-ToolVersionLine -ToolPath $FfmpegPath
-$currentFfprobeVersion = Get-ToolVersionLine -ToolPath $FfprobePath
-$currentMetadata = Get-EmbeddedBinaryMetadata -VersionLine $currentFfmpegVersion
+# bin/ is not git-tracked (GyanD builds exceed GitHub's 100 MB file limit since
+# 9.0.2): on a fresh clone the binaries are absent, and this script installs them.
+$hasEmbeddedBinaries = (Test-Path -LiteralPath $FfmpegPath) -and (Test-Path -LiteralPath $FfprobePath)
+$currentFfmpegVersion = $null
+$currentFfprobeVersion = $null
+$currentMetadata = $null
 
-Write-Host "Current embedded FFmpeg : $currentFfmpegVersion"
-Write-Host "Current embedded FFprobe: $currentFfprobeVersion"
-if ($currentMetadata.SemanticVersion) {
-    Write-Host "Current semantic version: $($currentMetadata.SemanticVersion)"
+if ($hasEmbeddedBinaries) {
+    $currentFfmpegVersion = Get-ToolVersionLine -ToolPath $FfmpegPath
+    $currentFfprobeVersion = Get-ToolVersionLine -ToolPath $FfprobePath
+    $currentMetadata = Get-EmbeddedBinaryMetadata -VersionLine $currentFfmpegVersion
+
+    Write-Host "Current embedded FFmpeg : $currentFfmpegVersion"
+    Write-Host "Current embedded FFprobe: $currentFfprobeVersion"
+    if ($currentMetadata.SemanticVersion) {
+        Write-Host "Current semantic version: $($currentMetadata.SemanticVersion)"
+    }
+    if ($currentMetadata.BuildDate) {
+        Write-Host "Current build date      : $($currentMetadata.BuildDate.ToString('yyyy-MM-dd'))"
+    }
 }
-if ($currentMetadata.BuildDate) {
-    Write-Host "Current build date      : $($currentMetadata.BuildDate.ToString('yyyy-MM-dd'))"
+else {
+    Write-Host "No embedded FFmpeg in $BinDir (fresh clone?): the latest release will be installed."
 }
 
 $release = Get-LatestReleaseWithEssentialsZip -ApiUrl $ReleasesApiUrl
@@ -376,7 +388,15 @@ if ($releaseMetadata.PublishedDate) {
     Write-Host "Latest release date    : $($releaseMetadata.PublishedDate.ToString('yyyy-MM-dd'))"
 }
 
-$decision = Get-UpdateDecision -Current $currentMetadata -Latest $releaseMetadata
+if ($hasEmbeddedBinaries) {
+    $decision = Get-UpdateDecision -Current $currentMetadata -Latest $releaseMetadata
+}
+else {
+    $decision = [pscustomobject]@{
+        ShouldDownload = $true
+        Reason = "Embedded FFmpeg is missing; installing GitHub release $($release.tag_name)."
+    }
+}
 Write-Host $decision.Reason
 
 if (-not $decision.ShouldDownload) {

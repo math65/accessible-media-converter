@@ -142,11 +142,18 @@ class LateCueEndToEndTests(unittest.TestCase):
                                   output_path=output)
             task.run()
 
-            self.assertEqual(task.dropped_subtitle_tracks, {2})
+            # L'invariant est le son complet. Le moyen dépend du FFmpeg embarqué :
+            # jusqu'en 9.0.1 le muxeur perdait l'audio et AMC devait retirer le
+            # sous-titre ; depuis 9.0.2 l'audio survit tout seul et la piste reste.
             streams = task._probe_stream_durations(output)
             audio = [value for kind, value, _is_cover in streams if kind == "audio"]
             self.assertGreater(min(audio), 4700)
-            self.assertNotIn("subtitle", [kind for kind, _value, _is_cover in streams])
+            subtitles = [kind for kind, _value, _is_cover in streams if kind == "subtitle"]
+            if task.dropped_subtitle_tracks:
+                self.assertEqual(task.dropped_subtitle_tracks, {2})
+                self.assertEqual(subtitles, [])
+            else:
+                self.assertEqual(subtitles, ["subtitle"])
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
 

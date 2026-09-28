@@ -26,26 +26,23 @@ Run every step from the project root. Stop and report if any step fails — neve
 
    Read its **final line**, not just the exit code:
 
-   - **`Embedded FFmpeg binaries updated successfully.`** → `bin/` changed. Two things follow.
-     First run the test suite *before* building — it converts into every output format the
-     app offers, which is exactly what catches a codec or option removed upstream:
+   - **`Embedded FFmpeg binaries updated successfully.`** → `bin/` changed. Run the test
+     suite *before* building — it converts into every output format the app offers, which
+     is exactly what catches a codec or option removed upstream:
      ```powershell
      .venv\Scripts\python.exe -m unittest discover -s tests -t .
      ```
-     Then commit the binaries on their own, taking the exact build token from the first
-     line of `& .\bin\ffmpeg.exe -version`:
-     ```
-     chore: update embedded FFmpeg to <version-token>
-     ```
-     (e.g. `chore: update embedded FFmpeg to 9.0.1`.) Mention the bump in the release notes
-     written at step 4.
-   - **`already matches` / `is newer than`** → nothing changed, `bin/` stays clean. Say so
-     plainly and move on; don't invent follow-up work.
+     There is **nothing to commit**: `bin/*.exe` are no longer git-tracked (GyanD builds
+     passed GitHub's 100 MB per-file limit with 9.0.2). Mention the bump, with the exact
+     token from `& .\bin\ffmpeg.exe -version`, in the release notes written at step 4 —
+     that and the tagged installer are the record of which FFmpeg shipped.
+   - **`already matches` / `is newer than`** → nothing changed. Say so plainly and move on;
+     don't invent follow-up work.
+   - **`Embedded FFmpeg is missing; installing ...`** → fresh clone, `bin/` was empty; the
+     script installs the latest release. Treat it like an update (run the test suite).
    - **An error** → the script has already restored the previous binaries. Confirm with
-     `git status --short bin/` (it should be clean) and report the *actual* error. A
-     download/API failure or a `hash mismatch` is usually transient — retry, and never
-     bypass the hash check. `Binary not found` means `bin/ffmpeg.exe` or `bin/ffprobe.exe`
-     is missing from the repo: investigate before forcing an install.
+     `& .\bin\ffmpeg.exe -version` and report the *actual* error. A download/API failure or
+     a `hash mismatch` is usually transient — retry, and never bypass the hash check.
 
    Add `-CheckOnly` for a dry run that downloads nothing (~80 MB saved) — the GyanD release
    tag *is* the exact build version, so the comparison needs API metadata alone.
@@ -107,6 +104,6 @@ Run every step from the project root. Stop and report if any step fails — neve
 ## Gotchas
 
 - Updating `bin/` does **not** rebuild `dist/`. The build script handles this, but never publish an installer built before an FFmpeg update — hence the ordering above (step 2 before step 5) and the verification at step 6.
-- `bin/ffmpeg.exe` / `bin/ffprobe.exe` are git-tracked despite matching `.gitignore`; GitHub warns on push because of their size. That is expected, not a problem.
+- `bin/ffmpeg.exe` / `bin/ffprobe.exe` are **not** git-tracked since v1.20.6 (each is over GitHub's 100 MB limit, which rejects the whole push). Never `git add -f` them. A fresh clone gets them from `scripts\update_embedded_ffmpeg.ps1`, and the build refuses to start without them.
 - `APP_VERSION` / `APP_VERSION_WIN` / `.iss AppVersion` must all agree, or the installer metadata mismatches the app.
 - A beta/rc **must** carry its suffix in `APP_VERSION` (e.g. `1.18.0-rc1`) and `.iss AppVersion`, but **never** in `APP_VERSION_WIN` (numeric `X.Y.Z.0` only). Without the suffix in `APP_VERSION`, the prerelease-aware updater can't tell the rc from the final build, and testers stay stuck on the rc.

@@ -44,8 +44,8 @@ crash_report.txt
 error_log.txt
 
 # 2. Binary Dependencies (FFmpeg)
-# It is bad practice to commit large .exe files to Git.
-# You should download them manually or use a script.
+# Not tracked: each GyanD build exceeds GitHub's 100 MB per-file limit.
+# Install/refresh them with scripts\update_embedded_ffmpeg.ps1.
 bin/ffmpeg.exe
 bin/ffprobe.exe
 # Or ignore the whole bin folder if it only contains tools:

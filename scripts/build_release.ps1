@@ -70,8 +70,8 @@ Assert-FileExists -Path $InstallerScript -Label "Inno Setup script"
 foreach ($documentationIndex in $DocumentationIndexes) {
     Assert-FileExists -Path $documentationIndex -Label "Documentation index"
 }
-Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffmpeg.exe") -Label "FFmpeg binary"
-Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffprobe.exe") -Label "FFprobe binary"
+Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffmpeg.exe") -Label "FFmpeg binary (run scripts/update_embedded_ffmpeg.ps1 to install it)"
+Assert-FileExists -Path (Join-Path $ProjectRoot "bin\ffprobe.exe") -Label "FFprobe binary (run scripts/update_embedded_ffmpeg.ps1 to install it)"
 
 Push-Location $ProjectRoot
 try {

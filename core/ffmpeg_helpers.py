@@ -338,6 +338,11 @@ def apply_audio_codec_args(cmd, codec_key, settings):
 # Autres conditions observées : l'audio doit être RÉENCODÉ (en `-c:a copy` rien
 # ne casse) et le silence doit tomber pendant que l'audio coule encore.
 #
+# FFmpeg 9.0.2 (septembre 2026) corrige la perte de l'audio : le muxeur refuse
+# toujours l'échantillon (la réplique tardive est perdue) mais l'audio est
+# complet, le filet ci-dessous ne se déclenche donc plus. On le garde : il ne
+# coûte rien quand tout va bien et protège d'une régression amont.
+#
 # Cas réel (août 2026) : quatre films d'un utilisateur, tous de plus de 71 min,
 # dont un sous-titre « forcé » ne portait que trois répliques (12 s, 100 s, puis
 # 4767 s) — un silence de 4662 s. Reproduit à 10 Ko près sur 9,9 Go.
