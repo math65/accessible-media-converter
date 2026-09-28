@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.5`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.6`.
 
 ## Running and building
 
@@ -166,6 +166,23 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.20.6 — published 2026-09-28, tag `v1.20.6`, commit `b0fe07d`.** Ships the four fixes of
+  `1e5285d` (found by a full app audit) plus **embedded FFmpeg 9.0.2**.
+  - **False "The converted file is unexpectedly short"** — hit in the field the same day (France TV
+    film, 1 h 47 of video, single audio-description track `qad` of ~25 min, extracted to MP3). The
+    v1.20.5 **container** check compared the output against the source **container** duration (=
+    the video), so any extraction of a short audio track failed. It now uses the source track(s)
+    actually mapped (`_expected_container_duration` / `_expected_duration_for_output`). Reproduced on
+    v1.20.5 and verified fixed with a 60 s video + 20 s `qad` track + attached-pic fixture. The
+    other three: in-place re-tag removing a video's cover also dropped the video track; a merge whose
+    output is one of its inputs destroyed it; cue albums shifted the status rows of later files.
+  - **`bin/*.exe` are no longer git-tracked**: the 9.0.2 GyanD builds are ~100.5 MB each and GitHub
+    rejected the push (100 MB hard limit). The two unpushed local commits were rewritten without the
+    blobs (old local branch `backup/pre-untrack-ffmpeg` kept — **never push it**, it carries them).
+    `update_embedded_ffmpeg.ps1` now installs into an empty `bin/` (fresh clone; validated: the
+    download is byte-identical to the shipped binaries). See "Critical gotchas".
+  - Suite: **102 tests** green. ⚠️ Published **without** real-world NVDA validation.
 
 - **v1.20.5 — published 2026-08-26, tag `v1.20.5`, commit `54427cb`.** Driven by the August 2026
   field investigation with **Manu** (`[[project_field_bugs_2026_08]]`): four of his MP4s had a
