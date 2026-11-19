@@ -1,6 +1,6 @@
 import wx
 
-from core.ffmpeg_helpers import RINGTONE_MAX_SECONDS
+from core.ffmpeg_helpers import RINGTONE_MAX_SECONDS, is_sample_rate_supported, resolve_sample_rate
 from core.formatting import (
     DEFAULT_FORMAT_SETTINGS,
     IMAGE_OUTPUT_FORMAT_KEYS,
@@ -135,9 +135,20 @@ class SettingsDialog(wx.Dialog):
             self.lbl_audio_codec = None
             self.combo_audio_codec = None
 
-        self.sr_display_choices = [_("Original"), "44.1 kHz", "48 kHz", "96 kHz", "22.05 kHz"]
+        # Valeurs proposées ; _populate_sample_rate_combo() n'en garde que celles
+        # que l'encodeur du codec actif accepte (pas de 96 kHz en MP3 ni en WMA).
+        self._sample_rate_options = [
+            ('original', _("Original")),
+            ('44100', "44.1 kHz"),
+            ('48000', "48 kHz"),
+            ('96000', "96 kHz"),
+            ('22050', "22.05 kHz"),
+        ]
+        self._sample_rate_values = [value for value, _label in self._sample_rate_options]
         self.lbl_sr = wx.StaticText(self.panel_audio_opts, label=_("Sample Rate:"))
-        self.combo_sr = wx.Choice(self.panel_audio_opts, choices=self.sr_display_choices)
+        self.combo_sr = wx.Choice(
+            self.panel_audio_opts, choices=[label for _value, label in self._sample_rate_options]
+        )
         self.audio_grid.Add(self.lbl_sr, 0, wx.ALIGN_CENTER_VERTICAL)
         self.audio_grid.Add(self.combo_sr, 0, wx.EXPAND)
 
@@ -321,8 +332,9 @@ class SettingsDialog(wx.Dialog):
 
         self._populate_audio_codec_combo(settings.get("audio_codec"))
 
-        sr_map = {'original': 0, '44100': 1, '48000': 2, '96000': 3, '22050': 4}
-        self.combo_sr.SetSelection(sr_map.get(str(settings.get('audio_sample_rate', 'original')), 0))
+        self._populate_sample_rate_combo(
+            self._get_active_audio_codec_key(), settings.get('audio_sample_rate', 'original')
+        )
 
         ch_map = {'2': 0, '1': 1, 'original': 2}
         self.combo_ch.SetSelection(ch_map.get(str(settings.get('audio_channels', '2')), 0))
@@ -477,9 +489,30 @@ class SettingsDialog(wx.Dialog):
         self._update_visibility(preserve_focus=self.combo_rate_mode)
         event.Skip()
 
+    def _current_sample_rate(self):
+        selection = self.combo_sr.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(self._sample_rate_values):
+            return 'original'
+        return self._sample_rate_values[selection]
+
+    def _populate_sample_rate_combo(self, codec_key, selected_value):
+        """Ne propose que les fréquences que l'encodeur accepte ; une valeur
+        enregistrée qu'il refuse est remplacée par la plus proche acceptée."""
+        options = [
+            (value, label) for value, label in self._sample_rate_options
+            if is_sample_rate_supported(codec_key, value)
+        ]
+        self._sample_rate_values = [value for value, _label in options]
+        self.combo_sr.Set([label for _value, label in options])
+        target = resolve_sample_rate(codec_key, selected_value) or 'original'
+        if target not in self._sample_rate_values:
+            target = 'original'
+        self.combo_sr.SetSelection(self._sample_rate_values.index(target))
+
     def on_audio_codec_change(self, event):
         codec_key = self._get_active_audio_codec_key()
         current_mode = self._current_rate_mode()
+        self._populate_sample_rate_combo(codec_key, self._current_sample_rate())
         self._populate_quality_combo(codec_key)
         self._set_quality_selection(self.current_settings)
         self._populate_rate_mode_combo(codec_key)
@@ -955,8 +988,7 @@ class SettingsDialog(wx.Dialog):
         settings = dict(self.current_settings)
         settings['audio_mode'] = 'copy' if self.rb_copy.GetValue() else 'convert'
 
-        sr_vals = ['original', '44100', '48000', '96000', '22050']
-        settings['audio_sample_rate'] = sr_vals[self.combo_sr.GetSelection()]
+        settings['audio_sample_rate'] = self._current_sample_rate()
 
         ch_vals = ['2', '1', 'original']
         settings['audio_channels'] = ch_vals[self.combo_ch.GetSelection()]

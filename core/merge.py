@@ -8,6 +8,8 @@ import tempfile
 from core.ffmpeg_helpers import (
     IPOD_MUXER_OUTPUTS,
     STREAMING_LOUDNORM_FILTER,
+    disk_full_error,
+    is_disk_full_failure,
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
     apply_common_audio_options,
@@ -84,7 +86,7 @@ class MergeTask:
         else:
             codec_key = self.target_format
 
-        apply_common_audio_options(cmd, self.settings)
+        apply_common_audio_options(cmd, self.settings, codec_key)
         apply_audio_codec_args(cmd, codec_key, self.settings)
 
         if (
@@ -309,6 +311,8 @@ class MergeTask:
                     )
 
                 logging.error("FFmpeg (fusion) a échoué avec le code %s", self.process.returncode)
+                if is_disk_full_failure(self.process.returncode, self.stderr_lines):
+                    raise disk_full_error(self.output_path)
                 tail = "\n".join(self.stderr_lines[-50:])
                 raise Exception(f"FFmpeg merge error (code {self.process.returncode}):\n{tail}")
 

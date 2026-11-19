@@ -9,6 +9,8 @@ from core.ffmpeg_helpers import (
     COVER_ART_AUDIO_OUTPUTS,
     IPOD_MUXER_OUTPUTS,
     STREAMING_LOUDNORM_FILTER,
+    disk_full_error,
+    is_disk_full_failure,
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
     apply_common_audio_options,
@@ -309,7 +311,7 @@ class ConversionTask:
         return self.target_format
 
     def _apply_encoded_audio_settings(self, cmd, mapped_container_tracks):
-        apply_common_audio_options(cmd, self.settings)
+        apply_common_audio_options(cmd, self.settings, self._get_target_audio_codec())
         apply_audio_codec_args(cmd, self._get_target_audio_codec(), self.settings)
         self._apply_audio_normalization_filters(cmd, mapped_container_tracks)
 
@@ -505,6 +507,8 @@ class ConversionTask:
 
         if self.process.returncode != 0:
             logging.error(f"FFmpeg image a échoué avec le code {self.process.returncode}")
+            if is_disk_full_failure(self.process.returncode, self.stderr_lines):
+                raise disk_full_error(output_path)
             tail = "\n".join(self.stderr_lines[-50:])
             raise Exception(f"FFmpeg error (code {self.process.returncode}):\n{tail}")
 
@@ -925,6 +929,8 @@ class ConversionTask:
                 )
 
             logging.error(f"FFmpeg a échoué avec le code {self.process.returncode}")
+            if is_disk_full_failure(self.process.returncode, self.stderr_lines):
+                raise disk_full_error(output_path)
             tail = "\n".join(self.stderr_lines[-50:])
             raise Exception(f"FFmpeg error (code {self.process.returncode}):\n{tail}")
         else:

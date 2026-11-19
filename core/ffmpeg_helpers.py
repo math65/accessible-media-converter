@@ -1,5 +1,7 @@
 """Shared FFmpeg utilities used by ConversionTask, MergeTask, and FileProber."""
 
+import builtins
+import errno
 import logging
 import os
 import re
@@ -298,9 +300,66 @@ def apply_id3v2_compat_args(cmd, output_path):
         cmd.extend(['-id3v2_version', ID3V2_COMPAT_VERSION])
 
 
-def apply_common_audio_options(cmd, settings):
-    sample_rate = settings.get('audio_sample_rate', 'original')
-    if sample_rate != 'original':
+def _translate(msgid):
+    translator = builtins.__dict__.get('_')
+    if callable(translator):
+        return translator(msgid)
+    return msgid
+
+
+# Fréquences d'échantillonnage acceptées par les encodeurs qui ne les prennent
+# pas toutes (lues dans `ffmpeg -h encoder=...` et vérifiées une à une) : leur
+# imposer une autre fréquence fait échouer toute la commande (« Specified sample
+# rate 96000 is not supported by the libmp3lame encoder », rapport d'octobre
+# 2026). Les autres encodeurs de l'app (AAC, FLAC, ALAC, WAV, Vorbis) acceptent
+# toutes celles que propose la boîte de réglages.
+ENCODER_SAMPLE_RATES = {
+    'mp3': (8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000),
+    'wma': (8000, 11025, 16000, 22050, 32000, 44100, 48000),
+    'opus': (8000, 12000, 16000, 24000, 48000),
+}
+
+
+def is_sample_rate_supported(codec_key, sample_rate):
+    """Vrai si l'encodeur du codec accepte cette fréquence (« original » : toujours)."""
+    if str(sample_rate) == 'original':
+        return True
+    allowed = ENCODER_SAMPLE_RATES.get(codec_key)
+    if not allowed:
+        return True
+    try:
+        return int(sample_rate) in allowed
+    except (TypeError, ValueError):
+        return False
+
+
+def resolve_sample_rate(codec_key, sample_rate):
+    """Fréquence à demander à FFmpeg, ou None pour garder celle de la source.
+
+    Une fréquence que l'encodeur refuse est remplacée par la plus proche qu'il
+    accepte (96 kHz → 48 kHz en MP3, 44,1 kHz → 48 kHz en Opus). Avec « original »,
+    FFmpeg choisit lui-même une fréquence compatible : rien à imposer.
+    """
+    if sample_rate in (None, '', 'original'):
+        return None
+    try:
+        requested = int(sample_rate)
+    except (TypeError, ValueError):
+        return None
+    allowed = ENCODER_SAMPLE_RATES.get(codec_key)
+    if not allowed or requested in allowed:
+        return str(requested)
+    chosen = min(allowed, key=lambda rate: (abs(rate - requested), -rate))
+    logging.warning(
+        "Fréquence %s Hz refusée par l'encodeur %s : %s Hz utilisée à la place.",
+        requested, codec_key, chosen,
+    )
+    return str(chosen)
+
+
+def apply_common_audio_options(cmd, settings, codec_key=None):
+    sample_rate = resolve_sample_rate(codec_key, settings.get('audio_sample_rate', 'original'))
+    if sample_rate is not None:
         cmd.extend(['-ar', sample_rate])
 
     channels = settings.get('audio_channels', 'original')
@@ -406,3 +465,44 @@ def detect_oversized_subtitle_streams(stderr_lines):
         if index is not None:
             found.add(index)
     return found
+
+
+class DiskFullError(OSError):
+    """FFmpeg s'est arrêté faute de place sur le disque de destination.
+
+    Problème de l'utilisateur, pas un défaut d'AMC : le message dit quoi faire
+    et l'interface n'ouvre pas le formulaire de rapport d'erreur.
+    """
+
+
+_DISK_FULL_STDERR_RE = re.compile(r'No space left on device', re.IGNORECASE)
+
+
+def ffmpeg_error_code(returncode):
+    """Code de sortie FFmpeg en entier signé.
+
+    Sous Windows, le code négatif d'FFmpeg (AVERROR) arrive en non signé sur
+    32 bits : 4294967268 est -28, soit ENOSPC.
+    """
+    try:
+        value = int(returncode)
+    except (TypeError, ValueError):
+        return None
+    if value >= 2 ** 31:
+        value -= 2 ** 32
+    return value
+
+
+def is_disk_full_failure(returncode, stderr_lines=()):
+    if ffmpeg_error_code(returncode) == -errno.ENOSPC:
+        return True
+    return any(_DISK_FULL_STDERR_RE.search(line or '') for line in stderr_lines or ())
+
+
+def disk_full_error(output_path):
+    drive = os.path.splitdrive(os.path.abspath(output_path or ''))[0] or os.path.dirname(output_path or '')
+    message = _translate(
+        "Not enough free space on the disk {drive}. Free up some space, "
+        "or choose another output folder, then try again."
+    ).format(drive=drive)
+    return DiskFullError(errno.ENOSPC, message)

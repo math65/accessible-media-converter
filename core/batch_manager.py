@@ -6,6 +6,7 @@ from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 
 from core.error_report import summarize_ffmpeg_stderr
+from core.ffmpeg_helpers import DiskFullError
 from core.conversion import ConversionTask, build_cue_track_output_path, build_output_path
 
 
@@ -364,6 +365,8 @@ class BatchConversionManager:
 
             if isinstance(exc, FileNotFoundError):
                 job.error_kind = "input_missing"
+            elif isinstance(exc, DiskFullError):
+                job.error_kind = "disk_full"
             self._set_job_state(job, JOB_STATE_ERROR, error_message=str(exc))
             return JOB_STATE_ERROR
         finally:

@@ -167,6 +167,9 @@ class MainWindow(wx.Frame):
         self.batch_manager = None
         self._current_batch_list_ctrl = None
         self._batch_error_rows = set()
+        # Disque de destination plein : dit une seule fois en fin de lot, plutôt
+        # que caché dans la colonne État de chaque ligne en échec.
+        self._batch_disk_full_message = ""
         self._merge_task = None
         self._error_report_dialog = None
         
@@ -2055,6 +2058,7 @@ class MainWindow(wx.Frame):
         self.stop_requested = False
         self._current_batch_list_ctrl = lst
         self._batch_error_rows = set()
+        self._batch_disk_full_message = ""
 
         self.btn_convert.Hide()
         self.btn_merge.Hide()
@@ -2264,7 +2268,7 @@ class MainWindow(wx.Frame):
         if state == JOB_STATE_ERROR:
             if payload.get('error_kind') == 'input_missing':
                 return _("Error (file not found)")
-            if payload.get('error_kind') == 'cue_invalid':
+            if payload.get('error_kind') in ('cue_invalid', 'disk_full'):
                 # La raison exacte (image introuvable, cue multi-fichiers…) est
                 # plus utile que « Erreur » : elle se lit dans la liste.
                 return _("Error: {reason}").format(reason=payload.get('error_message', ''))
@@ -2351,10 +2355,12 @@ class MainWindow(wx.Frame):
             error_msg = payload.get('error_message', '')
             if error_msg == 'Stopped by user':
                 return
-            # A missing input file — or a cue sheet that cannot be split — is a
-            # user-side issue, not an FFmpeg failure worth reporting. The clear
-            # message shows in the list row.
-            if payload.get('error_kind') in ('input_missing', 'cue_invalid'):
+            # A missing input file, a cue sheet that cannot be split, or a full
+            # destination disk is a user-side issue, not an FFmpeg failure worth
+            # reporting. The clear message shows in the list row.
+            if payload.get('error_kind') == 'disk_full':
+                self._batch_disk_full_message = error_msg
+            if payload.get('error_kind') in ('input_missing', 'cue_invalid', 'disk_full'):
                 return
             if not self._is_error_report_dialog_alive():
                 # Hard update gate: if a newer version exists, require updating
@@ -2507,6 +2513,9 @@ class MainWindow(wx.Frame):
             skipped=summary.get('skipped', 0),
             error=summary.get('error', 0),
         )
+        if self._batch_disk_full_message:
+            message += "\n\n" + self._batch_disk_full_message
+            self._batch_disk_full_message = ""
         icon = wx.ICON_WARNING if summary.get('error', 0) else wx.ICON_INFORMATION
         wx.MessageBox(message, _("Done"), icon)
         self._set_status(
