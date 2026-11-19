@@ -7,6 +7,7 @@ import builtins
 
 from core.ffmpeg_helpers import (
     COVER_ART_AUDIO_OUTPUTS,
+    IPOD_MUXER_OUTPUTS,
     STREAMING_LOUDNORM_FILTER,
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
@@ -21,6 +22,7 @@ from core.ffmpeg_helpers import (
     get_ffprobe_path,
     parse_ffmpeg_threads,
     parse_oversized_subtitle_stream,
+    ringtone_window,
 )
 from core.formatting import IMAGE_OUTPUT_FORMAT_KEYS, get_effective_audio_codec
 from core.probe import parse_stream_duration
@@ -142,6 +144,24 @@ class ConversionTask:
             start_ms, end_ms = clip
             if end_ms is not None and end_ms > start_ms:
                 self.duration = (end_ms - start_ms) / 1000.0
+
+        # Tranche de l'entrée réellement lue, en ms : (début, durée ou None).
+        # Une piste cue en est une ; une sonnerie .m4r aussi (40 s au plus, à
+        # partir du début choisi), prise au besoin à l'intérieur de la piste cue.
+        self._input_window = None
+        if clip:
+            start_ms, end_ms = clip
+            length_ms = end_ms - start_ms if end_ms is not None and end_ms > start_ms else None
+            self._input_window = (start_ms, length_ms)
+        if target_format == 'm4r':
+            base_start_ms = self._input_window[0] if self._input_window else 0
+            offset_s, length_s = ringtone_window(settings, self.duration)
+            self._input_window = (
+                base_start_ms + int(round(offset_s * 1000)),
+                int(round(length_s * 1000)),
+            )
+            if self.duration > 0:
+                self.duration = length_s
 
         self.target_format = target_format
         self.settings = settings
@@ -284,8 +304,8 @@ class ConversionTask:
     def _get_target_audio_codec(self):
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             return get_effective_audio_codec(self.target_format, self.settings)
-        if self.target_format == 'm4b':
-            return 'aac'  # le M4B est un conteneur MP4 encodé en AAC
+        if self.target_format in IPOD_MUXER_OUTPUTS:
+            return 'aac'  # M4B et M4R sont des conteneurs MP4 encodés en AAC
         return self.target_format
 
     def _apply_encoded_audio_settings(self, cmd, mapped_container_tracks):
@@ -563,7 +583,7 @@ class ConversionTask:
         légitimement 5 s. On prend la plus longue des pistes retenues dont la
         durée est connue ; sans aucune mesure, la durée source.
         """
-        if self.clip or self.meta is None:
+        if self._input_window or self.meta is None:
             return self.duration
         if self._extract_source_index is not None:
             indices = [self._extract_source_index]
@@ -589,7 +609,7 @@ class ConversionTask:
         Sans mesure côté source — ou sur un extrait, où les durées de pistes ne
         s'appliquent plus — on retombe sur la durée de référence.
         """
-        if self.clip or self.meta is None:
+        if self._input_window or self.meta is None:
             return self.duration
 
         source_index = None
@@ -699,17 +719,18 @@ class ConversionTask:
         # Captures TV (.ts/.mpg/.vob…) : PTS manquants, DTS non-monotones et
         # paramètres de flux découverts tardivement → genpts + analyse élargie.
         cmd.extend(broadcast_input_args(self.input_path))
-        clip_start_ms = clip_end_ms = None
-        if self.clip:
-            clip_start_ms, clip_end_ms = self.clip
-            # -ss avant -i : seek d'entrée rapide et précis en réencodage.
-            cmd.extend(['-ss', _format_ffmpeg_time(clip_start_ms)])
+        window_start_ms = window_length_ms = None
+        if self._input_window:
+            window_start_ms, window_length_ms = self._input_window
+            if window_start_ms:
+                # -ss avant -i : seek d'entrée rapide et précis en réencodage.
+                cmd.extend(['-ss', _format_ffmpeg_time(window_start_ms)])
         cmd.extend(['-i', self.input_path])
         if cover_replace and cover_path:
             cmd.extend(['-i', cover_path])  # 2e entrée = nouvelle pochette (index 1)
-        if clip_start_ms is not None and clip_end_ms is not None and clip_end_ms > clip_start_ms:
+        if window_length_ms:
             # -t après toutes les entrées → s'applique à la sortie (durée de la piste).
-            cmd.extend(['-t', _format_ffmpeg_time(clip_end_ms - clip_start_ms)])
+            cmd.extend(['-t', _format_ffmpeg_time(window_length_ms)])
         mapped_container_tracks = None
 
         if self.target_format in VIDEO_CONTAINER_OUTPUTS and self.meta is not None:
@@ -839,8 +860,8 @@ class ConversionTask:
         if thread_count is not None:
             cmd.extend(['-threads', str(thread_count)])
 
-        if self.target_format == 'm4b':
-            # Le muxer ipod gère .m4b (sinon FFmpeg ne déduit pas le conteneur).
+        if self.target_format in IPOD_MUXER_OUTPUTS:
+            # Le muxer ipod gère .m4b et .m4r (sinon FFmpeg ne déduit pas le conteneur).
             cmd.extend(['-f', 'ipod'])
 
         apply_id3v2_compat_args(cmd, output_path)

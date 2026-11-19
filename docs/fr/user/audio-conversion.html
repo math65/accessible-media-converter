@@ -27,6 +27,7 @@
       <ul>
         <li><a href="#formats">Choisir un format de sortie</a></li>
         <li><a href="#livre-audio">Livre audio M4B (chapitres)</a></li>
+        <li><a href="#sonnerie">Sonnerie iPhone M4R</a></li>
         <li><a href="#reglages">Régler la qualité</a></li>
         <li><a href="#metadonnees">Éditer les métadonnées audio</a></li>
         <li><a href="#normalisation">Normalisation streaming</a></li>
@@ -46,6 +47,7 @@
         <li>OGG</li>
         <li>WMA</li>
         <li>M4B (livre audio avec chapitres)</li>
+        <li>M4R (sonnerie iPhone)</li>
       </ul>
       <p>
         Le format choisi détermine ensuite les réglages disponibles. Un format sans perte
@@ -65,6 +67,17 @@
         Pour assembler plusieurs fichiers en un livre audio chapitré, utilisez la <strong>fusion</strong>
         (sélectionnez au moins deux fichiers) avec une sortie M4B. Le nommage des chapitres se règle dans les préférences.
       </p>
+    </section>
+
+    <section class="section" id="sonnerie">
+      <h2>Sonnerie iPhone M4R</h2>
+      <p>Le format de sortie <strong>M4R</strong> crée une sonnerie pour iPhone. Le M4R est aussi accepté en entrée.</p>
+      <ul>
+        <li>Un iPhone n'accepte pas de sonnerie de plus de 40 secondes : la sonnerie <strong>garde 40 secondes</strong> du fichier. Un fichier de 40 secondes ou moins est gardé en entier.</li>
+        <li>Dans les réglages, <strong>Début de la sonnerie (secondes)</strong> choisit où elle commence, par exemple 72 pour démarrer à 1:12, sur le refrain. Ce réglage n'apparaît que si un fichier dépasse 40 secondes.</li>
+        <li>Si le début tombe après la fin d'un fichier, la sonnerie prend ses 40 dernières secondes.</li>
+        <li>La sonnerie est en AAC, stéréo à 256 kb/s par défaut. Depuis l'onglet vidéo, on peut aussi faire une sonnerie avec le son d'une vidéo.</li>
+      </ul>
     </section>
 
     <section class="section" id="reglages">

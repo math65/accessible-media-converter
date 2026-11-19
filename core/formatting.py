@@ -4,7 +4,9 @@ import os
 from core.i18n import AUTO_LANGUAGE_CODE, normalize_ui_language
 
 
-AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "m4b", "wav", "flac", "alac", "ogg", "wma")
+AUDIO_OUTPUT_FORMAT_KEYS = ("mp3", "aac", "m4b", "m4r", "wav", "flac", "alac", "ogg", "wma")
+# Début maximal accepté pour l'extrait d'une sonnerie (23:59:59).
+RINGTONE_START_MAX_SECONDS = 86399
 # Modes de nommage des chapitres générés pour un M4B (fusion).
 M4B_CHAPTER_NAMING_MODES = ("title_or_number", "title_or_filename", "numbered")
 DEFAULT_M4B_CHAPTER_NAMING = "title_or_number"
@@ -96,6 +98,18 @@ DEFAULT_FORMAT_SETTINGS = {
         "audio_qscale": 3,
         "audio_sample_rate": "original",
         "audio_channels": "2",
+    },
+    "m4r": {
+        # Sonnerie iPhone : AAC dans un conteneur MP4, 40 s au plus à partir de
+        # ringtone_start (secondes). 256k : sur 40 s, la taille ne compte pas.
+        "audio_mode": "convert",
+        "audio_normalize_streaming": False,
+        "rate_mode": "cbr",
+        "audio_bitrate": "256k",
+        "audio_qscale": 3,
+        "audio_sample_rate": "original",
+        "audio_channels": "2",
+        "ringtone_start": 0,
     },
     "ogg": {
         "audio_mode": "convert",
@@ -256,6 +270,7 @@ def build_format_label(format_key, context="audio"):
             "mp3": _translate("MP3 - Audio (Extract)"),
             "aac": _translate("AAC - Audio (Extract)"),
             "m4b": _translate("M4B - Audio (Extract)"),
+            "m4r": _translate("M4R - iPhone Ringtone (Extract)"),
             "wav": _translate("WAV - Audio (Extract)"),
             "flac": _translate("FLAC - Audio (Extract)"),
             "alac": _translate("ALAC - Audio (Extract)"),
@@ -268,6 +283,7 @@ def build_format_label(format_key, context="audio"):
         "mp3": _translate("MP3 - Audio"),
         "aac": _translate("AAC - Audio (M4A)"),
         "m4b": _translate("M4B - Audiobook (Chapters)"),
+        "m4r": _translate("M4R - iPhone Ringtone"),
         "wav": _translate("WAV - Audio (Lossless)"),
         "flac": _translate("FLAC - Audio (Lossless)"),
         "alac": _translate("ALAC - Audio (Apple Lossless)"),
@@ -362,10 +378,31 @@ def normalize_format_settings(format_key, settings):
         normalized["summary"] = build_image_format_summary(format_key, normalized)
         return normalized
     normalized["audio_normalize_streaming"] = bool(normalized.get("audio_normalize_streaming", False))
+    if format_key == "m4r":
+        normalized["ringtone_start"] = normalize_ringtone_start(normalized.get("ringtone_start", 0))
     if format_key in VIDEO_CONTAINER_FORMAT_KEYS:
         normalized = _normalize_container_video_settings(format_key, normalized)
     normalized["summary"] = build_format_summary(format_key, normalized)
     return normalized
+
+
+def normalize_ringtone_start(value):
+    """Début d'une sonnerie en secondes entières, borné à [0, 23:59:59]."""
+    try:
+        seconds = int(float(value))
+    except (TypeError, ValueError):
+        return 0
+    return max(0, min(RINGTONE_START_MAX_SECONDS, seconds))
+
+
+def format_ringtone_start(seconds):
+    """72 → « 1:12 », 3725 → « 1:02:05 »."""
+    seconds = normalize_ringtone_start(seconds)
+    hours, rest = divmod(seconds, 3600)
+    minutes, secs = divmod(rest, 60)
+    if hours:
+        return f"{hours}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
 
 
 def normalize_settings_store(settings_store):
@@ -538,6 +575,13 @@ def _build_audio_summary(format_key, settings, include_channels):
         parts.append(_build_channel_summary(settings.get("audio_channels", "original")))
     if _should_include_audio_normalization(settings):
         parts.append(_translate("Normalized -16 LUFS"))
+    if format_key == "m4r":
+        parts.append(
+            _translatef(
+                "40 s from {start}",
+                start=format_ringtone_start(settings.get("ringtone_start", 0)),
+            )
+        )
     return " / ".join(parts)
 
 

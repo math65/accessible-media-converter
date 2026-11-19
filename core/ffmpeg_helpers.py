@@ -13,6 +13,39 @@ VIDEO_CONTAINER_OUTPUTS = ('mp4', 'mkv', 'mov')
 # Formats audio dont le conteneur sait embarquer une pochette (attached_pic).
 COVER_ART_AUDIO_OUTPUTS = ('mp3', 'aac', 'm4b', 'alac', 'flac')
 
+# Sorties MP4 encodées en AAC dont FFmpeg ne reconnaît pas l'extension
+# (« Unable to choose an output format for '….m4r' ») : il faut lui imposer
+# le muxer ipod (-f ipod), qui écrit le même conteneur qu'un .m4a.
+IPOD_MUXER_OUTPUTS = ('m4b', 'm4r')
+
+# Sonnerie iPhone (.m4r) : l'iPhone n'accepte pas une sonnerie de plus de
+# 40 secondes, on n'en garde donc qu'un extrait.
+RINGTONE_MAX_SECONDS = 40
+
+
+def ringtone_window(settings, source_duration=None):
+    """(début, durée) en secondes de l'extrait gardé pour une sonnerie.
+
+    Le début vient du réglage ``ringtone_start``. S'il tombe au-delà de la fin
+    du fichier, on garde les 40 dernières secondes plutôt que de produire un
+    fichier vide. Sans durée source connue, on demande 40 s à FFmpeg, qui
+    s'arrête de lui-même à la fin du fichier.
+    """
+    try:
+        start = float((settings or {}).get('ringtone_start', 0) or 0)
+    except (TypeError, ValueError):
+        start = 0.0
+    start = max(0.0, start)
+    try:
+        duration = float(source_duration or 0)
+    except (TypeError, ValueError):
+        duration = 0.0
+    if duration <= 0:
+        return start, float(RINGTONE_MAX_SECONDS)
+    if start >= duration:
+        start = max(0.0, duration - RINGTONE_MAX_SECONDS)
+    return start, min(float(RINGTONE_MAX_SECONDS), duration - start)
+
 _WAV_DEPTH_TO_CODEC = {'16': 'pcm_s16le', '24': 'pcm_s24le', '32': 'pcm_f32le'}
 
 # Conteneurs MPEG-TS (flux de diffusion / captures TV, caméscopes AVCHD). Ces

@@ -1,9 +1,11 @@
 import wx
 
+from core.ffmpeg_helpers import RINGTONE_MAX_SECONDS
 from core.formatting import (
     DEFAULT_FORMAT_SETTINGS,
     IMAGE_OUTPUT_FORMAT_KEYS,
     IMAGE_RESIZE_OPTIONS,
+    RINGTONE_START_MAX_SECONDS,
     VALID_VIDEO_ENCODER_PRESETS,
     VALID_VIDEO_PIXEL_FORMATS,
     VALID_VIDEO_PROFILES,
@@ -14,6 +16,7 @@ from core.formatting import (
     get_audio_codec_label,
     get_container_audio_codec_options,
     get_matching_video_preset_profile,
+    normalize_ringtone_start,
 )
 
 
@@ -57,7 +60,12 @@ VIDEO_PIXEL_FORMAT_OPTIONS = (
 
 
 class SettingsDialog(wx.Dialog):
-    def __init__(self, parent, title_format, has_video, input_ac, current_settings, format_key):
+    def __init__(self, parent, title_format, has_video, input_ac, current_settings, format_key,
+                 source_duration=None):
+        # source_duration : durée du plus long fichier concerné (None = inconnue).
+        # Une sonnerie ne garde que 40 s : pour des fichiers qui n'en font pas
+        # plus, le réglage du début n'a pas d'objet et n'est pas affiché.
+        self.source_duration = source_duration
         self.is_image_format = format_key in IMAGE_OUTPUT_FORMAT_KEYS
         dialog_size = (480, 400) if self.is_image_format else (560, 760)
         super().__init__(parent, title=_("Configure settings for: ") + title_format, size=dialog_size)
@@ -193,6 +201,33 @@ class SettingsDialog(wx.Dialog):
         audio_opts_sizer.Add(self.chk_normalize_streaming, 0, wx.TOP, 12)
         self.panel_audio_opts.SetSizer(audio_opts_sizer)
         audio_sizer.Add(self.panel_audio_opts, 1, wx.EXPAND | wx.ALL, 10)
+
+        # Sonnerie iPhone : hors du panneau des options d'encodage, car l'extrait
+        # de 40 s s'applique aussi en mode copie.
+        self.lbl_ringtone_start = None
+        self.spin_ringtone_start = None
+        if self.format_key == 'm4r' and not (
+            self.source_duration and self.source_duration <= RINGTONE_MAX_SECONDS
+        ):
+            ringtone_row = wx.BoxSizer(wx.HORIZONTAL)
+            self.lbl_ringtone_start = wx.StaticText(
+                audio_box, label=_("Ringtone start (seconds):")
+            )
+            self.spin_ringtone_start = wx.SpinCtrl(
+                audio_box, min=0, max=RINGTONE_START_MAX_SECONDS, initial=0
+            )
+            ringtone_row.Add(self.lbl_ringtone_start, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+            ringtone_row.Add(self.spin_ringtone_start, 0)
+            audio_sizer.Add(ringtone_row, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+            self.lbl_ringtone_help = wx.StaticText(
+                audio_box,
+                label=_(
+                    "The ringtone keeps 40 seconds from this point, "
+                    "the longest an iPhone accepts."
+                ),
+            )
+            audio_sizer.Add(self.lbl_ringtone_help, 0, wx.ALL | wx.EXPAND, 10)
+
         self.main_sizer.Add(audio_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
     def _build_video_section(self):
@@ -307,6 +342,8 @@ class SettingsDialog(wx.Dialog):
         compression = int(settings.get('flac_compression', 5))
         self.combo_comp.SetSelection(max(0, min(compression, 12)))
         self.chk_normalize_streaming.SetValue(bool(settings.get('audio_normalize_streaming', False)))
+        if self.spin_ringtone_start:
+            self.spin_ringtone_start.SetValue(normalize_ringtone_start(settings.get('ringtone_start', 0)))
 
         if self.has_video_controls:
             if settings.get("video_mode") == "copy":
@@ -579,6 +616,12 @@ class SettingsDialog(wx.Dialog):
 
         self.lbl_copy_warn.SetName(_("Copy mode warning"))
 
+        if self.spin_ringtone_start:
+            self.spin_ringtone_start.SetName(_("Ringtone start in seconds"))
+            self.spin_ringtone_start.SetToolTip(
+                _("Where the ringtone begins, in seconds from the start of the file (72 = 1:12).")
+            )
+
         if self.has_video_controls:
             self.panel_video_opts.SetName(_("Video settings panel"))
             self.rb_v_convert.SetName(_("Video mode re-encode"))
@@ -713,8 +756,8 @@ class SettingsDialog(wx.Dialog):
     def _get_active_audio_codec_key(self):
         if self.format_key in VIDEO_CONTAINER_FORMAT_KEYS:
             return self._get_selected_audio_codec_key()
-        if self.format_key == 'm4b':
-            return 'aac'  # M4B = conteneur AAC : mêmes contrôles que l'AAC
+        if self.format_key in ('m4b', 'm4r'):
+            return 'aac'  # M4B/M4R = conteneur AAC : mêmes contrôles que l'AAC
         return self.format_key
 
     def _get_selected_video_encoder_preset_key(self):
@@ -942,6 +985,8 @@ class SettingsDialog(wx.Dialog):
         settings['audio_bit_depth'] = d_vals[self.combo_depth.GetSelection()]
         settings['flac_compression'] = self.combo_comp.GetSelection()
         settings['audio_normalize_streaming'] = self.chk_normalize_streaming.GetValue()
+        if self.spin_ringtone_start:
+            settings['ringtone_start'] = normalize_ringtone_start(self.spin_ringtone_start.GetValue())
 
         if self.combo_audio_codec:
             settings["audio_codec"] = self._get_selected_audio_codec_key()

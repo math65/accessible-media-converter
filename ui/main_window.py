@@ -69,6 +69,21 @@ from ui.support_dialog import SupportContactDialog
 from ui.track_manager import AudioExtractTrackDialog, TrackManagerDialog, serialize_audio_track
 from ui.update_dialog import UpdateDialog
 
+
+def _longest_known_duration(metas):
+    """Durée du plus long fichier, ou None si la liste est vide ou si une durée manque."""
+    durations = []
+    for meta in metas or ():
+        try:
+            value = float(getattr(meta, 'duration', 0) or 0)
+        except (TypeError, ValueError):
+            value = 0.0
+        if value <= 0:
+            return None
+        durations.append(value)
+    return max(durations) if durations else None
+
+
 SUPPORTED_MEDIA_EXTENSIONS = {
     '.mp3',
     '.mp2',
@@ -79,6 +94,7 @@ SUPPORTED_MEDIA_EXTENSIONS = {
     '.wma',
     '.m4a',
     '.m4b',
+    '.m4r',
     '.opus',
     '.aiff',
     '.aif',
@@ -1683,9 +1699,15 @@ class MainWindow(wx.Frame):
         elif self.current_tab == 'video' and self.video_data: input_ac = self.video_data[0].audio_codec
         elif self.current_tab == 'image': input_ac = ""
         current_saved = self.settings_store.get(fmt_key, {})
-        
+        tab_data = self.audio_data if self.current_tab == 'audio' else (
+            self.video_data if self.current_tab == 'video' else []
+        )
+
         # Passage du fmt_key pour la logique interne
-        dlg = SettingsDialog(self, clean, input_has_vid, input_ac, current_saved, fmt_key)
+        dlg = SettingsDialog(
+            self, clean, input_has_vid, input_ac, current_saved, fmt_key,
+            source_duration=_longest_known_duration(tab_data),
+        )
         if dlg.ShowModal() == wx.ID_OK:
             self.settings_store[fmt_key] = dlg.get_settings()
             self._save_config()
@@ -1861,7 +1883,10 @@ class MainWindow(wx.Frame):
         else:
             current_saved = self.settings_store.get(fmt_key, {})
 
-        dlg = SettingsDialog(self, clean, input_has_vid, input_ac, current_saved, fmt_key)
+        dlg = SettingsDialog(
+            self, clean, input_has_vid, input_ac, current_saved, fmt_key,
+            source_duration=_longest_known_duration([data[i] for i in indices]),
+        )
         if dlg.ShowModal() == wx.ID_OK:
             new_settings = dlg.get_settings()
             for i in indices:

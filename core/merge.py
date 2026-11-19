@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 
 from core.ffmpeg_helpers import (
+    IPOD_MUXER_OUTPUTS,
     STREAMING_LOUDNORM_FILTER,
     VIDEO_CONTAINER_OUTPUTS,
     apply_audio_codec_args,
@@ -16,6 +17,7 @@ from core.ffmpeg_helpers import (
     get_ffmpeg_path,
     is_transport_stream,
     parse_ffmpeg_threads,
+    ringtone_window,
 )
 from core.formatting import get_effective_audio_codec
 
@@ -46,6 +48,12 @@ class MergeTask:
         self.total_duration = sum(
             float(getattr(m, 'duration', 0) or 0) for m in input_list
         )
+        # Sonnerie .m4r : on ne garde que 40 s de l'enchaînement (début réglable).
+        self._ringtone_window = None
+        if target_format == 'm4r':
+            self._ringtone_window = ringtone_window(settings, self.total_duration)
+            if self.total_duration > 0:
+                self.total_duration = self._ringtone_window[1]
 
     def _close_process_streams(self):
         """Les tubes du sous-processus ne se referment pas tout seuls : sans ça
@@ -71,8 +79,8 @@ class MergeTask:
     def _apply_audio_codec_settings(self, cmd):
         if self.target_format in VIDEO_CONTAINER_OUTPUTS:
             codec_key = get_effective_audio_codec(self.target_format, self.settings)
-        elif self.target_format == 'm4b':
-            codec_key = 'aac'  # conteneur MP4/ipod encodé en AAC
+        elif self.target_format in IPOD_MUXER_OUTPUTS:
+            codec_key = 'aac'  # conteneur MP4/ipod encodé en AAC (M4B, M4R)
         else:
             codec_key = self.target_format
 
@@ -164,7 +172,11 @@ class MergeTask:
             if any(is_transport_stream(meta.full_path) for meta in self.input_list):
                 # PTS manquants / DTS non-monotones fréquents sur les .ts broadcast.
                 cmd.extend(['-fflags', '+genpts'])
+            if self._ringtone_window and self._ringtone_window[0] > 0:
+                cmd.extend(['-ss', f"{self._ringtone_window[0]:.3f}"])
             cmd.extend(['-f', 'concat', '-safe', '0', '-i', list_path])
+            if self._ringtone_window:
+                cmd.extend(['-t', f"{self._ringtone_window[1]:.3f}"])
 
             if is_m4b:
                 # Chapitres : un [CHAPTER] par fichier fusionné, passé en 2e entrée.
@@ -213,8 +225,8 @@ class MergeTask:
             if thread_count is not None:
                 cmd.extend(['-threads', str(thread_count)])
 
-            if is_m4b:
-                cmd.extend(['-f', 'ipod'])  # muxer qui gère .m4b
+            if self.target_format in IPOD_MUXER_OUTPUTS:
+                cmd.extend(['-f', 'ipod'])  # muxer qui gère .m4b et .m4r
 
             apply_id3v2_compat_args(cmd, self.output_path)
 

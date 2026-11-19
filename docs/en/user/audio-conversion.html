@@ -27,6 +27,7 @@
       <ul>
         <li><a href="#formats">Choose an output format</a></li>
         <li><a href="#audiobook">M4B audiobook (chapters)</a></li>
+        <li><a href="#ringtone">M4R iPhone ringtone</a></li>
         <li><a href="#settings">Adjust quality</a></li>
         <li><a href="#metadata">Edit audio metadata</a></li>
         <li><a href="#normalization">Streaming normalization</a></li>
@@ -46,6 +47,7 @@
         <li>OGG</li>
         <li>WMA</li>
         <li>M4B (audiobook with chapters)</li>
+        <li>M4R (iPhone ringtone)</li>
       </ul>
       <p>
         The selected format determines which settings are available afterwards. A lossless
@@ -65,6 +67,17 @@
         To assemble several files into one chaptered audiobook, use the <strong>merge</strong>
         (select at least two files) with an M4B output. Chapter naming is configured in the preferences.
       </p>
+    </section>
+
+    <section class="section" id="ringtone">
+      <h2>M4R iPhone ringtone</h2>
+      <p>The <strong>M4R</strong> output format makes an iPhone ringtone. M4R is also accepted as input.</p>
+      <ul>
+        <li>An iPhone does not accept a ringtone longer than 40 seconds, so the ringtone <strong>keeps 40 seconds</strong> of the file. A file of 40 seconds or less is kept whole.</li>
+        <li>In the settings, <strong>Ringtone start (seconds)</strong> chooses where the ringtone begins, for example 72 to start at 1:12, on the chorus. This setting only appears when a file is longer than 40 seconds.</li>
+        <li>If the start is past the end of a file, the ringtone uses its last 40 seconds.</li>
+        <li>The ringtone is AAC, stereo at 256 kb/s by default. From the video tab, you can also turn a video's soundtrack into a ringtone.</li>
+      </ul>
     </section>
 
     <section class="section" id="settings">

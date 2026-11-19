@@ -82,6 +82,7 @@ class OutputFormatTests(unittest.TestCase):
             ("ogg", "ogg", {"audio_qscale": 6}),
             ("wma", "wma", {"audio_bitrate": "128k"}),
             ("m4b", "m4b", {"rate_mode": "cbr", "audio_bitrate": "128k"}),
+            ("m4r", "m4r", {"rate_mode": "cbr", "audio_bitrate": "256k", "ringtone_start": 1}),
             ("mono44k", "mp3", {"rate_mode": "cbr", "audio_bitrate": "128k",
                                 "audio_channels": "1", "audio_sample_rate": "44100"}),
             ("loudnorm", "mp3", {"rate_mode": "cbr", "audio_bitrate": "192k",
@@ -140,6 +141,7 @@ class OutputFormatTests(unittest.TestCase):
         cases = [
             ("merge_mp3", "mp3", {"rate_mode": "cbr", "audio_bitrate": "192k"}),
             ("merge_m4b", "m4b", {"rate_mode": "cbr", "audio_bitrate": "128k"}),
+            ("merge_m4r", "m4r", {"rate_mode": "cbr", "audio_bitrate": "256k"}),
         ]
         for label, target_format, extra in cases:
             with self.subTest(format=label):
