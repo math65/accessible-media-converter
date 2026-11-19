@@ -39,9 +39,18 @@ Expected outputs: `dist\AccessibleMediaConverter\AccessibleMediaConverter.exe` a
 powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1 -CheckOnly
 ```
 
-**Update embedded FFmpeg:**
+**Update embedded FFmpeg** (installs the latest GyanD build **and records it** in
+`scripts/ffmpeg_release.json` — commit that file):
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1
+```
+
+**Install the pinned FFmpeg** (fresh clone, CI — exactly the tag + archive SHA256 recorded in
+`scripts/ffmpeg_release.json`, never a newer one), or pick a release by tag (rollback, or a stable
+tag when "latest" is a git snapshot; also records it):
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1 -Pinned
+powershell -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1 -Tag 9.0.2
 ```
 
 **Translation management:**
@@ -146,7 +155,8 @@ Call `_translate()` / `_translatef()` inside functions, never at module level.
 
 ## Critical gotchas
 
-- `bin/ffmpeg.exe` and `bin/ffprobe.exe` are **not git-tracked** (since v1.20.6): the FFmpeg 9.0.2 builds are ~100.5 MB each, over GitHub's hard 100 MB per-file limit, which rejects the whole push. On a fresh clone, run `scripts\update_embedded_ffmpeg.ps1` to install them (SHA256-verified GyanD download); `build_release.ps1` refuses to start without them. Never `git add -f` them.
+- `bin/ffmpeg.exe` and `bin/ffprobe.exe` are **not git-tracked** (since v1.20.6): the FFmpeg 9.0.2 builds are ~100.5 MB each, over GitHub's hard 100 MB per-file limit, which rejects the whole push. On a fresh clone, run `scripts\update_embedded_ffmpeg.ps1 -Pinned` to install them (SHA256-verified GyanD download); `build_release.ps1` refuses to start without them. Never `git add -f` them.
+- **Which FFmpeg ships is decided by `scripts/ffmpeg_release.json`** (GyanD tag, asset name, archive SHA256), not by "latest". CI and the release workflow install it with `-Pinned`, which verifies the archive against the **committed** hash (an asset re-uploaded under the same tag is refused). Running the script **without** `-Pinned` moves to the newest GyanD release and rewrites the pin file — and GyanD's newest is often a **git snapshot** (`2026-11-19-git-01ca75d350`), not a stable `9.0.x`: read the tag it picked, and use `-Tag X.Y.Z` to stay on a stable.
 - Updating `bin/` does **not** update `dist/`. Always rebuild after an FFmpeg update before publishing.
 - The updater in `core/updater.py` only accepts the exact asset `AccessibleMediaConverter-Setup.exe`. The legacy fallback to versioned asset names was removed in v1.8.0.
 - The FFmpeg update script reads the full release list from `GyanD/codexffmpeg` instead of `releases/latest`, because `latest` may not be the most recent build. It decides whether an update is needed by comparing the GyanD release **tag** (which is the exact build token) against the embedded `ffmpeg -version` string, so `-CheckOnly` answers from API metadata alone and downloads nothing.
@@ -154,13 +164,39 @@ Call `_translate()` / `_translatef()` inside functions, never at module level.
 
 ## Release workflow
 
-1. Verify `git status` is clean.
-2. Bump version in `core/app_info.py` and `installer/UniversalTranscoder.iss`.
-3. Create `release-notes/vX.Y.Z.en.md` and `release-notes/vX.Y.Z.fr.md`.
-4. Run `scripts/build_release.ps1` — generates `dist\release-notes.md` automatically.
-5. Verify embedded FFmpeg version in `dist\AccessibleMediaConverter\_internal\bin\ffmpeg.exe`.
-6. Commit, push, publish GitHub release with the single installer asset.
+Releases are built and published by **GitHub Actions** (`.github/workflows/release.yml`,
+"Publier une version"), modelled on DownAccess. The local build stays available as a fallback.
 
+1. Verify `git status` is clean. Optionally refresh FFmpeg (`update_embedded_ffmpeg.ps1`, then
+   the test suite, then commit `scripts/ffmpeg_release.json`).
+2. Bump version in `core/app_info.py` (`APP_VERSION`, `APP_VERSION_WIN`) and
+   `installer/UniversalTranscoder.iss`.
+3. Create `release-notes/vX.Y.Z.en.md` and `release-notes/vX.Y.Z.fr.md`.
+4. Commit and push to **master**.
+5. **Dry run** (publier unchecked) → download the installer from the run's Artifacts, test it with NVDA:
+   ```powershell
+   gh workflow run release.yml --ref master -f version=X.Y.Z -f publier=false
+   ```
+6. **Publish** (same command with `-f publier=true`). The workflow refuses unless: run from
+   master; version matches `^\d+\.\d+\.\d+(-(rc|beta)\d+)?$` **and** equals `APP_VERSION` /
+   `.iss AppVersion` (`APP_VERSION_WIN` = `X.Y.Z.0`); tag `vX.Y.Z` free on origin (no release,
+   draft included); both release notes present. Then: pinned FFmpeg, **full test suite**
+   (mandatory), `build_release.ps1`, check that `dist\…\_internal\bin\ff*.exe` are byte-identical
+   to `bin\` and carry the pinned tag, then
+   `gh release create vX.Y.Z dist/AccessibleMediaConverter-Setup.exe --notes-file dist/release-notes.md --target <built commit>`
+   (`--prerelease` for an `-rcN`/`-betaN`). The workflow never commits anything.
+
+What the workflow fixes: Inno Setup **6.7.1** via choco, actions pinned by commit SHA (same SHAs as
+DownAccess), FFmpeg from `scripts/ffmpeg_release.json`. To bump any of them: change the SHA/version
+**and** its comment, then dry-run. A push to a `claude/**` branch touching packaging files
+(workflow, build/FFmpeg scripts, pin file, spec, installer, `core/app_info.py`, `core/updater.py`,
+`main.py`, `pyproject.toml`, `uv.lock`) triggers a dry run automatically (version = `APP_VERSION`).
+`.github/workflows/tests.yml` runs the suite (pinned FFmpeg) on every push and PR.
+
+`gh workflow run` only works once the workflow file is on the default branch (master).
+
+**Local fallback** (no CI): `scripts/build_release.ps1` (after `update_embedded_ffmpeg.ps1 -Pinned`
+and the test suite), verify `dist\AccessibleMediaConverter\_internal\bin\ffmpeg.exe -version`, then:
 ```powershell
 gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y.Z" --notes-file .\dist\release-notes.md
 ```
