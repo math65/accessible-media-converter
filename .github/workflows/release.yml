@@ -163,7 +163,8 @@ jobs:
           $setup = 'dist\AccessibleMediaConverter-Setup.exe'
           if (-not (Test-Path $setup)) { throw "$setup absent : l'updater n'accepte que ce nom exact." }
           $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  AccessibleMediaConverter-Setup.exe" | Set-Content "$setup.sha256" -Encoding ascii
+          # Fin de ligne LF : « sha256sum -c » refuse un nom de fichier suivi de CR.
+          [System.IO.File]::WriteAllText("$PWD\$setup.sha256", "$hash  AccessibleMediaConverter-Setup.exe`n")
           Write-Host "Installeur : $setup ($((Get-Item $setup).Length) octets), SHA256 $hash"
           if ($env:PUBLIER -eq 'true' -and -not (Test-Path dist\release-notes.md)) {
             throw "dist\release-notes.md absent : notes de version non assemblees."
