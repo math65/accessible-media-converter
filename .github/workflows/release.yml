@@ -1,0 +1,203 @@
+# Publier une version d'Accessible Media Converter depuis GitHub, sans PC.
+#
+# Avant de lancer : la version est deja montee et commitee sur master
+# (core/app_info.py + installer/UniversalTranscoder.iss) et les notes
+# release-notes/vX.Y.Z.en.md et .fr.md sont poussees. Ce workflow ne modifie
+# rien dans le depot : il verifie, teste, construit, puis publie.
+#
+# Depuis l'onglet Actions (ou l'app GitHub) : « Publier une version » →
+# Run workflow → branche master, version (ex. 1.20.7), case « publier ».
+# Case decochee = essai a blanc : l'installeur est construit et se telecharge
+# en bas de la page du run (Artifacts), a tester avec NVDA, mais rien n'est
+# publie. Version laissee vide = celle de core/app_info.py (essai a blanc
+# seulement). Une version 1.21.0-rc1 part en pre-version (--prerelease).
+#
+# Rien n'est publie si un test echoue. Une publication mal preparee — tag deja
+# pris, notes absentes, version qui ne correspond pas au code — est refusee des
+# la premiere minute (scripts/ci_release_check.py).
+#
+# FFmpeg : on installe la build que fige scripts/ffmpeg_release.json (tag
+# GyanD + SHA256 de l'archive), jamais « la derniere ». Changer de FFmpeg =
+# lancer update_embedded_ffmpeg.ps1 en local, relancer les tests, commiter ce
+# fichier : une publication ne change jamais FFmpeg en douce.
+#
+# Actions et Inno Setup sont figes sur une version precise : ce workflow a le
+# droit d'ecrire dans le depot, il ne doit pas executer du code qui change
+# sans qu'on le sache. Pour les mettre a jour, changer l'empreinte ET le
+# commentaire de version, puis lancer un essai a blanc.
+#
+# Les pushes sur les branches claude/** qui touchent l'empaquetage lancent un
+# essai a blanc automatique (version = celle de core/app_info.py).
+
+name: Publier une version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (ex. 1.20.7 ; vide = celle du code, essai a blanc seulement)"
+        required: false
+        type: string
+      publier:
+        description: "Publier la release (decoche = essai a blanc)"
+        type: boolean
+        default: false
+  push:
+    branches: ["claude/**"]
+    paths:
+      - ".github/workflows/release.yml"
+      - "scripts/build_release.ps1"
+      - "scripts/update_embedded_ffmpeg.ps1"
+      - "scripts/ffmpeg_release.json"
+      - "scripts/ci_release_check.py"
+      - "UniversalTranscoder.spec"
+      - "installer/**"
+      - "core/app_info.py"
+      - "core/updater.py"
+      - "main.py"
+      - "pyproject.toml"
+      - "uv.lock"
+
+permissions:
+  contents: write   # creation du tag et de la release
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      PUBLIER: ${{ github.event_name == 'workflow_dispatch' && inputs.publier }}
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - name: Garde-fou (publication depuis master uniquement)
+        if: env.PUBLIER == 'true' && github.ref != 'refs/heads/master'
+        shell: bash
+        env:
+          BRANCHE: ${{ github.ref_name }}
+        run: |
+          echo "::error::Une publication se lance depuis la branche master (ici : $BRANCHE)."
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0   # tags : controle « tag libre »
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Dependances (uv.lock)
+        run: uv sync --frozen
+
+      # La saisie passe par une variable : collee dans le script, elle serait
+      # executee avant d'etre controlee.
+      - name: Version
+        shell: bash
+        env:
+          SAISIE: ${{ inputs.version }}
+        run: |
+          v="${SAISIE:-}"
+          v="${v#v}"
+          if [ -z "$v" ]; then
+            if [ "$PUBLIER" = "true" ]; then
+              echo "::error::Une publication demande une version explicite (ex. 1.20.7)."; exit 1
+            fi
+            v=$(sed -n 's/^APP_VERSION = "\(.*\)"$/\1/p' core/app_info.py)
+          fi
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(rc|beta)[0-9]+)?$ ]]; then
+            echo "::error::Version invalide : '$v' (attendu : 1.20.7 ou 1.21.0-rc1)"; exit 1
+          fi
+          if [[ "$v" == *-* ]]; then pre=true; else pre=false; fi
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          echo "PRERELEASE=$pre" >> "$GITHUB_ENV"
+          echo "Version : $v — pre-version : $pre — publication : $PUBLIER"
+
+      # Toujours : la version doit etre celle du code. Tag libre et notes de
+      # version : bloquants en publication, simples avertissements a blanc.
+      - name: Controle prealable (version du code, tag libre, notes)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $publish = @()
+          if ($env:PUBLIER -eq 'true') { $publish = @('--publish') }
+          .venv\Scripts\python.exe scripts\ci_release_check.py $env:VERSION @publish
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Inno Setup
+        run: choco install innosetup --version=6.7.1 --allow-downgrade -y --no-progress
+
+      - name: FFmpeg fige (scripts/ffmpeg_release.json)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # quota de l'API GitHub
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1 -Pinned
+
+      # Obligatoires : un seul echec et rien n'est construit. Les tests de bout
+      # en bout convertissent dans les 31 formats de sortie avec ce FFmpeg-la.
+      - name: Tests
+        run: .venv\Scripts\python.exe -m unittest discover -s tests -t .
+
+      - name: Build (traductions, PyInstaller, Inno Setup)
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_release.ps1
+
+      # dist\ doit embarquer exactement les binaires de bin\, et ceux-ci le tag
+      # fige. Le nom de l'installeur est celui que l'updater exige.
+      - name: Verification de FFmpeg embarque et de l'installeur
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = (Get-Content scripts\ffmpeg_release.json -Raw | ConvertFrom-Json).tag
+          foreach ($tool in 'ffmpeg', 'ffprobe') {
+            $built = "dist\AccessibleMediaConverter\_internal\bin\$tool.exe"
+            if (-not (Test-Path $built)) { throw "$built absent du build." }
+            $line = (& $built -version | Select-Object -First 1)
+            Write-Host "$tool embarque : $line"
+            if ($line -notmatch "version $([regex]::Escape($tag))(-|\s)") {
+              throw "$tool embarque n'est pas la build figee $tag : $line"
+            }
+            if ((Get-FileHash $built).Hash -ne (Get-FileHash "bin\$tool.exe").Hash) {
+              throw "$built differe de bin\$tool.exe."
+            }
+          }
+          $setup = 'dist\AccessibleMediaConverter-Setup.exe'
+          if (-not (Test-Path $setup)) { throw "$setup absent : l'updater n'accepte que ce nom exact." }
+          $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          # Fin de ligne LF : « sha256sum -c » refuse un nom de fichier suivi de CR.
+          [System.IO.File]::WriteAllText("$PWD\$setup.sha256", "$hash  AccessibleMediaConverter-Setup.exe`n")
+          Write-Host "Installeur : $setup ($((Get-Item $setup).Length) octets), SHA256 $hash"
+          if ($env:PUBLIER -eq 'true' -and -not (Test-Path dist\release-notes.md)) {
+            throw "dist\release-notes.md absent : notes de version non assemblees."
+          }
+
+      # Essai a blanc seulement : une vraie publication met deja l'installeur
+      # dans la release, inutile d'en garder une seconde copie.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: env.PUBLIER != 'true'
+        with:
+          name: AccessibleMediaConverter-Setup-${{ env.VERSION }}
+          path: |
+            dist/AccessibleMediaConverter-Setup.exe
+            dist/AccessibleMediaConverter-Setup.exe.sha256
+            dist/release-notes.md
+          if-no-files-found: warn
+          retention-days: 14
+
+      # Le tag est cree par gh sur le commit exact qui vient d'etre construit et
+      # teste (--target), pas sur ce que master serait devenu entre-temps.
+      # Un seul asset, au nom exact : l'updater refuse tout autre nom et
+      # verifie le SHA-256 que GitHub calcule pour lui.
+      - name: Publication
+        if: env.PUBLIER == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          flags=()
+          if [ "$PRERELEASE" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "v$VERSION" dist/AccessibleMediaConverter-Setup.exe \
+            --title "v$VERSION" \
+            --notes-file dist/release-notes.md \
+            --target "$GITHUB_SHA" \
+            "${flags[@]}"
+          echo "Publiee : https://github.com/$GITHUB_REPOSITORY/releases/tag/v$VERSION"

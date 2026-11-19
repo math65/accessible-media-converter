@@ -1,0 +1,40 @@
+# Suite de tests sous Windows a chaque push : un probleme se voit avant de
+# lancer une publication. Les tests de bout en bout convertissent pour de vrai
+# avec le FFmpeg embarque : on installe donc celui que fige
+# scripts/ffmpeg_release.json, le meme que celui qui partira dans l'installeur.
+
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unittest:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      # Actions figees sur un commit : une etiquette, elle, peut etre deplacee.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Dependances (uv.lock)
+        run: uv sync --frozen
+
+      - name: FFmpeg fige (scripts/ffmpeg_release.json)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # quota de l'API GitHub
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update_embedded_ffmpeg.ps1 -Pinned
+
+      - name: Tests
+        run: .venv\Scripts\python.exe -m unittest discover -s tests -t .

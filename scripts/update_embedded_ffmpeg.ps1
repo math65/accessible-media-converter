@@ -1,17 +1,122 @@
+<#
+.SYNOPSIS
+Installs or refreshes the embedded FFmpeg (bin\ffmpeg.exe, bin\ffprobe.exe) from GyanD builds.
+
+.DESCRIPTION
+Three modes:
+
+  (default)  Install the LATEST GyanD release that has an essentials ZIP, then record it
+             in scripts\ffmpeg_release.json (tag, asset, archive SHA256). Commit that file:
+             it is what CI and release builds install.
+  -Tag X     Install that exact GyanD release (e.g. a rollback to 9.0.1) and record it.
+  -Pinned    Install exactly the release recorded in scripts\ffmpeg_release.json and verify
+             the archive against the SHA256 stored there. Never writes the pin file and
+             never looks at newer releases: this is the mode CI uses, so a release build
+             can never change FFmpeg behind your back.
+
+-CheckOnly answers from API metadata alone and downloads nothing.
+#>
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = "Medium")]
 param(
     [string]$ReleasesApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases?per_page=20",
+    [string]$Tag,
+    [switch]$Pinned,
     [switch]$CheckOnly
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+# Windows PowerShell 5.1 renders a progress bar per received chunk, which makes a
+# ~115 MB Invoke-WebRequest crawl. Nothing reads it, so turn it off.
+$ProgressPreference = "SilentlyContinue"
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $BinDir = Join-Path $ProjectRoot "bin"
 $FfmpegPath = Join-Path $BinDir "ffmpeg.exe"
 $FfprobePath = Join-Path $BinDir "ffprobe.exe"
+$PinFilePath = Join-Path $PSScriptRoot "ffmpeg_release.json"
+$ReleaseByTagApiUrl = "https://api.github.com/repos/GyanD/codexffmpeg/releases/tags/"
 $UserAgent = "AccessibleMediaConverter-FFmpeg-Updater"
+
+if ($Pinned -and $Tag) {
+    throw "-Pinned and -Tag are mutually exclusive: -Pinned installs the tag recorded in $PinFilePath."
+}
+
+function Get-ApiHeaders {
+    $headers = @{
+        "Accept"     = "application/vnd.github+json"
+        "User-Agent" = $UserAgent
+    }
+    # In GitHub Actions, the job token lifts the anonymous API quota (60 requests/hour
+    # per IP, shared by every job on the runner's address).
+    if ($env:GITHUB_TOKEN) {
+        $headers["Authorization"] = "Bearer $($env:GITHUB_TOKEN)"
+    }
+    return $headers
+}
+
+function Read-PinFile {
+    if (-not (Test-Path -LiteralPath $PinFilePath)) {
+        throw "Pin file not found: $PinFilePath. Run this script without -Pinned once to create it."
+    }
+    $pin = Get-Content -LiteralPath $PinFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($field in @("tag", "asset", "sha256")) {
+        if (-not ($pin.PSObject.Properties.Name -contains $field) -or -not [string]$pin.$field) {
+            throw "Pin file $PinFilePath is missing the '$field' field."
+        }
+    }
+    if ([string]$pin.sha256 -notmatch '^[0-9a-fA-F]{64}$') {
+        throw "Pin file $PinFilePath has an invalid sha256: $($pin.sha256)"
+    }
+    return $pin
+}
+
+function Write-PinFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TagName,
+        [Parameter(Mandatory = $true)]
+        [string]$AssetName,
+        [Parameter(Mandatory = $true)]
+        [string]$Sha256
+    )
+
+    $Sha256 = $Sha256.ToLowerInvariant()
+    if (Test-Path -LiteralPath $PinFilePath) {
+        $existing = Get-Content -LiteralPath $PinFilePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($existing.tag -eq $TagName -and $existing.asset -eq $AssetName -and $existing.sha256 -eq $Sha256) {
+            Write-Host "Pin file already records $TagName."
+            return
+        }
+    }
+
+    if ($WhatIfPreference) {
+        Write-Host "What if: would record FFmpeg release $TagName in $PinFilePath"
+        return
+    }
+
+    $json = @"
+{
+  "tag": "$TagName",
+  "asset": "$AssetName",
+  "sha256": "$Sha256"
+}
+"@
+    [System.IO.File]::WriteAllText($PinFilePath, $json.Replace("`r`n", "`n") + "`n", [System.Text.UTF8Encoding]::new($false))
+    Write-Host "Pinned FFmpeg release recorded in $PinFilePath : $TagName. Commit this file."
+}
+
+function Get-DigestSha256 {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$Digest
+    )
+
+    if ($Digest -and $Digest -match '^sha256:(?<value>[0-9a-fA-F]{64})$') {
+        return $Matches.value.ToLowerInvariant()
+    }
+    return ""
+}
 
 function Get-ToolVersionLine {
     param(
@@ -229,13 +334,10 @@ function Get-LatestReleaseWithEssentialsZip {
     )
 
     try {
-        $releases = Invoke-RestMethod -Uri $ApiUrl -Headers @{
-            "Accept"     = "application/vnd.github+json"
-            "User-Agent" = $UserAgent
-        }
+        $releases = Invoke-RestMethod -Uri $ApiUrl -Headers (Get-ApiHeaders)
     }
     catch {
-        throw "Unable to fetch FFmpeg releases from GitHub API: $ApiUrl"
+        throw "Unable to fetch FFmpeg releases from GitHub API: $ApiUrl ($($_.Exception.Message))"
     }
 
     $release = $releases |
@@ -251,11 +353,40 @@ function Get-LatestReleaseWithEssentialsZip {
     throw "Unable to find a published FFmpeg release with an essentials ZIP asset."
 }
 
+function Get-ReleaseByTag {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TagName
+    )
+
+    if ($TagName -notmatch '^[0-9A-Za-z][0-9A-Za-z._-]*$') {
+        throw "Invalid FFmpeg release tag: '$TagName'"
+    }
+
+    $url = $ReleaseByTagApiUrl + $TagName
+    try {
+        return Invoke-RestMethod -Uri $url -Headers (Get-ApiHeaders)
+    }
+    catch {
+        throw "Unable to fetch FFmpeg release '$TagName' from GitHub API: $url ($($_.Exception.Message))"
+    }
+}
+
 function Get-EssentialsZipAsset {
     param(
         [Parameter(Mandatory = $true)]
-        [object]$Release
+        [object]$Release,
+        [Parameter(Mandatory = $false)]
+        [string]$ExactName
     )
+
+    if ($ExactName) {
+        $asset = @($Release.assets) | Where-Object { $_.name -eq $ExactName } | Select-Object -First 1
+        if (-not $asset) {
+            throw "Asset '$ExactName' not found in FFmpeg release $($Release.tag_name)."
+        }
+        return $asset
+    }
 
     $asset = @($Release.assets) |
         Where-Object { $_.name -match '^ffmpeg-.*-essentials_build\.zip$' } |
@@ -273,24 +404,41 @@ function Test-ArchiveDigest {
         [Parameter(Mandatory = $true)]
         [string]$ArchivePath,
         [Parameter(Mandatory = $false)]
-        [string]$Digest
+        [string]$Digest,
+        [Parameter(Mandatory = $false)]
+        [string]$PinnedSha256
     )
 
-    if (-not $Digest) {
-        return
-    }
-
-    if ($Digest -notmatch '^sha256:(?<value>[0-9a-fA-F]{64})$') {
-        Write-Warning "Unsupported digest format reported by GitHub: $Digest"
-        return
-    }
-
-    $expectedHash = $Matches.value.ToLowerInvariant()
     $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $ArchivePath).Hash.ToLowerInvariant()
+
+    # Pinned mode: the hash committed in the repository is authoritative, whatever
+    # GitHub reports today (an asset re-uploaded under the same tag must not slip in).
+    if ($PinnedSha256) {
+        $expectedPinned = $PinnedSha256.ToLowerInvariant()
+        if ($actualHash -ne $expectedPinned) {
+            throw "Downloaded archive does not match the pinned SHA256. Expected $expectedPinned (from $PinFilePath) but got $actualHash."
+        }
+        Write-Host "Archive SHA256 matches the pinned value: $actualHash"
+    }
+
+    if (-not $Digest) {
+        if (-not $PinnedSha256) {
+            Write-Warning "GitHub reported no digest for this asset; SHA256 not verified ($actualHash)."
+        }
+        return $actualHash
+    }
+
+    $expectedHash = Get-DigestSha256 -Digest $Digest
+    if (-not $expectedHash) {
+        Write-Warning "Unsupported digest format reported by GitHub: $Digest"
+        return $actualHash
+    }
 
     if ($actualHash -ne $expectedHash) {
         throw "Downloaded archive hash mismatch. Expected $expectedHash but got $actualHash."
     }
+
+    return $actualHash
 }
 
 function Find-ExtractedBinary {
@@ -372,23 +520,60 @@ if ($hasEmbeddedBinaries) {
     }
 }
 else {
-    Write-Host "No embedded FFmpeg in $BinDir (fresh clone?): the latest release will be installed."
+    Write-Host "No embedded FFmpeg in $BinDir (fresh clone?): the selected release will be installed."
 }
 
-$release = Get-LatestReleaseWithEssentialsZip -ApiUrl $ReleasesApiUrl
-$asset = Get-EssentialsZipAsset -Release $release
+$pinnedSha256 = ""
+if ($Pinned) {
+    $pin = Read-PinFile
+    $pinnedSha256 = [string]$pin.sha256
+    Write-Host "Pinned release (from $PinFilePath): $($pin.tag)"
+    $release = Get-ReleaseByTag -TagName ([string]$pin.tag)
+    $asset = Get-EssentialsZipAsset -Release $release -ExactName ([string]$pin.asset)
+}
+elseif ($Tag) {
+    $release = Get-ReleaseByTag -TagName $Tag
+    $asset = Get-EssentialsZipAsset -Release $release
+}
+else {
+    $release = Get-LatestReleaseWithEssentialsZip -ApiUrl $ReleasesApiUrl
+    $asset = Get-EssentialsZipAsset -Release $release
+}
 $releaseMetadata = Get-ReleaseMetadata -Release $release
 
-Write-Host "Latest GitHub release: $($release.tag_name)"
-Write-Host "Selected asset      : $($asset.name)"
+Write-Host "Selected GitHub release: $($release.tag_name)"
+Write-Host "Selected asset         : $($asset.name)"
 if ($releaseMetadata.SemanticVersion) {
-    Write-Host "Latest semantic version: $($releaseMetadata.SemanticVersion)"
+    Write-Host "Release semantic version: $($releaseMetadata.SemanticVersion)"
 }
 if ($releaseMetadata.PublishedDate) {
-    Write-Host "Latest release date    : $($releaseMetadata.PublishedDate.ToString('yyyy-MM-dd'))"
+    Write-Host "Release date            : $($releaseMetadata.PublishedDate.ToString('yyyy-MM-dd'))"
 }
 
-if ($hasEmbeddedBinaries) {
+# The embedded ffmpeg -version token starts with the exact GyanD tag
+# (9.0.2-essentials_build-www.gyan.dev for tag 9.0.2).
+$embeddedMatchesRelease = $hasEmbeddedBinaries -and $currentMetadata.Token -and (
+    $currentMetadata.Token -eq $release.tag_name -or
+    $currentMetadata.Token.StartsWith("$($release.tag_name)-")
+)
+
+if ($Pinned -or $Tag) {
+    # An explicit release is installed as is, older or newer: no date or version
+    # heuristics, only "is it already the one in bin\?".
+    if ($embeddedMatchesRelease) {
+        $decision = [pscustomobject]@{
+            ShouldDownload = $false
+            Reason = "Embedded FFmpeg already matches the requested release $($release.tag_name)."
+        }
+    }
+    else {
+        $decision = [pscustomobject]@{
+            ShouldDownload = $true
+            Reason = "Installing the requested GitHub release $($release.tag_name)."
+        }
+    }
+}
+elseif ($hasEmbeddedBinaries) {
     $decision = Get-UpdateDecision -Current $currentMetadata -Latest $releaseMetadata
 }
 else {
@@ -400,11 +585,25 @@ else {
 Write-Host $decision.Reason
 
 if (-not $decision.ShouldDownload) {
+    # Keep the pin in step with what bin\ really holds (e.g. the first run after the
+    # pin file was introduced). Never in -Pinned mode: there the file is the input.
+    if (-not $Pinned -and -not $CheckOnly -and $embeddedMatchesRelease) {
+        $digestSha256 = ""
+        if ($asset.PSObject.Properties.Name -contains "digest") {
+            $digestSha256 = Get-DigestSha256 -Digest ([string]$asset.digest)
+        }
+        if ($digestSha256) {
+            Write-PinFile -TagName $release.tag_name -AssetName $asset.name -Sha256 $digestSha256
+        }
+        else {
+            Write-Warning "GitHub reported no SHA256 for $($asset.name); pin file left unchanged."
+        }
+    }
     return
 }
 
 # A dry run only needs to know whether an update exists. The release tag already
-# tells us that, so report it and stop before downloading the ~80 MB archive.
+# tells us that, so report it and stop before downloading the ~115 MB archive.
 if ($CheckOnly) {
     Write-Host "An embedded FFmpeg update is available: $($release.tag_name)"
     Write-Host "Run without -CheckOnly to download, verify, and install it."
@@ -422,15 +621,19 @@ $backupRoot = Join-Path $tempRoot "backup"
 [void][System.IO.Directory]::CreateDirectory($backupRoot)
 
 try {
-    Write-Host "Downloading latest essentials archive..."
+    Write-Host "Downloading essentials archive $($asset.name)..."
     Invoke-WithoutWhatIf {
         Invoke-WebRequest -Uri $asset.browser_download_url -Headers @{
             "Accept"     = "application/octet-stream"
             "User-Agent" = $UserAgent
-        } -OutFile $downloadPath
+        } -OutFile $downloadPath -UseBasicParsing
     }
 
-    Test-ArchiveDigest -ArchivePath $downloadPath -Digest $asset.digest
+    $assetDigest = ""
+    if ($asset.PSObject.Properties.Name -contains "digest") {
+        $assetDigest = [string]$asset.digest
+    }
+    $archiveSha256 = Test-ArchiveDigest -ArchivePath $downloadPath -Digest $assetDigest -PinnedSha256 $pinnedSha256
 
     Write-Host "Extracting archive..."
     Invoke-WithoutWhatIf {
@@ -447,6 +650,9 @@ try {
     Write-Host "Candidate FFprobe   : $candidateFfprobeVersion"
 
     if ($candidateFfmpegVersion -eq $currentFfmpegVersion -and $candidateFfprobeVersion -eq $currentFfprobeVersion) {
+        if (-not $Pinned) {
+            Write-PinFile -TagName $release.tag_name -AssetName $asset.name -Sha256 $archiveSha256
+        }
         Write-Host "Embedded FFmpeg binaries are already up to date."
         return
     }
@@ -480,6 +686,9 @@ try {
                 throw "Installed ffprobe.exe version does not match the downloaded candidate."
             }
 
+            if (-not $Pinned) {
+                Write-PinFile -TagName $release.tag_name -AssetName $asset.name -Sha256 $archiveSha256
+            }
             Write-Host "Embedded FFmpeg binaries updated successfully."
             Write-Host "Release page: $($release.html_url)"
         }
