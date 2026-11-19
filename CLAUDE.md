@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.20.6`.
+**Accessible Media Converter** — a Windows desktop transcoding app built with `wxPython` and embedded `FFmpeg`. Accessibility (NVDA, keyboard workflows) is the top design priority, ahead of advanced features or raw configurability. Current version: `1.21.0`.
 
 ## Running and building
 
@@ -202,6 +202,32 @@ gh release create vX.Y.Z .\dist\AccessibleMediaConverter-Setup.exe --title "vX.Y
 ```
 
 ## Recent changes
+
+- **v1.21.0 — published 2026-11-20, tag `v1.21.0`, commit `02677a6`.** **First release published by
+  GitHub Actions** (`release.yml`: dry run green, then `publier=true`), not from the PC.
+  - **iPhone ringtones (M4R), input and output** — a friend's report ("m4r not supported"). M4R = AAC
+    in MP4, forced with `-f ipod` like M4B (`IPOD_MUXER_OUTPUTS = ('m4b', 'm4r')`,
+    `core/ffmpeg_helpers.py`). An iPhone refuses a ringtone over **40 s**
+    (`RINGTONE_MAX_SECONDS`): `ringtone_window(settings, source_duration)` gives (start, length); a
+    start past the end yields the last 40 s. `ConversionTask._input_window` carries the window (`-ss`
+    before `-i`, `-t` after — same mechanism as cue clips, which it composes with) and the truncation
+    check compares against the window. `MergeTask` applies it to the concatenation. New setting
+    `ringtone_start` (seconds) in `SettingsDialog`, **hidden when every targeted file is known to be
+    ≤ 40 s** (`source_duration` = `_longest_known_duration(metas)` in `ui/main_window.py`, None as soon
+    as one duration is unknown); parented to the audio StaticBox outside the codec options so it still
+    applies in copy mode. Defaults AAC CBR 256k stereo. `tests/test_ringtone.py`.
+  - **Encoder sample-rate limits** (Gisèle's automatic report, 2026-10-22: MP3 at 96 kHz from a .ts →
+    "Specified sample rate 96000 is not supported", code -22). Measured on 9.0.2: libmp3lame 8–48 kHz,
+    wmav2 ≤ 48 kHz, **libopus only 48/24/16/12/8 kHz** (no 44.1). `ENCODER_SAMPLE_RATES` +
+    `resolve_sample_rate` (nearest accepted, ties go higher, logged) in `apply_common_audio_options`,
+    and the settings dialog only lists accepted rates. AAC/FLAC/ALAC/PCM/Vorbis take everything offered.
+  - **Disk full** (Everton's report, 2026-11-05: "FFmpeg error (code 4294967268)"). Windows exit codes
+    are unsigned 32-bit: `ffmpeg_error_code()` → -28 = ENOSPC. `is_disk_full_failure` (code or "No
+    space left on device") → `DiskFullError` naming the drive → `job.error_kind = "disk_full"`: reason
+    in the Status column and the end-of-batch message, **no** error report form (like `cue_invalid`).
+    `tests/test_field_reports_2026_11.py`.
+  - Suite: **138 tests**. Embedded FFmpeg unchanged (**9.0.2**, still the latest GyanD stable — newer
+    tags are git snapshots). ⚠️ Published **without** real-world NVDA validation.
 
 - **v1.20.6 — published 2026-09-28, tag `v1.20.6`, commit `b0fe07d`.** Ships the four fixes of
   `1e5285d` (found by a full app audit) plus **embedded FFmpeg 9.0.2**.
